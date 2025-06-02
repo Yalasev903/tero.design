@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('home_projects_grid', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('project_id');
-            $table->json('media');         // media в json, чтобы не терять структуру (Laravel умеет работать с json)
+            $table->json('media');
             $table->boolean('is_mobile')->default(false);
             $table->integer('row_number');
             $table->integer('col_number');
