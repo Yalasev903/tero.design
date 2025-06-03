@@ -3,13 +3,12 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ServiceController;
 
 // Главная страница сайта (home.blade.php)
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
-Route::get('/services', function () {
-    return view('services'); // или какую-то заглушку, пока нет шаблона
-})->name('services');
+Route::get('/services', [ServiceController::class, 'index'])->name('services');
 
 Route::get('/workflow', function () {
     return view('workflow'); // или заглушка
