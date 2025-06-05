@@ -9,6 +9,7 @@ class HomeController extends Controller
 {
     public function index()
     {
+        $settings = \App\Models\Setting::first();
         $projects_grid_raw = DB::table('home_projects_grid')
         ->leftJoin('projects', 'home_projects_grid.project_id', '=', 'projects.id')
         ->select(
@@ -39,7 +40,7 @@ class HomeController extends Controller
         }
         unset($row);
 
-        return view('home', compact('projects_grid'));
+        return view('home', compact('projects_grid', 'settings'));
     }
 
 }

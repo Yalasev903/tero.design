@@ -2,6 +2,31 @@
 
 @section('content')
     <div class="grid" id="js-gallery">
+
+        {{-- ✅ SHOWREEL из settings (если есть видео или постер) --}}
+        @if($settings->col_video || $settings->col_poster)
+        <div class="grid-row" id="showreel-grid-row">
+            <a href="#"
+               class="grid-item grid-item-desktop grid-item-video"
+               data-video="/multimedia/{{ $settings->col_video }}"
+               data-image="/multimedia/{{ $settings->col_poster }}"
+               data-project-link="#"
+               data-text2="<p>Showreel – видео-презентация студии</p>">
+                @if($settings->col_video)
+                    <video preload="metadata" muted loop autoplay class="js-grid-item-media tero-lazy-load">
+                        <source data-src="/multimedia/{{ $settings->col_video }}" type="video/mp4">
+                    </video>
+                @else
+                    <img data-src="/multimedia/{{ $settings->col_poster }}"
+                         alt="Showreel"
+                         class="js-grid-item-media tero-lazy-load">
+                @endif
+                <h3 class="grid-item-title">Showreel</h3>
+            </a>
+        </div>
+        @endif
+
+        {{-- 🔁 Остальная сетка проектов --}}
         @foreach($projects_grid as $row)
             <div class="grid-row" id="js-grid-item{{ $row[0]['project_id'] ?? '' }}">
                 @php $i = $loop->index; @endphp
@@ -37,6 +62,7 @@
             </div>
         @endforeach
     </div>
+
     <div id="scroll-to-top">
         <img src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiA/PjwhRE9DVFlQRSBzdmcgIFBVQkxJQyAnLS8vVzNDLy9EVEQgU1ZHIDEuMS8vRU4nICAnaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkJz48c3ZnIGhlaWdodD0iNTEycHgiIGlkPSJMYXllcl8xIiBzdHlsZT0iZW5hYmxlLWJhY2tncm91bmQ6bmV3IDAgMCA1MTIgNTEyOyIgdmVyc2lvbj0iMS4xIiB2aWV3Qm94PSIwIDAgNTEyIDUxMiIgd2lkdGg9IjUxMnB4IiB4bWxzOnNwYWNlPSJwcmVzZXJ2ZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxucz
 0iaHR0cDovL3d3dy53My5vcmcvMTk5OS94bGluayI+PHBhdGggZD0iTTEyOC40LDE4OS4zTDIzMy40LDg5YzUuOC02LDEzLjctOSwyMi40LTljOC43LDAsMTYuNSwzLDIyLjQsOWwxMDUuNCwxMDAuM2MxMi41LDExLjksMTIuNSwzMS4zLDAsNDMuMiAgYy0xMi41LDExLjktMzIuNywxMS45LTQ1LjIsMEwyODgsMTg0LjR2MjE3YzAsMTYuOS0xNC4zLDMwLjYtMzIsMzAuNmMtMTcuNywwLTMyLTEzLjctMzItMzAuNnYtMjE3bC01MC40LDQ4LjIgIC0xMi41LDExLjktMzIuNywxMS45LTQ1LjIsMEMxMTUuOSwyMjAuNiwxMTUuOSwyMDEuMywxMjguNCwxODkuM3oiLz48L3N2Zz4=">
