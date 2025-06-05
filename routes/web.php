@@ -16,3 +16,6 @@ Route::get('/workflow', [WorkflowController::class, 'index'])->name('workflow');
 Route::get('/contact', [ContactController::class, 'index'])->name('contact');
 
 Route::get('/projects/{id}', [ProjectController::class, 'show'])->name('projects.show');
+
+Route::view('/admin', 'admin');
+Route::get('/admin/{any}', fn () => view('admin'))->where('any', '.*');
