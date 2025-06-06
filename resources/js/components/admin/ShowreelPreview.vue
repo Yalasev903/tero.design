@@ -11,10 +11,10 @@
       <img :src="posterSrc" alt="Постер" />
       <div class="overlay">
         <span class="size">1920x1080</span>
-        <span class="upload-icon" @click.stop="select('poster')">📤 Заменить</span>
+        <span class="upload-icon" @click.stop="openFileManager('poster')">📤 Заменить</span>
       </div>
     </div>
-    <p class="filename">{{ posterFilename }}</p>
+    <p class="filename">{{ model.poster }}</p>
 
     <!-- Видео -->
     <div
@@ -29,92 +29,104 @@
       </video>
       <div class="overlay">
         <span class="size">1920x1080</span>
-        <span class="upload-icon" @click.stop="select('video')">📤 Заменить</span>
+        <span class="upload-icon" @click.stop="openFileManager('video')">📤 Заменить</span>
       </div>
     </div>
-    <p class="filename">{{ videoFilename }}</p>
+    <p class="filename">{{ model.video }}</p>
 
     <!-- Кнопка сохранения -->
     <div class="save-button">
       <el-button type="success" @click="saveMedia">Сохранить</el-button>
     </div>
 
-    <!-- Инпут загрузки -->
-    <input
-      type="file"
-      ref="fileInput"
-      class="hidden"
-      @change="uploadFile"
-    />
+    <!-- Модальное окно с FileManager -->
+    <el-dialog v-model="isModalOpen" title="Выберите файл" width="80%" top="5vh">
+      <iframe
+        :src="filemanagerUrl"
+        style="width:100%; height:70vh; border:0"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import axios from 'axios'
 
-const props = defineProps(['modelValue'])
-const emit = defineEmits(['update:modelValue'])
+// Локальное состояние вместо props.modelValue
+const model = reactive({
+  poster: '',
+  video: ''
+})
 
 const fileInput = ref(null)
 const currentType = ref('poster')
 const expanded = ref(null)
+const isModalOpen = ref(false)
+const filemanagerUrl = ref('/filemanager?type=file')
 
 const toggleExpand = (type) => {
   expanded.value = expanded.value === type ? null : type
 }
 
-const select = (type) => {
+const openFileManager = (type) => {
   currentType.value = type
-  fileInput.value.click()
+  isModalOpen.value = true
 }
 
-const uploadFile = async (e) => {
-  const file = e.target.files[0]
-  if (!file) return
-
-  const fd = new FormData()
-  fd.append('file', file)
-
-  const { data } = await axios.post('/api/admin/upload', fd)
-  emit('update:modelValue', {
-    ...props.modelValue,
-    [currentType.value]: data.filename
-  })
+const handleFileSelected = (e) => {
+  if (typeof e.data !== 'string') return
+  if (!e.data.startsWith('/multimedia/')) return
+  const filename = e.data.replace('/multimedia/', '')
+  model[currentType.value] = filename
+  isModalOpen.value = false
 }
 
-// Сохранить на сервер
+onMounted(() => window.addEventListener('message', handleFileSelected))
+onUnmounted(() => window.removeEventListener('message', handleFileSelected))
+
+// Сохранение через новый контроллер
 const saveMedia = async () => {
-  await axios.post('/api/admin/settings', {
-    poster: props.modelValue.poster,
-    video: props.modelValue.video
-  })
-  alert('Медиафайлы сохранены')
+  if (model.poster) {
+    await axios.post('/api/admin/showreel', {
+      type: 'img',
+      file: model.poster,
+      width: 1920,
+      height: 1080
+    })
+  }
+
+  if (model.video) {
+    await axios.post('/api/admin/showreel', {
+      type: 'video',
+      file: model.video,
+      mime: 'video/mp4',
+      width: 1920,
+      height: 1080
+    })
+  }
+
+  alert('Медиафайлы успешно сохранены.')
 }
 
-// Дефолтные пути
-const defaultPoster = '/multimedia/showreel_2023/obl-2023_2.jpg'
-const defaultVideoMp4 = '/multimedia/showreel/Showreel_2024_HD.mp4'
-const defaultVideoWebm = '/multimedia/showreel/Showreel_2024_HD.webm'
+// Подгрузка текущих данных
+const loadShowreel = async () => {
+  const { data } = await axios.get('/api/admin/showreel')
+  if (data?.media?.type === 'img') model.poster = data.media.link
+  if (data?.media?.type === 'video') model.video = data.media.links?.[0]?.link
+}
+onMounted(loadShowreel)
 
 const posterSrc = computed(() =>
-  props.modelValue.poster ? `/multimedia/${props.modelValue.poster}` : defaultPoster
+  model.poster ? `/multimedia/${model.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg'
 )
 
 const videoSrc = computed(() =>
-  props.modelValue.video ? `/multimedia/${props.modelValue.video}` : defaultVideoMp4
+  model.video ? `/multimedia/${model.video}` : '/multimedia/showreel/Showreel_2024_HD.mp4'
 )
 
 const videoWebmSrc = computed(() =>
-  props.modelValue.video ? `/multimedia/${props.modelValue.video}` : defaultVideoWebm
-)
-
-const posterFilename = computed(() =>
-  props.modelValue.poster || 'obl-2023_2.jpg'
-)
-
-const videoFilename = computed(() =>
-  props.modelValue.video || 'Showreel_2024_HD.mp4'
+  model.video ? `/multimedia/${model.video}` : '/multimedia/showreel/Showreel_2024_HD.webm'
 )
 </script>
 
@@ -135,7 +147,7 @@ const videoFilename = computed(() =>
   overflow: hidden;
   width: 320px;
   height: 180px;
-  transition: transform 0.4s ease, width 0.4s ease, height 0.4s ease;
+  transition: all 0.4s ease;
 }
 
 .media-box.expanded {
@@ -155,10 +167,8 @@ const videoFilename = computed(() =>
 
 .overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
   background-color: rgba(30, 30, 30, 0.45);
   display: flex;
   flex-direction: column;
@@ -170,9 +180,7 @@ const videoFilename = computed(() =>
   transition: opacity 0.3s ease;
 }
 
-.media-box:hover .overlay {
-  opacity: 1;
-}
+.media-box:hover .overlay { opacity: 1; }
 
 .size {
   font-size: 12px;
@@ -195,15 +203,11 @@ const videoFilename = computed(() =>
   font-size: 13px;
   color: #555;
   margin: 5px 0 15px;
-  word-break: break-all;
+  word-break: break-word;
 }
 
 .save-button {
   margin-top: 15px;
   text-align: right;
-}
-
-.hidden {
-  display: none;
 }
 </style>

@@ -7,22 +7,28 @@ use Illuminate\Support\Facades\DB; // если используешь Query Buil
 
 class HomeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $settings = \App\Models\Setting::first();
-        $projects_grid_raw = DB::table('home_projects_grid')
-        ->leftJoin('projects', 'home_projects_grid.project_id', '=', 'projects.id')
-        ->select(
-            'home_projects_grid.*',
-            'projects.title as project_title',
-            'projects.text2 as project_text2'
-        )
-        ->orderBy('row_number')
-        ->orderBy('col_number')
-        ->get();
+        $batch = $request->input('batch', 0);
+        $limit = 3;
+        $offset = $batch * $limit;
+
+        $query = DB::table('home_projects_grid')
+            ->leftJoin('projects', 'home_projects_grid.project_id', '=', 'projects.id')
+            ->select(
+                'home_projects_grid.*',
+                'projects.title as project_title',
+                'projects.text2 as project_text2'
+            )
+            ->orderBy('row_number')
+            ->orderBy('col_number');
+
+        $grid_raw = $request->ajax()
+            ? $query->skip($offset)->take($limit)->get()
+            : $query->get();
 
         $projects_grid = [];
-        foreach ($projects_grid_raw as $item) {
+        foreach ($grid_raw as $item) {
             $projects_grid[$item->row_number][$item->col_number] = [
                 'project_id' => $item->project_id,
                 'media' => $item->media,
@@ -32,7 +38,6 @@ class HomeController extends Controller
             ];
         }
 
-        // Сортировка
         ksort($projects_grid);
         foreach ($projects_grid as &$row) {
             ksort($row);
@@ -40,7 +45,13 @@ class HomeController extends Controller
         }
         unset($row);
 
+        if ($request->ajax()) {
+            return response()->json([
+                'rows' => view('components.grid-rows', compact('projects_grid'))->render()
+            ]);
+        }
+
+        $settings = \App\Models\Setting::first();
         return view('home', compact('projects_grid', 'settings'));
     }
-
 }

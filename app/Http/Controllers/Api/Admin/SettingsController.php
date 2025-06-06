@@ -41,35 +41,18 @@ class SettingsController extends Controller
 
     public function update(Request $request)
     {
-        $settings = Setting::first();
-        $settings->update([
-            'col_jivochat'       => $request->jivochat,
-            'col_jivochat_id'    => $request->jivochat_id,
-            'col_email'          => $request->email,
-            'col_tel'            => $request->tel,
-            'col_behance'        => $request->behance,
-            'col_facebook'       => $request->facebook,
-            'col_instagram'      => $request->instagram,
-            'col_pinterest'      => $request->pinterest,
-            'col_linkedin'       => $request->linkedin,
-            'col_youtube'        => $request->youtube,
-            'col_google_tm'      => $request->google_tm,
-            'col_seo_title'      => $request->seo_title,
-            'col_seo_description'=> $request->seo_description,
-            'col_seo_keywords'   => $request->seo_keywords,
-            'col_poster'         => $request->poster,
-            'col_video'          => $request->video,
-        ]);
+    $settings = Setting::first();
 
-        $map = Map::first();
-        $map->update([
-            'col_lat'     => $request->lat,
-            'col_lng'     => $request->lng,
-            'col_zoom'    => $request->zoom,
-            'col_key'     => $request->google_key,
-            'col_marker'  => $request->marker,
-        ]);
+    if ($request->has('poster')) {
+        $settings->col_poster = $request->poster;
+    }
 
-        return response()->noContent();
+    if ($request->has('video')) {
+        $settings->col_video = $request->video;
+    }
+
+    $settings->save();
+
+    return response()->noContent();
     }
 }

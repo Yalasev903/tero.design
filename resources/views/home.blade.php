@@ -3,64 +3,37 @@
 @section('content')
     <div class="grid" id="js-gallery">
 
-        {{-- ✅ SHOWREEL из settings (если есть видео или постер) --}}
-        @if($settings->col_video || $settings->col_poster)
-        <div class="grid-row" id="showreel-grid-row">
-            <a href="#"
-               class="grid-item grid-item-desktop grid-item-video"
-               data-video="/multimedia/{{ $settings->col_video }}"
-               data-image="/multimedia/{{ $settings->col_poster }}"
-               data-project-link="#"
-               data-text2="<p>Showreel – видео-презентация студии</p>">
-                @if($settings->col_video)
-                    <video preload="metadata" muted loop autoplay class="js-grid-item-media tero-lazy-load">
-                        <source data-src="/multimedia/{{ $settings->col_video }}" type="video/mp4">
-                    </video>
-                @else
-                    <img data-src="/multimedia/{{ $settings->col_poster }}"
-                         alt="Showreel"
-                         class="js-grid-item-media tero-lazy-load">
-                @endif
-                <h3 class="grid-item-title">Showreel</h3>
-            </a>
-        </div>
+        {{-- ✅ SHOWREEL из home_projects_grid (row_number = 0) --}}
+        @if(isset($projects_grid[0][0]))
+            @php
+                $showreel = $projects_grid[0][0];
+                $media = json_decode($showreel['media'], true);
+            @endphp
+            <div class="grid-row" id="showreel-grid-row">
+                <a href="#"
+                class="grid-item grid-item-desktop grid-item-{{ $media['type'] ?? 'img' }}"
+                data-video="@if(($media['type'] ?? '') == 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
+                data-image="/multimedia/{{ $media['link'] ?? '' }}"
+                data-project-link="#"
+                data-text2="<p>Showreel – видео-презентация студии</p>">
+                    @if(($media['type'] ?? '') === 'video')
+                        <video preload="metadata" muted loop autoplay class="js-grid-item-media tero-lazy-load">
+                            @foreach($media['links'] ?? [] as $link)
+                                <source data-src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? '' }}">
+                            @endforeach
+                        </video>
+                    @else
+                        <img data-src="/multimedia/{{ $media['link'] ?? '' }}"
+                            alt="Showreel"
+                            class="js-grid-item-media tero-lazy-load">
+                    @endif
+                    <h3 class="grid-item-title">Showreel</h3>
+                </a>
+            </div>
         @endif
 
         {{-- 🔁 Остальная сетка проектов --}}
-        @foreach($projects_grid as $row)
-            <div class="grid-row" id="js-grid-item{{ $row[0]['project_id'] ?? '' }}">
-                @php $i = $loop->index; @endphp
-                @foreach($row as $col)
-                    @php
-                        $media = json_decode($col['media'], true);
-                    @endphp
-                    <a href="#"
-                        data-image="/multimedia/{{ $media['link'] ?? '' }}"
-                        data-video="@if(($media['type'] ?? '') == 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
-                        id="grid-el-{{ $i }}-{{ $loop->index }}"
-                        class="grid-item loading {{ ($col['is_mobile'] ?? false) ? 'grid-item-mobile' : 'grid-item-desktop' }} grid-item-{{ $media['type'] ?? '' }}"
-                        data-media-width="{{ $media['width'] ?? '' }}"
-                        data-media-height="{{ $media['height'] ?? '' }}"
-                        data-project-link="{{ route('projects.show', ['id' => $col['project_id']]) }}"
-                        data-text2="{{ $col['text2'] ?? '' }}">
-                        @if(($media['type'] ?? '') === 'img')
-                            <img data-src="/multimedia/{{ $media['link'] ?? '' }}"
-                                alt="{{ $media['alt'] ?? '' }}"
-                                class="js-grid-item-media tero-lazy-load"
-                            >
-                            <h3 class="grid-item-title">{{ $col['title'] ?? '' }}</h3>
-                        @elseif(($media['type'] ?? '') === 'video')
-                            <video preload="metadata" muted loop autoplay class="js-grid-item-media tero-lazy-load">
-                                @foreach($media['links'] ?? [] as $link)
-                                    <source data-src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? '' }}">
-                                @endforeach
-                            </video>
-                            <h3 class="grid-item-title">{{ $col['title'] ?? '' }}</h3>
-                        @endif
-                    </a>
-                @endforeach
-            </div>
-        @endforeach
+@include('components.grid-rows', ['projects_grid' => $projects_grid])
     </div>
 
     <div id="scroll-to-top">
@@ -207,6 +180,54 @@
                 }
             });
         });
+
+        let batch = 1;
+        let loading = false;
+
+        window.addEventListener('scroll', async () => {
+            if (loading) return;
+
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const pageHeight = document.body.offsetHeight;
+
+            if (scrollPosition >= pageHeight - 500) {
+                loading = true;
+
+                try {
+                    const response = await fetch(`/?batch=${batch}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+                    const result = await response.json();
+
+                    if (result.rows.trim()) {
+                        document.querySelector('#js-gallery').insertAdjacentHTML('beforeend', result.rows);
+                        batch++;
+                        loading = false;
+                    }
+                } catch (err) {
+                    console.error('Ошибка подгрузки:', err);
+                }
+            }
+        });
     </script>
     {{-- / JS для popup --}}
+    @section('scripts')
+    {{-- ... все скрипты ... --}}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/plugins/ls.attrchange.min.js" async></script>
+
+    {{-- 👇 Добавить вот этот блок --}}
+    <script>
+        document.addEventListener('lazyloaded', function (e) {
+            const el = e.target;
+
+            if (el.tagName === 'VIDEO') {
+                el.querySelectorAll('source').forEach(source => {
+                    if (source.dataset.src && !source.src) {
+                        source.src = source.dataset.src;
+                    }
+                });
+                el.load();
+                el.play().catch(() => {});
+            }
+        });
+    </script>
 @endsection
