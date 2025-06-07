@@ -817,16 +817,4 @@ function dialog(title, value, callback) {
     callback($('#dialog').find('input').val());
   });
   $('#dialog').modal('show').find('.modal-title').text(title);
-
-  $(document).on('click', '.btn-confirm', function () {
-  const selectedItems = getSelectedItems();
-  if (selectedItems.length === 0) return;
-
-  const workingDir = $('#working_dir').val();
-  const fileName = selectedItems[0].name;
-  const fullPath = (workingDir + '/' + fileName).replace(/\/{2,}/g, '/');
-
-  // 👇 Вернуть путь в Vue (например, /multimedia/project/image.jpg)
-  window.parent.postMessage('/multimedia' + fullPath.replace(/^\/+/, ''), '*');
-});
 }

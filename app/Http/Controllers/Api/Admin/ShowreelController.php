@@ -10,25 +10,11 @@ class ShowreelController extends Controller
 {
     public function update(Request $request)
     {
-        $type = $request->input('type'); // 'img' или 'video'
-        $file = $request->input('file'); // путь файла
-        $mime = $request->input('mime') ?? null;
-        $width = $request->input('width') ?? 1920;
-        $height = $request->input('height') ?? 1080;
+        $media = $request->input('media');
 
-        $media = $type === 'video'
-            ? [
-                'type' => 'video',
-                'links' => [[ 'link' => $file, 'mime' => $mime ?? 'video/webm' ]],
-                'width' => $width,
-                'height' => $height
-            ]
-            : [
-                'type' => 'img',
-                'link' => $file,
-                'width' => $width,
-                'height' => $height
-            ];
+        if (!is_array($media)) {
+            return response()->json(['error' => 'Invalid media payload'], 422);
+        }
 
         DB::table('home_projects_grid')->updateOrInsert(
             ['row_number' => 0, 'col_number' => 0],
@@ -42,5 +28,19 @@ class ShowreelController extends Controller
         );
 
         return response()->json(['success' => true]);
+    }
+    public function show()
+    {
+        $row = DB::table('home_projects_grid')
+            ->where('row_number', 0)
+            ->where('col_number', 0)
+            ->first();
+
+        if (!$row) {
+            return response()->json(['media' => null]);
+        }
+
+        $media = json_decode($row->media, true);
+        return response()->json(['media' => $media]);
     }
 }

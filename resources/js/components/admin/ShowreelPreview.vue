@@ -3,33 +3,25 @@
     <h3>🎬 Видео в модальном окне</h3>
 
     <!-- Постер -->
-    <div
-      class="media-box"
-      :class="{ expanded: expanded === 'poster' }"
-      @click="toggleExpand('poster')"
-    >
+    <div class="media-box" :class="{ expanded: expanded === 'poster' }" @click="toggleExpand('poster')">
       <img :src="posterSrc" alt="Постер" />
       <div class="overlay">
         <span class="size">1920x1080</span>
-        <span class="upload-icon" @click.stop="openFileManager('poster')">📤 Заменить</span>
+        <span class="upload-icon" @click.stop="openManager('poster')">📤 Заменить</span>
       </div>
     </div>
     <p class="filename">{{ model.poster }}</p>
 
     <!-- Видео -->
-    <div
-      class="media-box"
-      :class="{ expanded: expanded === 'video' }"
-      @click="toggleExpand('video')"
-    >
-      <video autoplay loop muted playsinline>
+    <div class="media-box" :class="{ expanded: expanded === 'video' }" @click="toggleExpand('video')">
+      <video :key="videoSrc" autoplay loop muted playsinline>
         <source :src="videoSrc" type="video/mp4" />
         <source :src="videoWebmSrc" type="video/webm" />
         Ваш браузер не поддерживает видео.
       </video>
       <div class="overlay">
         <span class="size">1920x1080</span>
-        <span class="upload-icon" @click.stop="openFileManager('video')">📤 Заменить</span>
+        <span class="upload-icon" @click.stop="openManager('video')">📤 Заменить</span>
       </div>
     </div>
     <p class="filename">{{ model.video }}</p>
@@ -39,95 +31,87 @@
       <el-button type="success" @click="saveMedia">Сохранить</el-button>
     </div>
 
-    <!-- Модальное окно с FileManager -->
-    <el-dialog v-model="isModalOpen" title="Выберите файл" width="80%" top="5vh">
-      <iframe
-        :src="filemanagerUrl"
-        style="width:100%; height:70vh; border:0"
-      />
-    </el-dialog>
+    <!-- VueFinder -->
+    <teleport to="body">
+      <div v-if="showModal" class="finder-modal">
+        <div class="finder-container">
+          <vue-finder
+            id="vuefinder"
+            :request="{
+              baseUrl: '/api/vuefinder',
+              adapter: 'local',
+              xsrfHeaderName: 'X-XSRF-TOKEN'
+            }"
+            @select="handleSelect"
+          />
+          <button class="close-btn" @click="showModal = false">✖</button>
+        </div>
+      </div>
+    </teleport>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
 
-// Локальное состояние вместо props.modelValue
-const model = reactive({
-  poster: '',
-  video: ''
-})
-
-const fileInput = ref(null)
+const model = reactive({ poster: '', video: '' })
 const currentType = ref('poster')
 const expanded = ref(null)
-const isModalOpen = ref(false)
-const filemanagerUrl = ref('/filemanager?type=file')
+const showModal = ref(false)
 
-const toggleExpand = (type) => {
-  expanded.value = expanded.value === type ? null : type
-}
-
-const openFileManager = (type) => {
+const openManager = (type) => {
   currentType.value = type
-  isModalOpen.value = true
+  showModal.value = true
 }
 
-const handleFileSelected = (e) => {
-  if (typeof e.data !== 'string') return
-  if (!e.data.startsWith('/multimedia/')) return
-  const filename = e.data.replace('/multimedia/', '')
-  model[currentType.value] = filename
-  isModalOpen.value = false
+const handleSelect = (items) => {
+  if (!items.length) return
+
+  const path = items[0].path
+    .replace(/^local:\/\//, '')
+    .replace(/^multimedia\//, '')
+
+  model[currentType.value] = path
+  showModal.value = false
 }
 
-onMounted(() => window.addEventListener('message', handleFileSelected))
-onUnmounted(() => window.removeEventListener('message', handleFileSelected))
-
-// Сохранение через новый контроллер
-const saveMedia = async () => {
-  if (model.poster) {
-    await axios.post('/api/admin/showreel', {
-      type: 'img',
-      file: model.poster,
-      width: 1920,
-      height: 1080
-    })
-  }
-
-  if (model.video) {
-    await axios.post('/api/admin/showreel', {
-      type: 'video',
-      file: model.video,
-      mime: 'video/mp4',
-      width: 1920,
-      height: 1080
-    })
-  }
-
-  alert('Медиафайлы успешно сохранены.')
-}
-
-// Подгрузка текущих данных
 const loadShowreel = async () => {
   const { data } = await axios.get('/api/admin/showreel')
   if (data?.media?.type === 'img') model.poster = data.media.link
   if (data?.media?.type === 'video') model.video = data.media.links?.[0]?.link
 }
-onMounted(loadShowreel)
+
+const saveMedia = async () => {
+  const media = {
+    type: 'video',
+    poster: model.poster,
+    links: [{ link: model.video, mime: 'video/mp4' }],
+    width: 1920,
+    height: 1080
+  }
+  await axios.post('/api/admin/showreel', { media })
+  alert('🎉 Showreel успешно сохранён.')
+}
 
 const posterSrc = computed(() =>
   model.poster ? `/multimedia/${model.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg'
 )
-
 const videoSrc = computed(() =>
   model.video ? `/multimedia/${model.video}` : '/multimedia/showreel/Showreel_2024_HD.mp4'
 )
-
 const videoWebmSrc = computed(() =>
   model.video ? `/multimedia/${model.video}` : '/multimedia/showreel/Showreel_2024_HD.webm'
 )
+
+const toggleExpand = (type) => {
+  expanded.value = expanded.value === type ? null : type
+}
+
+onMounted(() => {
+  axios.get('/sanctum/csrf-cookie')
+  loadShowreel()
+})
 </script>
 
 <style scoped>
@@ -137,7 +121,6 @@ const videoWebmSrc = computed(() =>
   border-radius: 8px;
   box-shadow: 0 0 3px rgba(0, 0, 0, 0.05);
 }
-
 .media-box {
   position: relative;
   margin-top: 20px;
@@ -149,14 +132,12 @@ const videoWebmSrc = computed(() =>
   height: 180px;
   transition: all 0.4s ease;
 }
-
 .media-box.expanded {
   width: 100%;
   max-width: 720px;
   height: 405px;
   z-index: 2;
 }
-
 .media-box img,
 .media-box video {
   width: 100%;
@@ -164,7 +145,6 @@ const videoWebmSrc = computed(() =>
   object-fit: cover;
   border-radius: 6px;
 }
-
 .overlay {
   position: absolute;
   top: 0; left: 0;
@@ -179,9 +159,7 @@ const videoWebmSrc = computed(() =>
   opacity: 0;
   transition: opacity 0.3s ease;
 }
-
 .media-box:hover .overlay { opacity: 1; }
-
 .size {
   font-size: 12px;
   background: rgba(0, 0, 0, 0.5);
@@ -189,7 +167,6 @@ const videoWebmSrc = computed(() =>
   border-radius: 4px;
   align-self: flex-end;
 }
-
 .upload-icon {
   font-size: 13px;
   background: rgba(0, 0, 0, 0.7);
@@ -198,16 +175,44 @@ const videoWebmSrc = computed(() =>
   align-self: center;
   cursor: pointer;
 }
-
 .filename {
   font-size: 13px;
   color: #555;
   margin: 5px 0 15px;
   word-break: break-word;
 }
-
 .save-button {
   margin-top: 15px;
   text-align: right;
+}
+.finder-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.finder-container {
+  width: 90%;
+  height: 90%;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  background: #e00;
+  color: #fff;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 10;
 }
 </style>

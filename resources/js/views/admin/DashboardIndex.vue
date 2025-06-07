@@ -20,7 +20,7 @@
         <el-card style="margin-top: 20px">
           <h3>SEO</h3>
           <el-input v-model="form.seo_title" placeholder="Title" />
-          <el-input type="textarea" v-model="form.seo_description" placeholder="Description" rows="2" />
+          <el-input type="textarea" v-model="form.seo_description" placeholder="Description" :rows="2" />
           <el-input v-model="form.seo_keywords" placeholder="Keywords (через запятую)" />
         </el-card>
       </el-col>
