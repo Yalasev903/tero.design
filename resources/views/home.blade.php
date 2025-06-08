@@ -1,6 +1,9 @@
 @extends('layouts.app')
-
 @section('content')
+    @section('header_title', $page['title'] ?? 'Tero Design')
+    @section('header_description', $page['description'] ?? '')
+    @section('header_keywords', $page['keywords'] ?? '')
+    @section('header_meta_title', $page['title'] ?? 'Tero Design')
     <div class="grid" id="js-gallery">
         {{-- 🔁 Остальная сетка проектов --}}
 @include('components.grid-rows', ['projects_grid' => $projects_grid])

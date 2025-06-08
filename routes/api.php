@@ -6,6 +6,7 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Api\Admin\ShowreelController;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\Admin\VueFinderController;
+use App\Http\Controllers\Api\Admin\PageSeoController;
 
 Route::post('/admin/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy']);
@@ -16,6 +17,9 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/showreel', [ShowreelController::class, 'show']);
     Route::post('/showreel', [ShowreelController::class, 'update']);
     Route::post('/upload', [UploadController::class, 'store']);
+
+    Route::get('/pages/home-seo', [PageSeoController::class, 'getHomeSeo']);
+    Route::post('/pages/home-seo', [PageSeoController::class, 'updateHomeSeo']);
 
     Route::get('/settings', function () {
     return DB::table('settings')->first();

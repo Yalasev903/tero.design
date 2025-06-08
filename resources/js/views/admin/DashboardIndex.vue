@@ -18,10 +18,28 @@
         </el-card>
 
         <el-card style="margin-top: 20px">
-          <h3>SEO</h3>
+          <h3>SEO home.index</h3>
           <el-input v-model="form.seo_title" placeholder="Title" />
-          <el-input type="textarea" v-model="form.seo_description" placeholder="Description" :rows="2" />
-          <el-input v-model="form.seo_keywords" placeholder="Keywords (через запятую)" />
+          <el-input
+            type="textarea"
+            v-model="form.seo_description"
+            placeholder="Description"
+            :rows="2"
+          />
+          <el-select
+            v-model="form.seo_keywords"
+            multiple
+            allow-create
+            filterable
+            default-first-option
+            placeholder="Введите ключевые слова и нажимайте Enter"
+            style="width: 100%"
+          >
+          </el-select>
+
+          <div class="save-button">
+            <el-button type="success" @click="saveSettings">Сохранить</el-button>
+          </div>
         </el-card>
       </el-col>
 
@@ -39,16 +57,13 @@
         </el-card>
       </el-col>
     </el-row>
-
-    <div class="save-block">
-      <el-button type="primary" @click="saveSettings">💾 Сохранить</el-button>
-    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import axios from 'axios'
+import { ElNotification } from 'element-plus'
 import ShowreelPreview from '@/components/admin/ShowreelPreview.vue'
 
 const form = ref({
@@ -61,7 +76,7 @@ const form = ref({
   linkedin: '',
   seo_title: '',
   seo_description: '',
-  seo_keywords: '',
+  seo_keywords: [],
   poster: '',
   video: '',
   lat: '',
@@ -71,16 +86,38 @@ const form = ref({
 })
 
 const load = async () => {
-  const { data } = await axios.get('/api/admin/settings')
-  form.value = {
-    ...form.value, // сохранить значения по умолчанию
-    ...data       // подставить сохранённые из БД
-  }
+  const { data } = await axios.get('/api/admin/pages/home-seo')
+  form.value.seo_title = data.seo_title || ''
+  form.value.seo_description = data.seo_description || ''
+  form.value.seo_keywords = data.seo_keywords
+    ? data.seo_keywords.split(',').map(s => s.trim())
+    : []
 }
 
 const saveSettings = async () => {
-  await axios.post('/api/admin/settings', form.value)
-  alert('Сохранено')
+  try {
+    const payload = {
+      seo_title: form.value.seo_title,
+      seo_description: form.value.seo_description,
+      seo_keywords: form.value.seo_keywords.join(',')
+    }
+
+    await axios.post('/api/admin/pages/home-seo', payload)
+
+    ElNotification({
+      title: 'Успешно',
+      message: 'SEO данные обновлены',
+      type: 'success',
+      duration: 3000
+    })
+  } catch (error) {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Ошибка при сохранении SEO',
+      type: 'error',
+      duration: 3000
+    })
+  }
 }
 
 onMounted(load)
@@ -93,7 +130,15 @@ onMounted(load)
 .panel-section {
   margin-bottom: 20px;
 }
-.save-block {
-  margin-top: 20px;
+.save-button {
+  margin-top: 15px;
+  text-align: right;
+}
+:deep(.el-select .el-tag) {
+  background-color: transparent !important;
+  border: 1px solid rgb(64, 255, 89) !important;
+  color: #409EFF !important;
+  font-weight: 500;
+  border-radius: 6px;
 }
 </style>

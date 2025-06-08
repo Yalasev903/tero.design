@@ -4,23 +4,43 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0, user-scalable=no" name="viewport">
 
-    <title>@yield('header_title', $page['title'] ?? 'Tero Design')</title>
-    <meta name="description" content="@yield('header_description', $page['description'] ?? '')">
-    <meta name="keywords" content="@yield('header_keywords', $page['keywords'] ?? '')">
+    {{-- SEO --}}
+    @hasSection('header_title')
+        <title>@yield('header_title')</title>
+    @else
+        <title>Tero Design</title>
+    @endif
+
+    @hasSection('header_description')
+        <meta name="description" content="@yield('header_description')">
+    @endif
+
+    @hasSection('header_keywords')
+        <meta name="keywords" content="@yield('header_keywords')">
+    @endif
 
     <link rel="shortlink" href="https://tero.design/"/>
-    <link rel="icon" href="{{ asset('favicon.png') }}" sizes="32x32"/>
+    <link rel="icon" href="{{ asset('favicon.png') }}?v={{ filemtime(public_path('favicon.png')) }}" sizes="32x32"/>
     <link rel="icon" href="{{ asset('favicon.png') }}" sizes="192x192"/>
     <link rel="apple-touch-icon-precomposed" href="{{ asset('favicon.png') }}"/>
     <meta name="msapplication-TileImage" content="{{ asset('favicon.png') }}"/>
 
     {{-- SEO OpenGraph --}}
     @yield('header_og_url_block')
+
     <meta property="og:site_name" content="Tero"/>
     <meta property="og:locale" content="en_US"/>
     <meta property="og:type" content="@yield('header_og_type', 'website')"/>
-    <meta property="og:title" content="@yield('header_meta_title', View::hasSection('header_title') ? trim($__env->yieldContent('header_title')) : ($page['title'] ?? 'Tero Design'))"/>
-    <meta property="og:description" content="@yield('header_description', $page['description'] ?? '')"/>
+
+    @hasSection('header_meta_title')
+        <meta property="og:title" content="@yield('header_meta_title')"/>
+    @else
+        <meta property="og:title" content="@yield('header_title', 'Tero Design')"/>
+    @endif
+
+    @hasSection('header_description')
+        <meta property="og:description" content="@yield('header_description')"/>
+    @endif
 
     <meta name="twitter:card" content="summary_large_image"/>
     @section('header_og_image')
@@ -42,7 +62,7 @@
             pointer-events: auto;
             position: fixed;
             left: 0; top: 0; width: 100vw; height: 100vh;
-            background: rgba(0, 0, 0, 0.02);
+            /* background: rgba(0, 0, 0, 0.02); */
             z-index: 9999;
             display: none;
             align-items: center;

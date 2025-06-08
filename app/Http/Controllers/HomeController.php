@@ -7,8 +7,8 @@ use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
-    public function index(Request $request)
-    {
+public function index(Request $request)
+{
         $batch = $request->input('batch', 0);
         $limit = 3;
         $offset = $batch * $limit;
@@ -60,6 +60,14 @@ class HomeController extends Controller
 
         $settings = \App\Models\Setting::first();
 
+        // 👇 Только один раз: получаем и превращаем в массив
+        $page_obj = DB::table('tbl_pages')->where('col_title', 'index')->first();
+        $page = [
+            'title' => $page_obj->col_meta_title ?? 'Tero Design',
+            'description' => $page_obj->col_meta_description ?? '',
+            'keywords' => $page_obj->col_meta_keywords ?? '',
+        ];
+
         $showreel = null;
         if ($showreel_row) {
             $media = json_decode($showreel_row->media, true);
@@ -71,6 +79,7 @@ class HomeController extends Controller
             ];
         }
 
-        return view('home', compact('projects_grid', 'settings', 'showreel'));
+        return view('home', compact('projects_grid', 'settings', 'showreel', 'page'));
     }
+
 }
