@@ -54,6 +54,7 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
+import { ElNotification } from 'element-plus'
 
 const model = reactive({ poster: '', video: '' })
 const currentType = ref('poster')
@@ -78,20 +79,46 @@ const handleSelect = (items) => {
 
 const loadShowreel = async () => {
   const { data } = await axios.get('/api/admin/showreel')
-  if (data?.media?.type === 'img') model.poster = data.media.link
-  if (data?.media?.type === 'video') model.video = data.media.links?.[0]?.link
+  if (!data?.media) return
+
+  if (data.media?.type === 'video') {
+    model.poster = data.media?.poster || ''
+    model.video = data.media?.links?.[0]?.link || ''
+  } else if (data.media?.type === 'img') {
+    model.poster = data.media?.link || ''
+  }
 }
 
 const saveMedia = async () => {
-  const media = {
-    type: 'video',
-    poster: model.poster,
-    links: [{ link: model.video, mime: 'video/mp4' }],
-    width: 1920,
-    height: 1080
+  try {
+    const media = {
+      type: 'video',
+      poster: model.poster || '',
+      links: [],
+      width: 1920,
+      height: 1080
+    }
+
+    if (model.video) {
+      media.links.push({ link: model.video, mime: 'video/mp4' })
+    }
+
+    await axios.post('/api/admin/showreel', { media })
+
+    ElNotification({
+      title: 'Успешно',
+      message: 'Showreel обновлён',
+      type: 'success',
+      duration: 3000
+    })
+  } catch (error) {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Не удалось сохранить Showreel',
+      type: 'error',
+      duration: 3000
+    })
   }
-  await axios.post('/api/admin/showreel', { media })
-  alert('🎉 Showreel успешно сохранён.')
 }
 
 const posterSrc = computed(() =>
@@ -100,10 +127,12 @@ const posterSrc = computed(() =>
 const videoSrc = computed(() =>
   model.video ? `/multimedia/${model.video}` : '/multimedia/showreel/Showreel_2024_HD.mp4'
 )
-const videoWebmSrc = computed(() =>
-  model.video ? `/multimedia/${model.video}` : '/multimedia/showreel/Showreel_2024_HD.webm'
-)
+const videoWebmSrc = computed(() => {
+  if (!model.video) return '/multimedia/showreel/Showreel_2024_HD.webm'
 
+  const webm = model.video.replace(/\.(mp4|mov|mkv)$/i, '.webm')
+  return `/multimedia/${webm}`
+})
 const toggleExpand = (type) => {
   expanded.value = expanded.value === type ? null : type
 }

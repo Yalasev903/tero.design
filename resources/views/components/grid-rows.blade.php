@@ -1,7 +1,9 @@
 @foreach($projects_grid as $row)
     <div class="grid-row">
         @foreach($row as $col)
-            @php $media = json_decode($col['media'], true); @endphp
+            @php
+                $media = is_array($col['media']) ? $col['media'] : json_decode($col['media'] ?? '', true);
+            @endphp
             <a href="#"
                data-image="/multimedia/{{ $media['link'] ?? '' }}"
                data-video="@if(($media['type'] ?? '') == 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"

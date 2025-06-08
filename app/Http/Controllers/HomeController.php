@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; // если используешь Query Builder или Eloquent
+use Illuminate\Support\Facades\DB;
 
 class HomeController extends Controller
 {
@@ -13,7 +13,12 @@ class HomeController extends Controller
         $limit = 3;
         $offset = $batch * $limit;
 
+        $showreel_row = DB::table('home_projects_grid')
+            ->where('row_number', 0)
+            ->first();
+
         $query = DB::table('home_projects_grid')
+            ->where('row_number', '>', 0)
             ->leftJoin('projects', 'home_projects_grid.project_id', '=', 'projects.id')
             ->select(
                 'home_projects_grid.*',
@@ -29,9 +34,11 @@ class HomeController extends Controller
 
         $projects_grid = [];
         foreach ($grid_raw as $item) {
+            $media = json_decode($item->media, true);
+
             $projects_grid[$item->row_number][$item->col_number] = [
                 'project_id' => $item->project_id,
-                'media' => $item->media,
+                'media' => $media,
                 'is_mobile' => (bool)$item->is_mobile,
                 'title' => $item->project_title ?? '',
                 'text2' => $item->project_text2 ?? '',
@@ -52,6 +59,18 @@ class HomeController extends Controller
         }
 
         $settings = \App\Models\Setting::first();
-        return view('home', compact('projects_grid', 'settings'));
+
+        $showreel = null;
+        if ($showreel_row) {
+            $media = json_decode($showreel_row->media, true);
+            $showreel = [
+                'media' => $media,
+                'width' => $media['width'] ?? null,
+                'height' => $media['height'] ?? null,
+                'title' => 'SHOWREEL',
+            ];
+        }
+
+        return view('home', compact('projects_grid', 'settings', 'showreel'));
     }
 }

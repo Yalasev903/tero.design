@@ -196,38 +196,7 @@
         </footer>
 
         {{-- SHOWREEL MODAL --}}
-        <div class="showreel" id="js-showreel">
-            <div class="showreel-center">
-                <div class="showreel-poster-block" id="showreel-poster-block">
-                    <img src="/multimedia/showreel_2023/obl-2023_2.jpg"
-                        id="showreel-poster-img"
-                        alt="Showreel Poster">
-                    <button type="button" class="showreel-play js-video-play">
-                        <svg width="140" height="140" viewBox="0 0 140 140" fill="none">
-                            <circle cx="70" cy="70" r="65" stroke="#fff" stroke-width="6"/>
-                            <polygon points="58,45 105,70 58,95" fill="#fff"/>
-                        </svg>
-                    </button>
-                    <div class="showreel-title">SHOWREEL</div>
-                </div>
-                <video id="js-video"
-                    class="showreel-player-video"
-                    preload="metadata"
-                    controls
-                    playsinline
-                    muted
-                    style="display:none;">
-                    <source src="{{ asset('multimedia/showreel/Showreel_2024_HD.webm') }}" type="video/webm">
-                    <source src="{{ asset('multimedia/showreel/Showreel_2024_HD.mp4') }}" type="video/mp4">
-                    Ваш браузер не поддерживает видео.
-                </video>
-            </div>
-            <a href="#" class="showreel-close" id="js-showreel-close">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000" fill="#fff" width="48" height="48">
-                    <path d="M574.9,500L977.7,97.3c18.1-18.1,16-49.6-4.7-70.2c-20.7-20.7-52.1-22.8-70.2-4.7L500,425.1L97.3,22.3C79.1,4.2,47.7,6.3,27,27C6.3,47.7,4.2,79.1,22.3,97.3L425.1,500L22.3,902.7C4.2,920.9,6.3,952.3,27,973c20.7,20.7,52.1,22.8,70.2,4.7L500,574.9l402.7,402.7c18.1,18.1,49.6,16,70.2-4.7c20.7-20.7,22.8-52.1,4.7-70.2L574.9,500L574.9,500z"/>
-                </svg>
-            </a>
-        </div>
+    @include('components.showreel', ['showreel' => $showreel])
     </div> <!-- /.wrapper -->
 
     <div class="mobile-menu" id="js-mobile-menu">
@@ -246,7 +215,38 @@
         <script src="{{ asset('js/jquery.twentytwenty.min.js') }}"></script>
         <script src="{{ asset('js/main.min.js?v=5.92') }}"></script>
     @show
+    <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        const posterImg = document.getElementById('showreel-poster-img');
+        const videoEl = document.getElementById('js-video');
 
+        try {
+            const response = await fetch('/api/admin/showreel');
+            const data = await response.json();
+            const media = data.media;
+
+            if (!media || media.type !== 'video') return;
+
+            const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
+            if (posterImg && poster) {
+                posterImg.setAttribute('src', poster);
+            }
+
+            videoEl.innerHTML = ''; // очистим старые source'ы
+
+            for (const link of media.links) {
+                const source = document.createElement('source');
+                source.src = `/multimedia/${link.link}`;
+                source.type = link.mime || 'video/mp4';
+                videoEl.appendChild(source);
+            }
+
+        } catch (error) {
+            console.error('Ошибка загрузки Showreel:', error);
+            posterImg.src = '/multimedia/showreel_2023/obl-2023_2.jpg';
+        }
+    });
+    </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('js-showreel');

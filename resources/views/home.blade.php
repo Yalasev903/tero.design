@@ -2,36 +2,6 @@
 
 @section('content')
     <div class="grid" id="js-gallery">
-
-        {{-- ✅ SHOWREEL из home_projects_grid (row_number = 0) --}}
-        @if(isset($projects_grid[0][0]))
-            @php
-                $showreel = $projects_grid[0][0];
-                $media = json_decode($showreel['media'], true);
-            @endphp
-            <div class="grid-row" id="showreel-grid-row">
-                <a href="#"
-                class="grid-item grid-item-desktop grid-item-{{ $media['type'] ?? 'img' }}"
-                data-video="@if(($media['type'] ?? '') == 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
-                data-image="/multimedia/{{ $media['link'] ?? '' }}"
-                data-project-link="#"
-                data-text2="<p>Showreel – видео-презентация студии</p>">
-                    @if(($media['type'] ?? '') === 'video')
-                        <video preload="metadata" muted loop autoplay class="js-grid-item-media tero-lazy-load">
-                            @foreach($media['links'] ?? [] as $link)
-                                <source data-src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? '' }}">
-                            @endforeach
-                        </video>
-                    @else
-                        <img data-src="/multimedia/{{ $media['link'] ?? '' }}"
-                            alt="Showreel"
-                            class="js-grid-item-media tero-lazy-load">
-                    @endif
-                    <h3 class="grid-item-title">Showreel</h3>
-                </a>
-            </div>
-        @endif
-
         {{-- 🔁 Остальная сетка проектов --}}
 @include('components.grid-rows', ['projects_grid' => $projects_grid])
     </div>

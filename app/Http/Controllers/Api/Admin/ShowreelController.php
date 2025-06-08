@@ -4,43 +4,60 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Models\HomeProjectGrid;
+use Illuminate\Support\Facades\Log;
 
 class ShowreelController extends Controller
 {
     public function update(Request $request)
     {
-        $media = $request->input('media');
+        try {
+            $media = $request->input('media');
 
-        if (!is_array($media)) {
-            return response()->json(['error' => 'Invalid media payload'], 422);
+            if (!is_array($media)) {
+                Log::warning('Неверный формат media', ['media' => $media]);
+                return response()->json(['error' => 'Неверный формат media'], 422);
+            }
+
+            HomeProjectGrid::updateOrCreate(
+                ['row_number' => 0, 'col_number' => 0],
+                [
+                    'project_id' => 0,
+                    'media' => json_encode($media, JSON_UNESCAPED_UNICODE),
+                    'is_mobile' => false,
+                ]
+            );
+
+            return response()->json(['success' => true]);
+        } catch (\Throwable $e) {
+            Log::error('Ошибка при сохранении Showreel', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+
+            return response()->json([
+                'error' => 'Ошибка сервера: ' . $e->getMessage(),
+            ], 500);
         }
-
-        DB::table('home_projects_grid')->updateOrInsert(
-            ['row_number' => 0, 'col_number' => 0],
-            [
-                'project_id' => 0,
-                'media' => json_encode($media),
-                'is_mobile' => false,
-                'updated_at' => now(),
-                'created_at' => now(),
-            ]
-        );
-
-        return response()->json(['success' => true]);
     }
+
     public function show()
     {
-        $row = DB::table('home_projects_grid')
-            ->where('row_number', 0)
-            ->where('col_number', 0)
-            ->first();
+        try {
+            $row = HomeProjectGrid::where('row_number', 0)
+                ->where('col_number', 0)
+                ->first();
 
-        if (!$row) {
-            return response()->json(['media' => null]);
+            $media = $row ? json_decode($row->media, true) : null;
+
+            return response()->json(['media' => $media]);
+        } catch (\Throwable $e) {
+            Log::error('Ошибка при получении Showreel', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return response()->json(['media' => null], 500);
         }
-
-        $media = json_decode($row->media, true);
-        return response()->json(['media' => $media]);
     }
 }
