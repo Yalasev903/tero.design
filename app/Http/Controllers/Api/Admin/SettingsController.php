@@ -43,10 +43,10 @@ class SettingsController extends Controller
     {
         $settings = Setting::first();
 
-        // $settings->col_jivochat      = $request->jivochat;
-        // $settings->col_jivochat_id   = $request->jivochat_id;
-        // $settings->col_email         = $request->email;
-        // $settings->col_tel           = $request->tel;
+        $settings->col_jivochat      = $request->jivochat;
+        $settings->col_jivochat_id   = $request->jivochat_id;
+        $settings->col_email         = $request->email;
+        $settings->col_tel           = $request->tel;
         $settings->col_behance       = $request->behance;
         $settings->col_facebook      = $request->facebook;
         $settings->col_instagram     = $request->instagram;

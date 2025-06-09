@@ -2,67 +2,110 @@
   <div class="panel-wrapper">
     <h2>Панель управления</h2>
 
-    <div class="panel-section">
-      <el-switch v-model="form.jivochat" active-text="JivoChat включен" inactive-text="Отключен" />
-    </div>
-
     <el-row :gutter="20">
+      <!-- Левая колонка -->
       <el-col :span="12">
-        <el-card>
+        <!-- Соцсети -->
+        <el-card class="mb20">
           <h3>Соцсети и Контакты</h3>
-          <el-input v-model="form.behance" placeholder="Behance" />
-          <el-input v-model="form.facebook" placeholder="Facebook" />
-          <el-input v-model="form.instagram" placeholder="Instagram" />
-          <el-input v-model="form.linkedin" placeholder="LinkedIn" />
-          <el-input v-model="form.pinterest" placeholder="Pinterest" />
-          <el-input v-model="form.youtube" placeholder="YouTube" />
-
-            <div class="save-button">
-                <el-button type="success" @click="saveSettings">Сохранить</el-button>
-            </div>
+          <el-input v-model="form.behance" placeholder="Ссылка на Behance" />
+          <el-input v-model="form.facebook" placeholder="Ссылка на Facebook" />
+          <el-input v-model="form.instagram" placeholder="Ссылка на Instagram" />
+          <el-input v-model="form.linkedin" placeholder="Ссылка на LinkedIn" />
+          <el-input v-model="form.pinterest" placeholder="Ссылка на Pinterest" />
+          <el-input v-model="form.youtube" placeholder="Ссылка на YouTube" />
         </el-card>
 
-        <el-card style="margin-top: 20px">
+        <!-- JivoChat -->
+        <el-card class="mb20">
+          <h3>JivoChat</h3>
+          <el-switch
+            v-model="form.jivochat"
+            active-text="Включить JivoChat на всех страницах"
+            inactive-text="Отключить"
+          />
+          <el-input v-model="form.jivochat_id" placeholder="JivoChat ID" />
+          <el-input v-model="form.email" placeholder="Email" />
+          <el-input v-model="form.tel" placeholder="Телефон" />
+          <el-input v-model="form.google_tm" type="textarea" :rows="3" placeholder="Google Tag Manager (gtag.js)" />
+
+          <div class="save-button">
+            <el-button type="success" @click="saveSettings">Сохранить</el-button>
+          </div>
+        </el-card>
+
+        <!-- Showreel -->
+        <el-card>
+          <ShowreelPreview v-model="form" />
+        </el-card>
+      </el-col>
+
+      <!-- Правая колонка -->
+      <el-col :span="12">
+        <!-- SEO -->
+        <el-card class="mb20">
           <h3>SEO home.index</h3>
           <el-input v-model="form.seo_title" placeholder="Title" />
-          <el-input
-            type="textarea"
-            v-model="form.seo_description"
-            placeholder="Description"
-            :rows="2"
-          />
+          <el-input type="textarea" v-model="form.seo_description" placeholder="Description" :rows="2" />
           <el-select
             v-model="form.seo_keywords"
             multiple
             allow-create
             filterable
             default-first-option
-            placeholder="Введите ключевые слова и нажимайте Enter"
+            placeholder="Ключевые слова"
             style="width: 100%"
-          >
-          </el-select>
+          />
 
           <div class="save-button">
             <el-button type="success" @click="saveSeo">Сохранить</el-button>
           </div>
         </el-card>
-      </el-col>
 
-      <el-col :span="12">
+        <!-- Карта -->
         <el-card>
-          <ShowreelPreview v-model="form" />
-        </el-card>
+        <h3>Карта</h3>
 
-        <el-card style="margin-top: 20px">
-          <h3>Карта</h3>
-          <el-input v-model="form.lat" placeholder="Lat" />
-          <el-input v-model="form.lng" placeholder="Lng" />
-          <el-input v-model="form.zoom" placeholder="Zoom" />
-          <el-input v-model="form.google_key" placeholder="Google API Key" />
+        <el-form label-position="top" class="map-form">
+            <el-form-item label="Координаты Lat">
+            <el-input v-model="form.lat" placeholder="Широта" />
+            </el-form-item>
+
+            <el-form-item label="Координаты Lng">
+            <el-input v-model="form.lng" placeholder="Долгота" />
+            </el-form-item>
+
+            <el-form-item label="Приближение (Zoom)">
+            <el-input-number v-model="form.zoom" :min="1" :max="20" controls-position="right" />
+            </el-form-item>
+
+            <el-row :gutter="10">
+            <el-col :span="12">
+                <el-form-item label="Ключ google">
+                <el-input v-model="form.google_key" placeholder="Google API Key" />
+                </el-form-item>
+            </el-col>
+
+            <el-col :span="12">
+                <el-form-item label="Маркер">
+                <div style="display: flex; align-items: center;">
+                    <el-input v-model="form.marker" placeholder="Путь до иконки" style="flex: 1;" />
+                    <img
+                    v-if="form.marker"
+                    :src="form.marker"
+                    alt="Маркер"
+                    style="height: 30px; margin-left: 10px; border-radius: 4px;"
+                    />
+                </div>
+                </el-form-item>
+            </el-col>
+            </el-row>
 
             <div class="save-button">
-                <el-button type="success" @click="saveMap">Сохранить карту</el-button>
+            <el-button type="success" @click="saveMap">Сохранить</el-button>
+            <el-button>Отмена</el-button>
             </div>
+        </el-form>
         </el-card>
       </el-col>
     </el-row>
@@ -125,6 +168,7 @@ const load = async () => {
   form.value.lng = data.lng
   form.value.zoom = data.zoom
   form.value.google_key = data.google_key
+  form.value.google_tm = data.google_tm || ''
 }
 
 const saveSeo = async () => {
