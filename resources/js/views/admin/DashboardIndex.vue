@@ -10,11 +10,16 @@
       <el-col :span="12">
         <el-card>
           <h3>Соцсети и Контакты</h3>
-          <el-input v-model="form.email" placeholder="Email" />
-          <el-input v-model="form.tel" placeholder="Телефон" />
+          <el-input v-model="form.behance" placeholder="Behance" />
           <el-input v-model="form.facebook" placeholder="Facebook" />
           <el-input v-model="form.instagram" placeholder="Instagram" />
           <el-input v-model="form.linkedin" placeholder="LinkedIn" />
+          <el-input v-model="form.pinterest" placeholder="Pinterest" />
+          <el-input v-model="form.youtube" placeholder="YouTube" />
+
+            <div class="save-button">
+                <el-button type="success" @click="saveSettings">Сохранить</el-button>
+            </div>
         </el-card>
 
         <el-card style="margin-top: 20px">
@@ -38,7 +43,7 @@
           </el-select>
 
           <div class="save-button">
-            <el-button type="success" @click="saveSettings">Сохранить</el-button>
+            <el-button type="success" @click="saveSeo">Сохранить</el-button>
           </div>
         </el-card>
       </el-col>
@@ -54,6 +59,10 @@
           <el-input v-model="form.lng" placeholder="Lng" />
           <el-input v-model="form.zoom" placeholder="Zoom" />
           <el-input v-model="form.google_key" placeholder="Google API Key" />
+
+            <div class="save-button">
+                <el-button type="success" @click="saveMap">Сохранить карту</el-button>
+            </div>
         </el-card>
       </el-col>
     </el-row>
@@ -74,6 +83,9 @@ const form = ref({
   facebook: '',
   instagram: '',
   linkedin: '',
+  pinterest: '',
+  youtube: '',
+  behance: '',
   seo_title: '',
   seo_description: '',
   seo_keywords: [],
@@ -86,36 +98,111 @@ const form = ref({
 })
 
 const load = async () => {
-  const { data } = await axios.get('/api/admin/pages/home-seo')
-  form.value.seo_title = data.seo_title || ''
-  form.value.seo_description = data.seo_description || ''
-  form.value.seo_keywords = data.seo_keywords
-    ? data.seo_keywords.split(',').map(s => s.trim())
+  // SEO
+  const seoRes = await axios.get('/api/admin/pages/home-seo')
+  form.value.seo_title = seoRes.data.seo_title || ''
+  form.value.seo_description = seoRes.data.seo_description || ''
+  form.value.seo_keywords = seoRes.data.seo_keywords
+    ? seoRes.data.seo_keywords.split(',').map(s => s.trim())
     : []
+
+  // Settings (соцсети, контакты, карта и т.д.)
+  const settingsRes = await axios.get('/api/admin/settings')
+  const data = settingsRes.data
+  form.value.jivochat = data.jivochat
+  form.value.jivochat_id = data.jivochat_id
+  form.value.email = data.email
+  form.value.tel = data.tel
+  form.value.behance = data.behance || ''
+  form.value.facebook = data.facebook || ''
+  form.value.instagram = data.instagram || ''
+  form.value.linkedin = data.linkedin || ''
+  form.value.pinterest = data.pinterest || ''
+  form.value.youtube = data.youtube || ''
+  form.value.poster = data.poster || ''
+  form.value.video = data.video || ''
+  form.value.lat = data.lat
+  form.value.lng = data.lng
+  form.value.zoom = data.zoom
+  form.value.google_key = data.google_key
 }
 
-const saveSettings = async () => {
+const saveSeo = async () => {
   try {
-    const payload = {
+    await axios.post('/api/admin/pages/home-seo', {
       seo_title: form.value.seo_title,
       seo_description: form.value.seo_description,
       seo_keywords: form.value.seo_keywords.join(',')
-    }
-
-    await axios.post('/api/admin/pages/home-seo', payload)
+    })
 
     ElNotification({
       title: 'Успешно',
       message: 'SEO данные обновлены',
-      type: 'success',
-      duration: 3000
+      type: 'success'
     })
-  } catch (error) {
+  } catch {
     ElNotification({
       title: 'Ошибка',
       message: 'Ошибка при сохранении SEO',
-      type: 'error',
-      duration: 3000
+      type: 'error'
+    })
+  }
+}
+
+const saveSettings = async () => {
+  try {
+    await axios.post('/api/admin/settings', {
+      jivochat: form.value.jivochat,
+      jivochat_id: form.value.jivochat_id,
+      email: form.value.email,
+      tel: form.value.tel,
+      behance: form.value.behance,
+      facebook: form.value.facebook,
+      instagram: form.value.instagram,
+      linkedin: form.value.linkedin,
+      pinterest: form.value.pinterest,
+      youtube: form.value.youtube,
+      poster: form.value.poster,
+      video: form.value.video,
+      lat: form.value.lat,
+      lng: form.value.lng,
+      zoom: form.value.zoom,
+      google_key: form.value.google_key
+    })
+
+    ElNotification({
+      title: 'Успешно',
+      message: 'Настройки сохранены',
+      type: 'success'
+    })
+  } catch {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Ошибка при сохранении настроек',
+      type: 'error'
+    })
+  }
+}
+
+const saveMap = async () => {
+  try {
+    await axios.post('/api/admin/settings/map', {
+      lat: form.value.lat,
+      lng: form.value.lng,
+      zoom: form.value.zoom,
+      google_key: form.value.google_key
+    })
+
+    ElNotification({
+      title: 'Успешно',
+      message: 'Карта сохранена',
+      type: 'success'
+    })
+  } catch {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Ошибка при сохранении карты',
+      type: 'error'
     })
   }
 }

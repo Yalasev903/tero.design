@@ -1,10 +1,8 @@
         @php
-            $showreel = \DB::table('home_projects_grid')->where('row_number', 0)->first();
-            $media = json_decode($showreel?->media ?? '', true);
-            $poster = $media['poster'] ?? $media['link'] ?? '';
+            $poster = $showreel['poster'] ?? $showreel['link'] ?? '';
             $posterSrc = $poster ? '/multimedia/' . $poster : '';
             $posterSrc .= $poster && file_exists(public_path('multimedia/' . $poster)) ? '?v=' . filemtime(public_path('multimedia/' . $poster)) : '';
-            $videoMp4 = $media['links'][0]['link'] ?? '';
+            $videoMp4 = $showreel['links'][0]['link'] ?? '';
             $videoWebm = preg_replace('/\.(mp4|mov|mkv)$/i', '.webm', $videoMp4);
         @endphp
 
