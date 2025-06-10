@@ -258,7 +258,8 @@ const saveSettings = async () => {
       lat: form.value.lat,
       lng: form.value.lng,
       zoom: form.value.zoom,
-      google_key: form.value.google_key
+      google_key: form.value.google_key,
+      google_tm: form.value.google_tm,
     })
 
     ElNotification({
