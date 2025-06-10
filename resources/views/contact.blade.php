@@ -13,8 +13,12 @@
                 </div>
             </div>
             <ul class="contact-list">
-                <li><a href="mailto:{{ $base_config['email'] }}">{{ $base_config['email'] }}</a></li>
-                {{-- <li><a href="tel:{{ preg_replace('/\s+/', '', $base_config['phoneNumber']) }}">{{ $base_config['phoneNumber'] }}</a></li> --}}
+                @if(!empty($contact_data['email']))
+                    <li><a href="mailto:{{ $contact_data['email'] }}">{{ $contact_data['email'] }}</a></li>
+                @endif
+                @if(!empty($contact_data['phone']))
+                    <li><a href="tel:{{ preg_replace('/\s+/', '', $contact_data['phone']) }}">{{ $contact_data['phone'] }}</a></li>
+                @endif
             </ul>
         </div>
         <div class="contact-left" style="display:inline-block">

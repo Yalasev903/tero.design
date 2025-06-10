@@ -53,6 +53,7 @@ class SettingsController extends Controller
         $settings->col_linkedin      = $request->linkedin;
         $settings->col_pinterest     = $request->pinterest;
         $settings->col_youtube       = $request->youtube;
+        $settings->col_google_tm    = $request->google_tm ?? '';
         // $settings->col_seo_title     = $request->seo_title;
         // $settings->col_seo_description = $request->seo_description;
         // $settings->col_seo_keywords  = $request->seo_keywords;

@@ -381,6 +381,9 @@
             });
         });
         </script>
+        @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
+        <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
+        @endif
     @stack('scripts')
 </body>
 </html>
