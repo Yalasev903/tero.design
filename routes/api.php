@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Api\Admin\VueFinderController;
 use App\Http\Controllers\Api\Admin\PageSeoController;
 use App\Http\Controllers\Api\Admin\SettingsController;
+use App\Http\Controllers\Api\Admin\HomeGridController;
 
 Route::post('/admin/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy']);
@@ -26,6 +27,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/settings', [SettingsController::class, 'update']);
     Route::post('/settings/map', [SettingsController::class, 'updateMap']);
 
+    Route::get('/home-grid', [HomeGridController::class, 'index']);
+    Route::post('/home-grid', [HomeGridController::class, 'update']);
 });
 
 Route::get('/user', function (Request $request) {
