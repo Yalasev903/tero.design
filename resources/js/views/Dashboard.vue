@@ -163,7 +163,7 @@ const logout = async () => {
   left: 0;
   right: 0;
   height: 56px;
-  background: #18734f;
+  background: rgb(71, 71, 71);
   color: #fff;
   display: flex;
   align-items: center;
@@ -193,7 +193,7 @@ const logout = async () => {
   width: 220px;
   min-width: 220px;
   height: calc(100vh - 56px);
-  background: #212b23;
+  background: rgb(48, 65, 86);
   color: #e7ffe6;
   padding: 20px 0;
   z-index: 99;
@@ -208,7 +208,7 @@ const logout = async () => {
   margin-bottom: 10px;
 }
 .admin-sidebar a {
-  color: #9af8b2;
+  color:rgb(154, 184, 248);
   text-decoration: none;
   padding: 12px 28px;
   display: flex;
@@ -219,7 +219,7 @@ const logout = async () => {
 }
 .admin-sidebar a.active,
 .admin-sidebar a:hover {
-  background: #275c3b;
+  background:rgb(48, 65, 86);
   color: #fff;
 }
 .admin-content {
@@ -249,7 +249,7 @@ const logout = async () => {
   min-height: 40px;
 }
 .tab {
-  background: #44bc73;
+  background: rgb(95, 111, 131);
   color: #fff;
   border-radius: 8px 8px 0 0;
   padding: 9px 22px 6px 16px;
@@ -262,7 +262,7 @@ const logout = async () => {
   align-items: center;
 }
 .tab.active {
-  background: #19794f;
+  background: rgb(48, 65, 86);
   color: #fff;
 }
 .close-tab {
