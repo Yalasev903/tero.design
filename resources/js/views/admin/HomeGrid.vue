@@ -1,152 +1,155 @@
-<template>
-  <div>
-    <div class="home-grid-panel">
-      <h3>🏠 Home Grid</h3>
+        <template>
+        <div>
+            <div class="home-grid-panel">
+            <h3>🏠 Home Grid</h3>
 
-      <SeoIndex
-        v-model="form"
-        title="SEO Home Grid"
-        :apiUrl="'/api/admin/pages/homegrid-seo'"
-      />
-      <br />
-      <div class="panel-buttons">
-        <el-button type="primary" @click="addRow">
-          <component :is="Plus" /> Добавить строку
-        </el-button>
-        <el-button type="success" @click="saveGrid" :loading="saving">
-          <component :is="Check" /> Сохранить изменения
-        </el-button>
-      </div>
-
-      <div class="grid-rows">
-            <draggable
-            v-model="gridRows"
-            group="rows"
-            animation="220"
-            item-key="id"
-            >
-            <template #item="{ element: row, index: rowIdx }">
-                <div class="grid-row-wrap">
-                <!-- Слой можно оставить для cursor/drag подсветки -->
-                <div class="drag-row-overlay"></div>
-
-                <div class="row-header">
-                    <span class="drag-row" title="Перетащить строку">
-                    <component :is="Menu" />
-                    </span>
-                    <el-button
-                    type="danger"
-                    size="small"
-                    circle
-                    @click.stop="removeRow(rowIdx)"
-                    title="Удалить строку"
-                    >
-                    <component :is="Delete" />
-                    </el-button>
-                </div>
-              <div class="grid-row">
-                <draggable
-                  v-model="row.items"
-                  group="cols"
-                  handle=".grid-item"
-                  animation="180"
-                  item-key="colIdx"
-                  class="columns-draggable"
-                  :style="{display: 'flex', gap: '16px', width: '100%'}"
-                >
-                  <template #item="{ element: col, index: colIdx }">
-                    <div
-                      class="grid-item"
-                      :class="[
-                        col.is_mobile ? 'grid-item-mobile' : 'grid-item-desktop',
-                        col.media?.type ? 'grid-item-' + col.media.type : ''
-                      ]"
-                    >
-                        <div
-                        class="media-thumb"
-                        @click="openPreview(col)"
-                        @mousedown="onMouseDown"
-                        @mouseup="onMouseUp"
-                        >
-                        <div v-if="col.media?.type === 'img' && col.media?.link">
-                          <img
-                            :src="`/multimedia/${col.media.link}`"
-                            alt=""
-                            class="grid-img"
-                            @load="e => setPreviewImgSize(e, rowIdx, colIdx)"
-                          />
-                        </div>
-                        <div v-else-if="col.media?.type === 'video' && col.media?.links?.length">
-                          <video
-                            ref="allGridVideos"
-                            muted
-                            loop
-                            playsinline
-                            preload="auto"
-                            class="grid-video"
-                            :poster="`/multimedia/${col.media.poster || col.media.link}`"
-                            @loadedmetadata="e => setPreviewVideoSize(e, rowIdx, colIdx)"
-                            autoplay
-                          >
-                            <source
-                              v-for="(link, i) in col.media.links || []"
-                              :key="i"
-                              :src="`/multimedia/${link.link}`"
-                              :type="link.mime || 'video/mp4'"
-                            />
-                          </video>
-                        </div>
-                        <div v-else class="empty-media">
-                          <component :is="Picture" />
-                        </div>
-                        <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)" title="Заменить медиа">
-                          <component :is="Edit" />
-                        </span>
-                        <span class="media-name">
-                          <component :is="col.media?.type === 'video' ? VideoCamera : Picture" />
-                          {{ col.title || 'Без названия' }}
-                        </span>
-                      </div>
-                      <div class="item-toolbar">
-                        <el-button
-                          size="small"
-                          circle
-                          :type="col.is_mobile ? 'primary' : 'default'"
-                          @click="col.is_mobile = !col.is_mobile"
-                          title="Показывать на мобильных"
-                        >
-                          <component :is="Iphone" />
-                        </el-button>
-                        <el-button
-                          size="small"
-                          type="danger"
-                          circle
-                          @click="removeCol(rowIdx, colIdx)"
-                          title="Удалить колонку"
-                        >
-                          <component :is="Delete" />
-                        </el-button>
-                      </div>
-                    </div>
-                  </template>
-                </draggable>
-                <el-button
-                  size="small"
-                  circle
-                  type="primary"
-                  class="add-col-btn"
-                  @click="addCol(rowIdx)"
-                  title="Добавить колонку"
-                >
-                  <component :is="Plus" />
+            <SeoIndex
+                v-model="form"
+                title="SEO Home Grid"
+                :apiUrl="'/api/admin/pages/homegrid-seo'"
+            />
+            <br />
+            <div class="panel-buttons">
+                <el-button type="primary" @click="addRow">
+                <el-icon><Plus /></el-icon> Добавить строку
                 </el-button>
-              </div>
+                <el-button type="success" @click="saveGrid" :loading="saving">
+                <el-icon><Check /></el-icon> Сохранить изменения
+                </el-button>
             </div>
-          </template>
-        </draggable>
-      </div>
-    </div>
-  </div>
+
+            <div class="grid-rows">
+                <draggable
+                v-model="gridRows"
+                group="rows"
+                animation="220"
+                item-key="id"
+                >
+                <template #item="{ element: row, index: rowIdx }">
+                    <div class="grid-row-wrap">
+                    <div class="drag-row-overlay"></div>
+                    <div class="row-header">
+                        <span class="drag-row" title="Перетащить строку">
+                        <el-icon><Menu /></el-icon>
+                        </span>
+                        <el-button
+                        type="danger"
+                        size="small"
+                        circle
+                        @click.stop="removeRow(rowIdx)"
+                        title="Удалить строку"
+                        >
+                        <el-icon><Delete /></el-icon>
+                        </el-button>
+                    </div>
+                    <div class="grid-row">
+                        <draggable
+                        v-model="row.items"
+                        group="cols"
+                        handle=".grid-item"
+                        animation="180"
+                        item-key="colIdx"
+                        class="columns-draggable"
+                        :style="{ display: 'flex', gap: '16px', width: '100%' }"
+                        >
+                        <template #item="{ element: col, index: colIdx }">
+                            <div
+                            class="grid-item"
+                            :class="[
+                                col.is_mobile ? 'grid-item-mobile' : 'grid-item-desktop',
+                                col.media?.type ? 'grid-item-' + col.media.type : ''
+                            ]"
+                            >
+                            <div
+                                class="media-thumb"
+                                @click="openPreview(col)"
+                                @mousedown="onMouseDown"
+                                @mouseup="onMouseUp"
+                            >
+                                <div v-if="col.media?.type === 'img' && col.media?.link">
+                                <img
+                                    :src="`/multimedia/${col.media.link}`"
+                                    alt=""
+                                    class="grid-img"
+                                    @load="e => setPreviewImgSize(e, rowIdx, colIdx)"
+                                />
+                                </div>
+                                <div v-else-if="col.media?.type === 'video' && col.media?.links?.length">
+                                <video
+                                    ref="allGridVideos"
+                                    muted
+                                    loop
+                                    playsinline
+                                    preload="auto"
+                                    class="grid-video"
+                                    :poster="`/multimedia/${col.media.poster || col.media.link}`"
+                                    @loadedmetadata="e => setPreviewVideoSize(e, rowIdx, colIdx)"
+                                    autoplay
+                                >
+                                    <source
+                                    v-for="(link, i) in col.media.links || []"
+                                    :key="i"
+                                    :src="`/multimedia/${link.link}`"
+                                    :type="link.mime || 'video/mp4'"
+                                    />
+                                </video>
+                                </div>
+                                <div v-else class="empty-media">
+                                <el-icon><Picture /></el-icon>
+                                </div>
+                                <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)" title="Заменить медиа">
+                                <el-icon><Edit /></el-icon>
+                                </span>
+                                <span class="media-name">
+                                <el-icon v-if="col.media?.type === 'video'">
+                                    <VideoCamera />
+                                </el-icon>
+                                <el-icon v-else>
+                                    <Picture />
+                                </el-icon>
+                                {{ col.title || 'Без названия' }}
+                                </span>
+                            </div>
+                            <div class="item-toolbar">
+                                <el-button
+                                size="small"
+                                circle
+                                :type="col.is_mobile ? 'primary' : 'default'"
+                                @click="col.is_mobile = !col.is_mobile"
+                                title="Показывать на мобильных"
+                                >
+                                <el-icon><Iphone /></el-icon>
+                                </el-button>
+                                <el-button
+                                size="small"
+                                type="danger"
+                                circle
+                                @click="removeCol(rowIdx, colIdx)"
+                                title="Удалить колонку"
+                                >
+                                <el-icon><Delete /></el-icon>
+                                </el-button>
+                            </div>
+                            </div>
+                        </template>
+                        </draggable>
+                        <el-button
+                        size="small"
+                        circle
+                        type="primary"
+                        class="add-col-btn"
+                        @click="addCol(rowIdx)"
+                        title="Добавить колонку"
+                        >
+                        <el-icon><Plus /></el-icon>
+                        </el-button>
+                    </div>
+                    </div>
+                </template>
+                </draggable>
+            </div>
+            </div>
+        </div>
         <el-dialog
         v-model="previewVisible"
         title="Предпросмотр"
