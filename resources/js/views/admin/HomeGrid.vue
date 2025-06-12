@@ -19,31 +19,31 @@
       </div>
 
       <div class="grid-rows">
-        <draggable
-          v-model="gridRows"
-          group="rows"
-          handle=".drag-row-overlay"
-          animation="220"
-          item-key="id"
-        >
-          <template #item="{ element: row, index: rowIdx }">
-            <div class="grid-row-wrap">
-              <div class="drag-row-overlay" style="pointer-events: none;"></div>
+            <draggable
+            v-model="gridRows"
+            group="rows"
+            animation="220"
+            item-key="id"
+            >
+            <template #item="{ element: row, index: rowIdx }">
+                <div class="grid-row-wrap">
+                <!-- Слой можно оставить для cursor/drag подсветки -->
+                <div class="drag-row-overlay"></div>
 
-              <div class="row-header">
-                <span class="drag-row" title="Перетащить строку">
-                  <component :is="Menu" />
-                </span>
-                <el-button
-                  type="danger"
-                  size="small"
-                  circle
-                  @click="removeRow(rowIdx)"
-                  title="Удалить строку"
-                >
-                  <component :is="Delete" />
-                </el-button>
-              </div>
+                <div class="row-header">
+                    <span class="drag-row" title="Перетащить строку">
+                    <component :is="Menu" />
+                    </span>
+                    <el-button
+                    type="danger"
+                    size="small"
+                    circle
+                    @click.stop="removeRow(rowIdx)"
+                    title="Удалить строку"
+                    >
+                    <component :is="Delete" />
+                    </el-button>
+                </div>
               <div class="grid-row">
                 <draggable
                   v-model="row.items"
@@ -147,54 +147,60 @@
       </div>
     </div>
   </div>
-  <el-dialog
-  v-model="previewVisible"
-  title="Предпросмотр"
-  width="50%"
-  class="preview-dialog"
-  :append-to-body="true"
->
-    <div class="preview-modal-content">
-        <div v-if="previewItem?.type === 'img'">
-        <img :src="`/multimedia/${previewItem.link}`" class="preview-img" />
-        </div>
-        <div v-else-if="previewItem?.type === 'video' && previewItem?.links?.length">
-        <video
-            class="preview-video"
-            controls
-            autoplay
-            loop
-            muted
-            playsinline
-            :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
+        <el-dialog
+        v-model="previewVisible"
+        title="Предпросмотр"
+        width="50%"
+        class="preview-dialog"
+        :append-to-body="true"
         >
-            <source
-            v-for="(link, i) in previewItem.links"
-            :key="i"
-            :src="`/multimedia/${link.link}`"
-            :type="link.mime || 'video/mp4'"
-            />
-        </video>
+        <div class="preview-modal-content">
+            <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
+            {{ previewSize.w }} × {{ previewSize.h }} px
+            </div>
+
+            <div v-if="previewItem?.type === 'img'">
+            <img :src="`/multimedia/${previewItem.link}`" class="preview-img" />
+            </div>
+
+            <div v-else-if="previewItem?.type === 'video' && previewItem?.links?.length">
+            <video
+                class="preview-video"
+                controls
+                autoplay
+                loop
+                muted
+                playsinline
+                :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
+            >
+                <source
+                v-for="(link, i) in previewItem.links"
+                :key="i"
+                :src="`/multimedia/${link.link}`"
+                :type="link.mime || 'video/mp4'"
+                />
+            </video>
+            </div>
+
+            <div v-else>
+            <p>Нет данных для предпросмотра</p>
+            </div>
         </div>
-        <div v-else>
-        <p>Нет данных для предпросмотра</p>
-        </div>
-    </div>
-    </el-dialog>
+        </el-dialog>
 
     <!-- VueFinder -->
     <teleport to="body">
       <div v-if="showFileManager" class="finder-modal">
         <div class="finder-homegrid">
-<vue-finder
-  id="vuefinder"
-  :request="{
-    baseUrl: '/api/vuefinder',
-    adapter: 'local',
-    xsrfHeaderName: 'X-XSRF-TOKEN'
-  }"
-  @select="handleFileSelect"
-/>
+            <vue-finder
+            id="vuefinder"
+            :request="{
+                baseUrl: '/api/vuefinder',
+                adapter: 'local',
+                xsrfHeaderName: 'X-XSRF-TOKEN'
+            }"
+            @select="handleFileSelect"
+            />
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
       </div>
@@ -323,12 +329,24 @@ const handleFileSelect = (items) => {
 
   showFileManager.value = false
 }
+const previewSize = ref({ w: null, h: null })
 
 // --- Предпросмотр ---
 const openPreview = async (col) => {
   previewItem.value = col.media || {}
   previewVisible.value = true
+
+  // ждем рендер
   await nextTick()
+
+  const el = document.querySelector('.preview-modal-content video, .preview-modal-content img')
+  if (el?.tagName === 'IMG') {
+    previewSize.value = { w: el.naturalWidth, h: el.naturalHeight }
+  } else if (el?.tagName === 'VIDEO') {
+    previewSize.value = { w: el.videoWidth, h: el.videoHeight }
+  } else {
+    previewSize.value = { w: null, h: null }
+  }
 }
 
 const setPreviewImgSize = (e, rowIdx, colIdx) => {
@@ -392,19 +410,27 @@ onMounted(() => {
   display: block;
   width: 100%;
 }
-/* .grid-row-wrap {
-  margin-bottom: 18px;
+.grid-row-wrap {
+  position: relative;
+  margin-bottom: 25px;
   border: 2px dashed #e3e3e3;
   border-radius: 12px;
   background: #f9f9fb;
   padding: 15px 8px 8px;
-  position: relative;
-  width: 100%;
-} */
-
-.grid-row-wrap {
-  margin-bottom: 25px;
+  cursor: grab;
 }
+
+.grid-row-wrap * {
+  cursor: auto; /* отменяем grab внутри */
+}
+
+.drag-row-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+    pointer-events: none;
+}
+
 .vuedraggable-dragging {
   opacity: 0.9;
   transform: scale(1.01);
