@@ -3,167 +3,203 @@
     <div class="home-grid-panel">
       <h3>🏠 Home Grid</h3>
 
-      <!-- SEO блок для Home Grid -->
       <SeoIndex
         v-model="form"
         title="SEO Home Grid"
         :apiUrl="'/api/admin/pages/homegrid-seo'"
       />
-      <br/>
+      <br />
       <div class="panel-buttons">
-        <el-button type="primary" @click="addRow">Добавить строку</el-button>
-        <el-button type="success" @click="saveGrid" :loading="saving">Сохранить изменения</el-button>
+        <el-button type="primary" @click="addRow">
+          <component :is="Plus" /> Добавить строку
+        </el-button>
+        <el-button type="success" @click="saveGrid" :loading="saving">
+          <component :is="Check" /> Сохранить изменения
+        </el-button>
       </div>
 
-      <draggable
-        v-model="gridRows"
-        group="rows"
-        handle=".drag-row"
-        animation="220"
-        item-key="rowIdx"
-      >
-        <template #item="{ element: row, index: rowIdx }">
-          <div class="grid-row-wrap">
-            <div class="row-header">
-              <span class="drag-row" title="Перетащить строку">↕️</span>
-              <el-button type="danger" size="small" icon="el-icon-delete" @click="removeRow(rowIdx)">Удалить строку</el-button>
-            </div>
-            <draggable
-              :list="row"
-              group="cols"
-              handle=".drag-col"
-              animation="180"
-              class="grid-row"
-              item-key="colIdx"
-            >
-              <template #item="{ element: col, index: colIdx }">
-                <div
-                  class="grid-item"
-                  :class="[
-                    col.is_mobile ? 'grid-item-mobile' : 'grid-item-desktop',
-                    col.media?.type ? 'grid-item-' + col.media.type : ''
-                  ]"
-                >
-                  <span class="drag-col" title="Перетащить ячейку">⬍</span>
-                  <div class="preview-box" @click="openPreview(col)">
-                    <template v-if="col.media?.type === 'img' && col.media?.link">
-                      <img
-                        :src="`/multimedia/${col.media.link}`"
-                        alt=""
-                        class="grid-img"
-                        @load="e => setPreviewImgSize(e, rowIdx, colIdx)"
-                      />
-                      <div
-                        v-if="getImgSize(rowIdx, colIdx).w && getImgSize(rowIdx, colIdx).h"
-                        class="media-size-above"
-                      >
-                        {{ getImgSize(rowIdx, colIdx).w }}×{{ getImgSize(rowIdx, colIdx).h }}
-                      </div>
-                    </template>
-                    <template v-else-if="col.media?.type === 'video' && col.media?.links?.length">
-                      <video
-                        ref="allGridVideos"
-                        muted
-                        loop
-                        playsinline
-                        preload="auto"
-                        class="grid-video"
-                        :poster="`/multimedia/${col.media.poster || col.media.link}`"
-                        @loadedmetadata="e => setPreviewVideoSize(e, rowIdx, colIdx)"
-                        autoplay
-                      >
-                        <source
-                          v-for="(link, i) in col.media.links || []"
-                          :key="i"
-                          :src="`/multimedia/${link.link}`"
-                          :type="link.mime || 'video/mp4'"
-                        />
-                      </video>
-                      <div
-                        v-if="getVideoSize(rowIdx, colIdx).w && getVideoSize(rowIdx, colIdx).h"
-                        class="media-size-above"
-                      >
-                        {{ getVideoSize(rowIdx, colIdx).w }}×{{ getVideoSize(rowIdx, colIdx).h }}
-                      </div>
-                    </template>
-                    <!-- Если нет медиа — ничего не выводим! -->
-                    <span class="zoom-icon" title="Просмотр">🔍</span>
-                  </div>
-                  <el-button
-                    type="primary"
-                    size="small"
-                    icon="el-icon-upload"
-                    @click="openFileManager(rowIdx, colIdx)"
-                  >Медиа</el-button>
-                  <el-button type="danger" size="small" @click="removeCol(rowIdx, colIdx)">Удалить</el-button>
-                </div>
-              </template>
-            </draggable>
-            <div class="add-col">
-              <el-button type="primary" size="small" @click="addCol(rowIdx)">+ Колонка</el-button>
-            </div>
-          </div>
-        </template>
-      </draggable>
-    </div>
+      <div class="grid-rows">
+        <draggable
+          v-model="gridRows"
+          group="rows"
+          handle=".drag-row-overlay"
+          animation="220"
+          item-key="id"
+        >
+          <template #item="{ element: row, index: rowIdx }">
+            <div class="grid-row-wrap">
+              <div class="drag-row-overlay" style="pointer-events: none;"></div>
 
-    <!-- Модалка превью -->
-    <el-dialog
-      v-model="showPreview"
-      width="auto"
-      title="Превью"
-      :close-on-click-modal="true"
-      class="preview-dialog"
-      @closed="onPreviewClosed"
-    >
-      <div class="preview-modal-content">
-        <div v-if="modalSize.w && modalSize.h" class="media-size-modal">
-          {{ modalSize.w }}×{{ modalSize.h }}
+              <div class="row-header">
+                <span class="drag-row" title="Перетащить строку">
+                  <component :is="Menu" />
+                </span>
+                <el-button
+                  type="danger"
+                  size="small"
+                  circle
+                  @click="removeRow(rowIdx)"
+                  title="Удалить строку"
+                >
+                  <component :is="Delete" />
+                </el-button>
+              </div>
+              <div class="grid-row">
+                <draggable
+                  v-model="row.items"
+                  group="cols"
+                  handle=".grid-item"
+                  animation="180"
+                  item-key="colIdx"
+                  class="columns-draggable"
+                  :style="{display: 'flex', gap: '16px', width: '100%'}"
+                >
+                  <template #item="{ element: col, index: colIdx }">
+                    <div
+                      class="grid-item"
+                      :class="[
+                        col.is_mobile ? 'grid-item-mobile' : 'grid-item-desktop',
+                        col.media?.type ? 'grid-item-' + col.media.type : ''
+                      ]"
+                    >
+                        <div
+                        class="media-thumb"
+                        @click="openPreview(col)"
+                        @mousedown="onMouseDown"
+                        @mouseup="onMouseUp"
+                        >
+                        <div v-if="col.media?.type === 'img' && col.media?.link">
+                          <img
+                            :src="`/multimedia/${col.media.link}`"
+                            alt=""
+                            class="grid-img"
+                            @load="e => setPreviewImgSize(e, rowIdx, colIdx)"
+                          />
+                        </div>
+                        <div v-else-if="col.media?.type === 'video' && col.media?.links?.length">
+                          <video
+                            ref="allGridVideos"
+                            muted
+                            loop
+                            playsinline
+                            preload="auto"
+                            class="grid-video"
+                            :poster="`/multimedia/${col.media.poster || col.media.link}`"
+                            @loadedmetadata="e => setPreviewVideoSize(e, rowIdx, colIdx)"
+                            autoplay
+                          >
+                            <source
+                              v-for="(link, i) in col.media.links || []"
+                              :key="i"
+                              :src="`/multimedia/${link.link}`"
+                              :type="link.mime || 'video/mp4'"
+                            />
+                          </video>
+                        </div>
+                        <div v-else class="empty-media">
+                          <component :is="Picture" />
+                        </div>
+                        <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)" title="Заменить медиа">
+                          <component :is="Edit" />
+                        </span>
+                        <span class="media-name">
+                          <component :is="col.media?.type === 'video' ? VideoCamera : Picture" />
+                          {{ col.title || 'Без названия' }}
+                        </span>
+                      </div>
+                      <div class="item-toolbar">
+                        <el-button
+                          size="small"
+                          circle
+                          :type="col.is_mobile ? 'primary' : 'default'"
+                          @click="col.is_mobile = !col.is_mobile"
+                          title="Показывать на мобильных"
+                        >
+                          <component :is="Iphone" />
+                        </el-button>
+                        <el-button
+                          size="small"
+                          type="danger"
+                          circle
+                          @click="removeCol(rowIdx, colIdx)"
+                          title="Удалить колонку"
+                        >
+                          <component :is="Delete" />
+                        </el-button>
+                      </div>
+                    </div>
+                  </template>
+                </draggable>
+                <el-button
+                  size="small"
+                  circle
+                  type="primary"
+                  class="add-col-btn"
+                  @click="addCol(rowIdx)"
+                  title="Добавить колонку"
+                >
+                  <component :is="Plus" />
+                </el-button>
+              </div>
+            </div>
+          </template>
+        </draggable>
+      </div>
+    </div>
+  </div>
+  <el-dialog
+  v-model="previewVisible"
+  title="Предпросмотр"
+  width="50%"
+  class="preview-dialog"
+  :append-to-body="true"
+>
+    <div class="preview-modal-content">
+        <div v-if="previewItem?.type === 'img'">
+        <img :src="`/multimedia/${previewItem.link}`" class="preview-img" />
         </div>
-        <template v-if="previewType === 'img'">
-          <img
-            :src="previewSrc"
-            class="preview-img"
-            ref="previewImg"
-            @load="updateModalImgSize"
-            style="max-width:70vw;max-height:60vh;display:block;margin:0 auto;"
-          />
-        </template>
-        <template v-else>
-          <video
-            ref="previewVideo"
+        <div v-else-if="previewItem?.type === 'video' && previewItem?.links?.length">
+        <video
             class="preview-video"
             controls
             autoplay
+            loop
+            muted
             playsinline
-            style="max-width:70vw;max-height:60vh;display:block;margin:0 auto;"
-            @loadedmetadata="updateModalVideoSize"
-          >
-            <source :src="previewSrc" type="video/mp4" />
-          </video>
-        </template>
-      </div>
+            :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
+        >
+            <source
+            v-for="(link, i) in previewItem.links"
+            :key="i"
+            :src="`/multimedia/${link.link}`"
+            :type="link.mime || 'video/mp4'"
+            />
+        </video>
+        </div>
+        <div v-else>
+        <p>Нет данных для предпросмотра</p>
+        </div>
+    </div>
     </el-dialog>
 
-    <!-- VueFinder: файловый менеджер -->
+    <!-- VueFinder -->
     <teleport to="body">
       <div v-if="showFileManager" class="finder-modal">
-        <div class="finder-container">
-          <vue-finder
-            id="vuefinder"
-            :request="{
-              baseUrl: '/api/vuefinder',
-              adapter: 'local',
-              xsrfHeaderName: 'X-XSRF-TOKEN'
-            }"
-            @select="handleFileSelect"
-          />
+        <div class="finder-homegrid">
+<vue-finder
+  id="vuefinder"
+  :request="{
+    baseUrl: '/api/vuefinder',
+    adapter: 'local',
+    xsrfHeaderName: 'X-XSRF-TOKEN'
+  }"
+  @select="handleFileSelect"
+/>
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
       </div>
     </teleport>
-  </div>
-</template>
+    </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
@@ -171,110 +207,43 @@ import draggable from 'vuedraggable'
 import SeoIndex from '@/components/admin/SeoIndex.vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'
+import {
+  Plus,
+  Check,
+  Delete,
+  Edit,
+  Picture,
+  Menu,
+  Iphone,
+  VideoCamera
+} from '@element-plus/icons-vue'
 
-// --------------------------
-// Вся сетка (Grid)
+// --- Переменные ---
 const gridRows = ref([])
 const saving = ref(false)
+const form = ref({ seo_title: '', seo_description: '', seo_keywords: [] })
 
-// Сохраняем размеры медиа для превью в сетке
+const previewVisible = ref(false)
+const previewItem = ref({})
+
+const showFileManager = ref(false)
+const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
+
 const imgSizes = ref({})
 const videoSizes = ref({})
 const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
 
-// Устанавливаем размеры для изображений (сеточное превью)
-const setPreviewImgSize = (e, rowIdx, colIdx) => {
-  imgSizes.value[makeKey(rowIdx, colIdx)] = {
-    w: e.target.naturalWidth,
-    h: e.target.naturalHeight
-  }
-}
-const setPreviewVideoSize = (e, rowIdx, colIdx) => {
-  videoSizes.value[makeKey(rowIdx, colIdx)] = {
-    w: e.target.videoWidth,
-    h: e.target.videoHeight
-  }
-}
-const getImgSize = (rowIdx, colIdx) => imgSizes.value[makeKey(rowIdx, colIdx)] || {w: null, h: null}
-const getVideoSize = (rowIdx, colIdx) => videoSizes.value[makeKey(rowIdx, colIdx)] || {w: null, h: null}
-
-// Файловый менеджер
-const showFileManager = ref(false)
-const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
-const openFileManager = (rowIdx, colIdx) => {
-  selectedCell.value = { rowIdx, colIdx }
-  showFileManager.value = true
-}
-const handleFileSelect = (items) => {
-  if (!items.length) return
-  const file = items[0]
-  let type = 'img'
-  if (file.mime?.includes('video')) type = 'video'
-  const col = gridRows.value[selectedCell.value.rowIdx][selectedCell.value.colIdx]
-  if (type === 'img') {
-    col.media = {
-      type: 'img',
-      link: file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
-    }
-  } else {
-    col.media = {
-      type: 'video',
-      poster: file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, ''),
-      links: [
-        {
-          link: file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, ''),
-          mime: file.mime || 'video/mp4'
-        }
-      ]
-    }
-  }
-  showFileManager.value = false
-}
-
-// Grid CRUD
+// --- Загрузка данных ---
 const loadGrid = async () => {
   const { data } = await axios.get('/api/admin/home-grid')
-  // Только при загрузке с сервера убираем пустые строки и строки без валидного контента
-  gridRows.value = data.filter(
-    row =>
-      Array.isArray(row) &&
-      row.length > 0 &&
-      row.some(col =>
-        (col.project_id && col.project_id !== 0) ||
-        (col.media && (col.media.link || (col.media.links && col.media.links.length)))
-      )
-  )
+  gridRows.value = data
+    .filter(r => Array.isArray(r) && r.length > 0)
+    .map((row, i) => ({
+      id: Date.now() + i,
+      items: row
+    }))
 }
 
-const addRow = () => gridRows.value.unshift([])
-
-const removeRow = (rowIdx) => gridRows.value.splice(rowIdx, 1)
-const addCol = (rowIdx) => {
-  gridRows.value[rowIdx].push({
-    project_id: null,
-    media: {},
-    is_mobile: false,
-    title: 'Без названия',
-    text2: '',
-  })
-}
-const removeCol = (rowIdx, colIdx) => gridRows.value[rowIdx].splice(colIdx, 1)
-
-const saveGrid = async () => {
-  saving.value = true
-  try {
-    await axios.post('/api/admin/home-grid', { grid: gridRows.value })
-    ElNotification({ title: 'Успешно', message: 'Сетка сохранена', type: 'success' })
-    await loadGrid() // снова фильтруем только из API
-  } catch {
-    ElNotification({ title: 'Ошибка', message: 'Ошибка при сохранении', type: 'error' })
-  }
-  saving.value = false
-}
-
-
-// SEO
-const form = ref({ seo_title: '', seo_description: '', seo_keywords: [] })
 const loadSeo = async () => {
   const res = await axios.get('/api/admin/pages/homegrid-seo')
   form.value.seo_title = res.data.seo_title || ''
@@ -284,51 +253,105 @@ const loadSeo = async () => {
     : []
 }
 
-// ---- Модалка ----
-const showPreview = ref(false)
-const previewSrc = ref('')
-const previewType = ref('img')
-const previewImg = ref(null)
-const previewVideo = ref(null)
-const modalSize = ref({ w: null, h: null })
+// --- Grid управление ---
+const addRow = () => {
+  gridRows.value.unshift({
+    id: Date.now() + Math.random(),
+    items: []
+  })
+}
 
-const openPreview = async (col) => {
-  modalSize.value = { w: null, h: null }
-  if (col.media?.type === 'video' && col.media.links?.length) {
-    previewType.value = 'video'
-    previewSrc.value = `/multimedia/${col.media.links[0].link}`
+const removeRow = (rowIdx) => gridRows.value.splice(rowIdx, 1)
+
+const addCol = (rowIdx) => {
+  gridRows.value[rowIdx].items.push({
+    project_id: null,
+    media: {},
+    is_mobile: false,
+    title: 'Без названия',
+    text2: '',
+  })
+}
+
+const removeCol = (rowIdx, colIdx) => {
+  gridRows.value[rowIdx].items.splice(colIdx, 1)
+}
+
+const saveGrid = async () => {
+  saving.value = true
+  try {
+    const payload = gridRows.value.map(r => r.items)
+    await axios.post('/api/admin/home-grid', { grid: payload })
+    ElNotification({ title: 'Успешно', message: 'Сетка сохранена', type: 'success' })
+    await loadGrid()
+  } catch {
+    ElNotification({ title: 'Ошибка', message: 'Ошибка при сохранении', type: 'error' })
+  }
+  saving.value = false
+}
+
+// --- Медиа-файлы ---
+const openFileManager = (rowIdx, colIdx) => {
+      console.log('openFileManager', rowIdx, colIdx)
+  selectedCell.value = { rowIdx, colIdx }
+  showFileManager.value = true
+}
+
+const handleFileSelect = (items) => {
+  if (!items.length) return
+  const file = items[0]
+  let type = 'img'
+  if (file.mime?.includes('video')) type = 'video'
+
+  const row = gridRows.value[selectedCell.value.rowIdx]
+  const col = row.items[selectedCell.value.colIdx]
+
+  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
+
+  if (type === 'img') {
+    col.media = {
+      type: 'img',
+      link: path
+    }
   } else {
-    previewType.value = 'img'
-    previewSrc.value = `/multimedia/${col.media.link}`
+    col.media = {
+      type: 'video',
+      poster: path,
+      links: [{ link: path, mime: file.mime || 'video/mp4' }]
+    }
   }
-  showPreview.value = true
+
+  showFileManager.value = false
+}
+
+// --- Предпросмотр ---
+const openPreview = async (col) => {
+  previewItem.value = col.media || {}
+  previewVisible.value = true
   await nextTick()
-  // Автовоспроизведение видео
-  if (previewType.value === 'video' && previewVideo.value) {
-    try {
-      previewVideo.value.currentTime = 0
-      previewVideo.value.play()
-    } catch {}
+}
+
+const setPreviewImgSize = (e, rowIdx, colIdx) => {
+  imgSizes.value[makeKey(rowIdx, colIdx)] = {
+    w: e.target.naturalWidth,
+    h: e.target.naturalHeight
   }
 }
 
-// Для модалки: размеры медиа
-const updateModalImgSize = () => {
-  if (previewImg.value) {
-    modalSize.value.w = previewImg.value.naturalWidth
-    modalSize.value.h = previewImg.value.naturalHeight
+const setPreviewVideoSize = (e, rowIdx, colIdx) => {
+  videoSizes.value[makeKey(rowIdx, colIdx)] = {
+    w: e.target.videoWidth,
+    h: e.target.videoHeight
   }
-}
-const updateModalVideoSize = () => {
-  if (previewVideo.value) {
-    modalSize.value.w = previewVideo.value.videoWidth
-    modalSize.value.h = previewVideo.value.videoHeight
-  }
-}
-const onPreviewClosed = () => {
-  if (previewVideo.value) previewVideo.value.pause()
 }
 
+const getImgSize = (rowIdx, colIdx) =>
+  imgSizes.value[makeKey(rowIdx, colIdx)] || { w: null, h: null }
+
+const getVideoSize = (rowIdx, colIdx) =>
+  videoSizes.value[makeKey(rowIdx, colIdx)] || { w: null, h: null }
+
+// --- Инициализация ---
 onMounted(() => {
   loadGrid()
   loadSeo()
@@ -349,6 +372,160 @@ onMounted(() => {
 .finder-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); z-index: 9999; display: flex; justify-content: center; align-items: center; }
 .finder-container { width: 90%; height: 90%; background: #fff; border-radius: 8px; overflow: hidden; position: relative; }
 .close-btn { position: absolute; top: 10px; right: 15px; background: #e00; color: #fff; padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; z-index: 10; }
+
+.row-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 8px;
+  background: #f2f2f2;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: grab;
+  user-select: none;
+}
+.row-header:hover {
+  background: #eaeaea;
+}
+
+.grid-rows {
+  display: block;
+  width: 100%;
+}
+/* .grid-row-wrap {
+  margin-bottom: 18px;
+  border: 2px dashed #e3e3e3;
+  border-radius: 12px;
+  background: #f9f9fb;
+  padding: 15px 8px 8px;
+  position: relative;
+  width: 100%;
+} */
+
+.grid-row-wrap {
+  margin-bottom: 25px;
+}
+.vuedraggable-dragging {
+  opacity: 0.9;
+  transform: scale(1.01);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.grid-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  min-height: 150px;
+  width: 100%;
+}
+.columns-draggable {
+  display: flex;
+  gap: 16px;
+  width: 100%;
+}
+
+/* Иконка редактировать в верхнем правом углу превью */
+.media-thumb {
+  position: relative;
+  width: 180px;
+  height: 120px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #eee;
+  margin: 0 auto 10px auto;
+  cursor: pointer;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.media-thumb img,
+.media-thumb video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.empty-media {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 38px;
+  color: #ccc;
+  background: #f5f5f7;
+}
+.edit-icon {
+  position: absolute;
+  top: 7px;
+  right: 8px;
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.13);
+  font-size: 18px;
+  padding: 4px;
+  color: #409EFF;
+  cursor: pointer;
+  transition: background 0.2s;
+  z-index: 2;
+}
+.edit-icon:hover { background: #f3f7ff; }
+
+.media-name {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.55);
+  color: #fff;
+  font-size: 13px;
+  padding: 3px 12px 3px 7px;
+  border-radius: 0 9px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.item-toolbar {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 7px 0 2px 0;
+}
+
+.add-col-btn {
+  margin-top: 4px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* drag-row area - иконка меню */
+.drag-row {
+  cursor: grab;
+  font-size: 20px;
+  color: #b1b1b1;
+  margin-right: 11px;
+  vertical-align: middle;
+}
+
+.drag-row-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  cursor: grab;
+}
+
+.grid-item {
+    position: relative;
+    z-index: 10;
+    cursor: grab;
+  /* подсветка при drag можно добавить если хочешь */
+}
 
 /* Размеры над превью в сетке */
 .media-size-above {
@@ -376,6 +553,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
 }
 .media-size-modal {
   margin-bottom: 6px;
@@ -389,11 +567,12 @@ onMounted(() => {
 }
 .preview-img,
 .preview-video {
-  box-shadow: 0 3px 16px rgba(0,0,0,0.18);
+  max-width: 100%;
+  max-height: calc(100vh - 140px); /* чтобы не вылазило за экран */
+  object-fit: contain;
+  background: #000;
   border-radius: 10px;
-  max-width: 70vw;
-  max-height: 60vh;
-  background: #111;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.18);
 }
 @media (max-width: 900px) {
   .preview-img, .preview-video {

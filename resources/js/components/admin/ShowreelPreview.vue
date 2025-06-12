@@ -55,6 +55,18 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'
+import {
+  Plus,
+  Check,
+  Delete,
+  Edit,
+  Picture,
+  Menu,
+  Iphone,
+  VideoCamera
+} from '@element-plus/icons-vue'
+import VueFinder from 'vuefinder'
+
 
 const model = reactive({ poster: '', video: '' })
 const currentType = ref('poster')
