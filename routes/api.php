@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\Admin\VueFinderController;
 use App\Http\Controllers\Api\Admin\PageSeoController;
 use App\Http\Controllers\Api\Admin\SettingsController;
 use App\Http\Controllers\Api\Admin\HomeGridController;
+use App\Http\Controllers\Api\Admin\TblServiceController;
 
 Route::post('/admin/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy']);
@@ -29,6 +30,15 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
     Route::get('/home-grid', [HomeGridController::class, 'index']);
     Route::post('/home-grid', [HomeGridController::class, 'update']);
+
+
+    Route::get('tbl-services', [TblServiceController::class, 'index']);
+    Route::post('tbl-services', [TblServiceController::class, 'store']);
+    Route::get('tbl-services/{id}', [TblServiceController::class, 'show']);
+    Route::put('tbl-services/{id}', [TblServiceController::class, 'update']);
+    Route::post('tbl-services/reorder', [TblServiceController::class, 'reorder']);
+    Route::post('tbl-services/reorder', [TblServiceController::class, 'reorder']);
+    Route::delete('tbl-services/{id}', [TblServiceController::class, 'destroy']);
 });
 
 Route::get('/user', function (Request $request) {

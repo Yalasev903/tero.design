@@ -1,7 +1,10 @@
         <template>
         <div>
             <div class="home-grid-panel">
-            <h3>🏠 Home Grid</h3>
+                <a href="/" target="_blank" class="inline-flex items-center text-blue-600 hover:underline text-lg font-medium mb-4">
+                    <el-icon class="mr-1"><House /></el-icon>
+                    Открыть главную страницу
+                    </a>
 
             <SeoIndex
                 v-model="form"
@@ -224,7 +227,8 @@ import {
   Picture,
   Menu,
   Iphone,
-  VideoCamera
+  VideoCamera,
+  House
 } from '@element-plus/icons-vue'
 
 // --- Переменные ---

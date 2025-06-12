@@ -2,15 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Service;
+use App\Models\TblService;
 
 class ServiceController extends Controller
 {
     public function index()
     {
-        // Сортируем по position, потом по id (если понадобится)
-        $service_list = Service::orderBy('position')->get();
-
+        $service_list = TblService::orderBy('position')->get();
         return view('services', compact('service_list'));
     }
 }
