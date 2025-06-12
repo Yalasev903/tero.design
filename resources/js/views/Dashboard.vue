@@ -61,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, markRaw } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
@@ -78,11 +78,11 @@ const showSettings = ref(false)
 const tabsMode = ref(true)
 
 const menuItems = [
-  { path: '/dashboard', label: 'Панель управления', icon: '📊', component: DashboardIndex },
-  { path: '/home-grid', label: 'Home Grid', icon: '🏠', component: HomeGrid },
-  { path: '/projects', label: 'Проекты', icon: '📂', component: Projects },
-  { path: '/workflow', label: 'Workflow', icon: '🔁', component: Workflow },
-  { path: '/services', label: 'Услуги', icon: '🛠️', component: Services }
+  { path: '/dashboard', label: 'Панель управления', icon: '📊', component: markRaw(DashboardIndex) },
+  { path: '/home-grid', label: 'Home Grid', icon: '🏠', component: markRaw(HomeGrid) },
+  { path: '/projects', label: 'Проекты', icon: '📂', component: markRaw(Projects) },
+  { path: '/workflow', label: 'Workflow', icon: '🔁', component: markRaw(Workflow) },
+  { path: '/services', label: 'Услуги', icon: '🛠️', component: markRaw(Services) }
 ]
 
 // tabs — массив открытых вкладок
