@@ -33,8 +33,9 @@
                 muted
                 playsinline
                 style="max-width: 180px; max-height: 120px; cursor: pointer;"
+                :key="service.col_video"
               >
-                <source :src="videoUrl(service.col_video)" type="video/mp4" />
+                <source :src="videoUrl(service.col_video)" :type="getVideoMimeType(service.col_video)" />
                 Ваш браузер не поддерживает видео.
               </video>
               <div v-else class="no-video">Нет видео</div>
@@ -50,49 +51,66 @@
 
     <p v-else>Нет данных</p>
 
-    <!-- Модальное окно добавления услуги -->
-        <el-dialog
-        v-model="addModalVisible"
-        title="Добавить новую услугу"
-        width="60%"
-        :before-close="handleBeforeClose"
-        destroy-on-close
-        append-to-body
-        >
+    <!-- Модалка добавления услуги -->
+    <el-dialog
+      v-model="addModalVisible"
+      title="Добавить новую услугу"
+      width="60%"
+      :before-close="handleBeforeClose"
+      destroy-on-close
+      append-to-body
+    >
       <el-form :model="newService" label-position="top" ref="addForm">
         <el-form-item label="Название услуги" required>
           <el-input v-model="newService.col_title" placeholder="Введите название услуги" />
         </el-form-item>
 
-        <el-form-item label="Описание услуги">
-          <textarea
-            id="tinymce-editor"
-            style="min-height: 200px"
-            placeholder="Описание услуги (редактор выключен)"
-          ></textarea>
+        <el-form-item label="Описание услуги" required>
+          <el-input
+            type="textarea"
+            v-model="newService.col_description"
+            placeholder="Введите описание услуги"
+            :rows="6"
+          />
         </el-form-item>
 
-        <el-form-item label="Видео или изображение">
+        <el-form-item label="Видео">
           <div class="media-preview" @click="openFileManager">
+            <!-- Выводим реальные размеры над медиа -->
+            <div
+              class="media-size"
+              v-if="mediaPreviewRealSize.width && mediaPreviewRealSize.height"
+              style="margin-bottom: 5px; font-weight: 600; color: #333;"
+            >
+              Размер: {{ mediaPreviewRealSize.width }} × {{ mediaPreviewRealSize.height }} px
+            </div>
+
             <template v-if="mediaPreview.type === 'video'">
               <video
+                ref="mediaPreviewVideoRef"
                 autoplay
                 loop
                 muted
                 playsinline
                 style="max-width: 100%; max-height: 180px; border-radius: 8px; cursor: pointer;"
+                :key="mediaPreview.link"
+                @loadedmetadata="onLoadedMetadataMediaPreview"
               >
-                <source :src="mediaPreview.link" type="video/mp4" />
+                <source :src="mediaPreview.link" :type="getVideoMimeType(mediaPreview.link)" />
                 Ваш браузер не поддерживает видео.
               </video>
             </template>
+
             <template v-else-if="mediaPreview.type === 'img'">
               <img
+                ref="mediaPreviewImgRef"
                 :src="mediaPreview.link"
-                alt="preview"
+                alt="Preview"
                 style="max-width: 100%; max-height: 180px; border-radius: 8px; cursor: pointer;"
+                @load="onLoadedMetadataMediaPreview"
               />
             </template>
+
             <template v-else>
               <div class="no-media">Кликните для выбора видео или изображения</div>
             </template>
@@ -110,22 +128,37 @@
     <el-dialog
       :visible.sync="previewVisible"
       title="Предпросмотр видео"
-      width="50%"
-      :before-close="() => { previewVisible.value = false }"
+      width="60%"
+      :before-close="closePreview"
       append-to-body
+      center
     >
-      <video
-        v-if="previewVideo"
-        controls
-        autoplay
-        loop
-        muted
-        playsinline
-        style="width: 100%;"
-      >
-        <source :src="previewVideo" type="video/mp4" />
-        Ваш браузер не поддерживает видео.
-      </video>
+      <div v-if="previewVisible && previewVideo" class="preview-content">
+        <!-- Реальный размер видео -->
+        <div class="video-size" v-if="previewRealSize.width && previewRealSize.height" style="margin-bottom: 5px;">
+          Реальный размер: {{ previewRealSize.width }} × {{ previewRealSize.height }} px
+        </div>
+
+        <video
+          ref="previewVideoRef"
+          controls
+          autoplay
+          loop
+          muted
+          playsinline
+          :style="{
+            width: previewDisplaySize.width + 'px',
+            height: previewDisplaySize.height + 'px',
+            borderRadius: '8px',
+            display: 'block',
+            margin: '10px auto 0'
+          }"
+          @loadedmetadata="onLoadedMetadata"
+        >
+          <source :src="previewVideo" :type="getVideoMimeType(previewVideo)" />
+          Ваш браузер не поддерживает видео.
+        </video>
+      </div>
       <p v-else>Видео отсутствует</p>
     </el-dialog>
 
@@ -150,7 +183,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import draggable from 'vuedraggable'
 import axios from 'axios'
 import { ElNotification, ElMessageBox } from 'element-plus'
@@ -161,6 +194,18 @@ const saving = ref(false)
 
 const previewVisible = ref(false)
 const previewVideo = ref('')
+const previewVideoRef = ref(null)
+
+// Новые реальное и отображаемое размеры видео
+const previewRealSize = ref({ width: 0, height: 0 })
+const previewDisplaySize = ref({ width: 0, height: 0 })
+
+const previewVideoExtension = ref('')
+
+const mediaPreviewVideoSize = ref({ width: 0, height: 0 })
+const mediaPreviewRealSize = ref({ width: 0, height: 0 })
+const mediaPreviewVideoRef = ref(null)
+const mediaPreviewImgRef = ref(null)
 
 const addModalVisible = ref(false)
 const adding = ref(false)
@@ -180,10 +225,9 @@ const showFileManager = ref(false)
 
 const handleBeforeClose = () => {
   addModalVisible.value = false
-  // destroyTinyMCE() можно включить при необходимости
 }
 
-const fetchServices = async () => {
+async function fetchServices() {
   try {
     const res = await axios.get('/api/admin/tbl-services')
     services.value = res.data
@@ -204,7 +248,7 @@ const fetchServices = async () => {
   }
 }
 
-const saveServices = async () => {
+async function saveServices() {
   saving.value = true
   try {
     const payload = services.value.map((s, i) => ({
@@ -220,7 +264,7 @@ const saveServices = async () => {
   saving.value = false
 }
 
-const deleteService = async (id) => {
+async function deleteService(id) {
   try {
     await ElMessageBox.confirm('Удалить услугу?', 'Внимание', {
       confirmButtonText: 'Удалить',
@@ -237,69 +281,168 @@ const deleteService = async (id) => {
   }
 }
 
-const videoUrl = (video) => (video ? `/multimedia/${video}` : '')
+const videoUrl = (video) => {
+  if (!video) return ''
+  if (video.startsWith('/multimedia/')) return video
+  return `/multimedia/${video}`
+}
 
-const openPreview = (video) => {
+function getVideoExtension(url) {
+  if (!url) return ''
+  const cleanUrl = url.split('?')[0]
+  return cleanUrl.split('.').pop().toLowerCase()
+}
+
+function getVideoMimeType(url) {
+  if (!url) return 'video/mp4'
+  const ext = getVideoExtension(url)
+  switch (ext) {
+    case 'mp4': return 'video/mp4'
+    case 'webm': return 'video/webm'
+    case 'ogg':
+    case 'ogv': return 'video/ogg'
+    default: return 'video/mp4'
+  }
+}
+
+function openPreview(video) {
   const url = videoUrl(video)
   if (!url) return
   previewVideo.value = url
+  previewVideoExtension.value = getVideoExtension(url) || ''
   previewVisible.value = true
+  previewRealSize.value = { width: 0, height: 0 }
+  previewDisplaySize.value = { width: 0, height: 0 }
+
+  nextTick(() => {
+    if (previewVideoRef.value) {
+      previewVideoRef.value.load()
+      previewVideoRef.value.play().catch(() => {})
+    }
+  })
 }
 
-const openAddModal = () => {
+function onLoadedMetadata(event) {
+  const video = event.target
+
+  const realW = video.videoWidth
+  const realH = video.videoHeight
+
+  previewRealSize.value = { width: realW, height: realH }
+
+  const maxWidth = window.innerWidth * 0.6
+  const maxHeight = window.innerHeight * 0.6
+  const ratio = Math.min(maxWidth / realW, maxHeight / realH, 1)
+  const displayW = Math.round(realW * ratio)
+  const displayH = Math.round(realH * ratio)
+
+  previewDisplaySize.value = { width: displayW, height: displayH }
+}
+
+function onLoadedMetadataMediaPreview(event) {
+  const el = event.target
+
+  let realW, realH
+
+  if (el.tagName === 'VIDEO') {
+    realW = el.videoWidth
+    realH = el.videoHeight
+  } else if (el.tagName === 'IMG') {
+    realW = el.naturalWidth
+    realH = el.naturalHeight
+  }
+
+  mediaPreviewRealSize.value = { width: realW, height: realH }
+
+  // Для превью в форме масштабируем под max 320x180
+  const maxWidth = 320
+  const maxHeight = 180
+  const ratio = Math.min(maxWidth / realW, maxHeight / realH, 1)
+  const displayW = Math.round(realW * ratio)
+  const displayH = Math.round(realH * ratio)
+
+  mediaPreviewVideoSize.value = { width: displayW, height: displayH }
+}
+
+function closePreview() {
+  previewVisible.value = false
+  previewVideo.value = ''
+  previewRealSize.value = { width: 0, height: 0 }
+  previewDisplaySize.value = { width: 0, height: 0 }
+  previewVideoExtension.value = ''
+}
+
+function openAddModal() {
   addModalVisible.value = true
   newService.value = { col_title: '', col_description: '', col_video: '' }
   mediaPreview.value = { type: '', link: '' }
-  // Можно раскомментировать для TinyMCE
-  // nextTick(() => initTinyMCE())
+  mediaPreviewRealSize.value = { width: 0, height: 0 }
+  mediaPreviewVideoSize.value = { width: 0, height: 0 }
 }
 
-const submitNewService = () => {
-  // Пока без TinyMCE, описание пустое
-  // const editorContent = tinymce.get('tinymce-editor')?.getContent() || ''
-  // newService.value.col_description = editorContent
-
+async function submitNewService() {
   if (!newService.value.col_title.trim()) {
     ElNotification({ title: 'Ошибка', message: 'Название услуги обязательно', type: 'error' })
     return
   }
 
   adding.value = true
-  axios.post('/api/admin/tbl-services', {
-    col_title: newService.value.col_title,
-    col_description: newService.value.col_description,
-    col_video: mediaPreview.value.type === 'video' ? mediaPreview.value.link.replace(/^\/multimedia\//, '') : '',
-  })
-    .then(() => {
-      ElNotification({ title: 'Успешно', message: 'Услуга добавлена', type: 'success' })
-      addModalVisible.value = false
-      fetchServices()
-      // destroyTinyMCE()
-    })
-    .catch(() => {
+
+  try {
+    const payload = {
+      col_title: newService.value.col_title,
+      col_description: newService.value.col_description,
+      col_video: mediaPreview.value.type === 'video' ? mediaPreview.value.link.replace(/^\/?multimedia\//, '') : '',
+    }
+
+    await axios.post('/api/admin/tbl-services', payload)
+
+    ElNotification({ title: 'Успешно', message: 'Услуга добавлена', type: 'success' })
+    addModalVisible.value = false
+    await fetchServices()
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      const errors = error.response.data.errors
+      let errorMessages = ''
+      for (const key in errors) {
+        if (errors.hasOwnProperty(key)) {
+          errorMessages += errors[key].join(' ') + ' '
+        }
+      }
+      ElNotification({ title: 'Ошибка валидации', message: errorMessages, type: 'error' })
+    } else {
       ElNotification({ title: 'Ошибка', message: 'Не удалось добавить услугу', type: 'error' })
-    })
-    .finally(() => {
-      adding.value = false
-    })
+    }
+  } finally {
+    adding.value = false
+  }
 }
 
-const openFileManager = () => {
+function openFileManager() {
   showFileManager.value = true
 }
 
-const handleFileSelect = (items) => {
+function handleFileSelect(items) {
   if (!items.length) return
   const file = items[0]
-  let type = 'img'
-  if (file.mime?.includes('video')) type = 'video'
-  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
-  mediaPreview.value = { type, link: `/multimedia/${path}` }
-  showFileManager.value = false
-}
 
-const destroyTinyMCE = () => {
-  if (window.tinymce) window.tinymce.remove('#tinymce-editor')
+  let type = ''
+  const ext = file.path ? file.path.split('.').pop().toLowerCase() : ''
+  if (file.mime && file.mime.startsWith('video/')) type = 'video'
+  else if (file.mime && file.mime.startsWith('image/')) type = 'img'
+  else if (['mp4', 'webm', 'ogg', 'ogv'].includes(ext)) type = 'video'
+  else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) type = 'img'
+  else type = ''
+
+  let path = file.path.replace(/^local:\/\//, '')
+  if (!path.startsWith('/multimedia/')) {
+    path = `/multimedia/${path}`
+  }
+
+  mediaPreview.value = { type, link: path }
+  mediaPreviewRealSize.value = { width: 0, height: 0 }
+  mediaPreviewVideoSize.value = { width: 0, height: 0 }
+  showFileManager.value = false
 }
 
 onMounted(() => fetchServices())
@@ -316,15 +459,6 @@ onMounted(() => fetchServices())
   align-items: center;
   gap: 12px;
   margin-bottom: 20px;
-}
-.button {
-  background: #409eff;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-weight: 600;
-  cursor: pointer;
-  border: none;
 }
 .save-btn {
   margin-left: auto;
@@ -379,10 +513,11 @@ onMounted(() => fetchServices())
   color: #409eff;
 }
 .media-preview {
-  border: 2px dashed #409eff;
+  /* border: 2px dashed #409eff; */
   border-radius: 8px;
   height: 180px;
   display: flex;
+  flex-direction: column; /* чтобы размер был над медиаконтентом */
   justify-content: center;
   align-items: center;
   cursor: pointer;
@@ -423,5 +558,21 @@ onMounted(() => fetchServices())
   padding: 5px 10px;
   cursor: pointer;
   z-index: 10;
+}
+.preview-content {
+  text-align: center;
+}
+
+.video-size {
+  font-weight: 600;
+  font-size: 1.2rem;
+  margin-bottom: 6px;
+  color: #333;
+}
+
+.video-extension {
+  font-size: 1rem;
+  margin-bottom: 10px;
+  color: #555;
 }
 </style>
