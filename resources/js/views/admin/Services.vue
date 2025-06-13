@@ -76,7 +76,6 @@
 
         <el-form-item label="Видео">
           <div class="media-preview" @click="openFileManager">
-            <!-- Выводим реальные размеры над медиа -->
             <div
               class="media-size"
               v-if="mediaPreviewRealSize.width && mediaPreviewRealSize.height"
@@ -85,7 +84,16 @@
               Размер: {{ mediaPreviewRealSize.width }} × {{ mediaPreviewRealSize.height }} px
             </div>
 
-            <template v-if="mediaPreview.type === 'video'">
+            <el-alert
+              v-if="videoFormatError"
+              title="Видео формата .webm отсутствует!"
+              type="warning"
+              show-icon
+              :closable="false"
+              style="margin-bottom: 8px;"
+            />
+
+            <template v-if="!videoFormatError && mediaPreview.type === 'video'">
               <video
                 ref="mediaPreviewVideoRef"
                 autoplay
@@ -101,26 +109,16 @@
               </video>
             </template>
 
-            <template v-else-if="mediaPreview.type === 'img'">
-              <img
-                ref="mediaPreviewImgRef"
-                :src="mediaPreview.link"
-                alt="Preview"
-                style="max-width: 100%; max-height: 180px; border-radius: 8px; cursor: pointer;"
-                @load="onLoadedMetadataMediaPreview"
-              />
-            </template>
-
-            <template v-else>
-              <div class="no-media">Кликните для выбора видео или изображения</div>
+            <template v-if="!mediaPreview.link && !videoFormatError">
+              <div class="no-media">Кликните для выбора видео формата .webm</div>
             </template>
           </div>
         </el-form-item>
       </el-form>
 
       <template #footer>
-        <el-button @click="addModalVisible = false">Отмена</el-button>
-        <el-button type="primary" :loading="adding" @click="submitNewService">Добавить</el-button>
+        <el-button @click="closeAddModal">Отмена</el-button>
+        <el-button type="primary" :loading="adding" @click="submitNewService" :disabled="videoFormatError">Добавить</el-button>
       </template>
     </el-dialog>
 
@@ -134,7 +132,6 @@
       center
     >
       <div v-if="previewVisible && previewVideo" class="preview-content">
-        <!-- Реальный размер видео -->
         <div class="video-size" v-if="previewRealSize.width && previewRealSize.height" style="margin-bottom: 5px;">
           Реальный размер: {{ previewRealSize.width }} × {{ previewRealSize.height }} px
         </div>
@@ -164,18 +161,14 @@
 
     <!-- Файловый менеджер -->
     <teleport to="body">
-      <div v-if="showFileManager" class="finder-modal">
+      <div v-if="showFileManager" class="finder-modal" @click.self="closeFileManager">
         <div class="finder-homegrid">
           <vue-finder
             id="vuefinder"
-            :request="{
-              baseUrl: '/api/vuefinder',
-              adapter: 'local',
-              xsrfHeaderName: 'X-XSRF-TOKEN'
-            }"
+            :request="vueFinderRequest"
             @select="handleFileSelect"
           />
-          <button class="close-btn" @click="showFileManager = false">✖</button>
+          <button class="close-btn" @click="closeFileManager">✖</button>
         </div>
       </div>
     </teleport>
@@ -196,7 +189,6 @@ const previewVisible = ref(false)
 const previewVideo = ref('')
 const previewVideoRef = ref(null)
 
-// Новые реальное и отображаемое размеры видео
 const previewRealSize = ref({ width: 0, height: 0 })
 const previewDisplaySize = ref({ width: 0, height: 0 })
 
@@ -204,11 +196,10 @@ const previewVideoExtension = ref('')
 
 const mediaPreviewVideoSize = ref({ width: 0, height: 0 })
 const mediaPreviewRealSize = ref({ width: 0, height: 0 })
-const mediaPreviewVideoRef = ref(null)
-const mediaPreviewImgRef = ref(null)
 
 const addModalVisible = ref(false)
 const adding = ref(false)
+const videoFormatError = ref(false)
 
 const newService = ref({
   col_title: '',
@@ -223,10 +214,39 @@ const mediaPreview = ref({
 
 const showFileManager = ref(false)
 
-const handleBeforeClose = () => {
-  addModalVisible.value = false
+const vueFinderRequest = {
+  baseUrl: '/api/vuefinder',
+  adapter: 'local',
+  xsrfHeaderName: 'X-XSRF-TOKEN',
 }
 
+// Открытие модалки добавления
+function openAddModal() {
+  addModalVisible.value = true
+  newService.value = { col_title: '', col_description: '', col_video: '' }
+  mediaPreview.value = { type: '', link: '' }
+  mediaPreviewRealSize.value = { width: 0, height: 0 }
+  mediaPreviewVideoSize.value = { width: 0, height: 0 }
+  videoFormatError.value = false
+}
+
+// Закрытие модалки добавления
+function closeAddModal() {
+  addModalVisible.value = false
+  videoFormatError.value = false
+}
+
+// Закрытие файлового менеджера
+function closeFileManager() {
+  showFileManager.value = false
+}
+
+// Открытие файлового менеджера
+function openFileManager() {
+  showFileManager.value = true
+}
+
+// Получение списка услуг
 async function fetchServices() {
   try {
     const res = await axios.get('/api/admin/tbl-services')
@@ -248,6 +268,7 @@ async function fetchServices() {
   }
 }
 
+// Сохранение порядка услуг
 async function saveServices() {
   saving.value = true
   try {
@@ -264,6 +285,7 @@ async function saveServices() {
   saving.value = false
 }
 
+// Удаление услуги
 async function deleteService(id) {
   try {
     await ElMessageBox.confirm('Удалить услугу?', 'Внимание', {
@@ -281,18 +303,21 @@ async function deleteService(id) {
   }
 }
 
+// Формируем URL для видео
 const videoUrl = (video) => {
   if (!video) return ''
   if (video.startsWith('/multimedia/')) return video
   return `/multimedia/${video}`
 }
 
+// Получаем расширение файла из URL
 function getVideoExtension(url) {
   if (!url) return ''
   const cleanUrl = url.split('?')[0]
   return cleanUrl.split('.').pop().toLowerCase()
 }
 
+// Получаем MIME тип для видео по расширению
 function getVideoMimeType(url) {
   if (!url) return 'video/mp4'
   const ext = getVideoExtension(url)
@@ -305,6 +330,7 @@ function getVideoMimeType(url) {
   }
 }
 
+// Открываем модалку предпросмотра видео
 function openPreview(video) {
   const url = videoUrl(video)
   if (!url) return
@@ -322,12 +348,11 @@ function openPreview(video) {
   })
 }
 
+// Обработка загрузки метаданных видео для предпросмотра
 function onLoadedMetadata(event) {
   const video = event.target
-
   const realW = video.videoWidth
   const realH = video.videoHeight
-
   previewRealSize.value = { width: realW, height: realH }
 
   const maxWidth = window.innerWidth * 0.6
@@ -339,9 +364,9 @@ function onLoadedMetadata(event) {
   previewDisplaySize.value = { width: displayW, height: displayH }
 }
 
+// Обработка загрузки метаданных видео для превью в форме
 function onLoadedMetadataMediaPreview(event) {
   const el = event.target
-
   let realW, realH
 
   if (el.tagName === 'VIDEO') {
@@ -354,7 +379,7 @@ function onLoadedMetadataMediaPreview(event) {
 
   mediaPreviewRealSize.value = { width: realW, height: realH }
 
-  // Для превью в форме масштабируем под max 320x180
+  // Масштабируем под max 320x180 для превью
   const maxWidth = 320
   const maxHeight = 180
   const ratio = Math.min(maxWidth / realW, maxHeight / realH, 1)
@@ -364,6 +389,7 @@ function onLoadedMetadataMediaPreview(event) {
   mediaPreviewVideoSize.value = { width: displayW, height: displayH }
 }
 
+// Закрываем модалку предпросмотра
 function closePreview() {
   previewVisible.value = false
   previewVideo.value = ''
@@ -372,22 +398,63 @@ function closePreview() {
   previewVideoExtension.value = ''
 }
 
-function openAddModal() {
-  addModalVisible.value = true
-  newService.value = { col_title: '', col_description: '', col_video: '' }
-  mediaPreview.value = { type: '', link: '' }
+// Обработка выбора файла из файлового менеджера с проверкой формата .webm
+function handleFileSelect(items) {
+  if (!items.length) return
+  const file = items[0]
+
+  const ext = file.path ? file.path.split('.').pop().toLowerCase() : ''
+  let type = ''
+  if (file.mime && file.mime.startsWith('video/')) type = 'video'
+  else if (file.mime && file.mime.startsWith('image/')) type = 'img'
+  else if (['mp4', 'webm', 'ogg', 'ogv'].includes(ext)) type = 'video'
+  else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) type = 'img'
+  else type = ''
+
+  let path = file.path.replace(/^local:\/\//, '')
+  if (!path.startsWith('/multimedia/')) {
+    path = `/multimedia/${path}`
+  }
+
+  // Если файл не видео или не .webm - показываем ошибку и закрываем файловый менеджер
+  if (type !== 'video' || ext !== 'webm') {
+    videoFormatError.value = true
+    mediaPreview.value = { type: '', link: '' }
+    mediaPreviewRealSize.value = { width: 0, height: 0 }
+    mediaPreviewVideoSize.value = { width: 0, height: 0 }
+    ElNotification({
+      title: 'Предупреждение',
+      message: 'Видео формата .webm отсутствует! Пожалуйста, выберите видео с расширением .webm',
+      type: 'warning',
+      duration: 5000,
+      position: 'top-right',
+    })
+    // Закрываем файловый менеджер, чтобы уведомление было видно
+    showFileManager.value = false
+    return
+  } else {
+    videoFormatError.value = false
+  }
+
+  // Корректный файл - принимаем и закрываем файловый менеджер
+  mediaPreview.value = { type, link: path }
   mediaPreviewRealSize.value = { width: 0, height: 0 }
   mediaPreviewVideoSize.value = { width: 0, height: 0 }
+  showFileManager.value = false
 }
 
+// Отправка новой услуги
 async function submitNewService() {
   if (!newService.value.col_title.trim()) {
     ElNotification({ title: 'Ошибка', message: 'Название услуги обязательно', type: 'error' })
     return
   }
+  if (videoFormatError.value) {
+    ElNotification({ title: 'Ошибка', message: 'Пожалуйста, выберите видео формата .webm', type: 'error' })
+    return
+  }
 
   adding.value = true
-
   try {
     const payload = {
       col_title: newService.value.col_title,
@@ -398,7 +465,7 @@ async function submitNewService() {
     await axios.post('/api/admin/tbl-services', payload)
 
     ElNotification({ title: 'Успешно', message: 'Услуга добавлена', type: 'success' })
-    addModalVisible.value = false
+    closeAddModal()
     await fetchServices()
   } catch (error) {
     if (error.response && error.response.status === 422) {
@@ -416,33 +483,6 @@ async function submitNewService() {
   } finally {
     adding.value = false
   }
-}
-
-function openFileManager() {
-  showFileManager.value = true
-}
-
-function handleFileSelect(items) {
-  if (!items.length) return
-  const file = items[0]
-
-  let type = ''
-  const ext = file.path ? file.path.split('.').pop().toLowerCase() : ''
-  if (file.mime && file.mime.startsWith('video/')) type = 'video'
-  else if (file.mime && file.mime.startsWith('image/')) type = 'img'
-  else if (['mp4', 'webm', 'ogg', 'ogv'].includes(ext)) type = 'video'
-  else if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext)) type = 'img'
-  else type = ''
-
-  let path = file.path.replace(/^local:\/\//, '')
-  if (!path.startsWith('/multimedia/')) {
-    path = `/multimedia/${path}`
-  }
-
-  mediaPreview.value = { type, link: path }
-  mediaPreviewRealSize.value = { width: 0, height: 0 }
-  mediaPreviewVideoSize.value = { width: 0, height: 0 }
-  showFileManager.value = false
 }
 
 onMounted(() => fetchServices())
@@ -513,7 +553,6 @@ onMounted(() => fetchServices())
   color: #409eff;
 }
 .media-preview {
-  /* border: 2px dashed #409eff; */
   border-radius: 8px;
   height: 180px;
   display: flex;
@@ -534,7 +573,7 @@ onMounted(() => fetchServices())
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(0,0,0,0.5);
-  z-index: 9999;
+  z-index: 10500 !important; /* Увеличенный z-index */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -562,17 +601,10 @@ onMounted(() => fetchServices())
 .preview-content {
   text-align: center;
 }
-
 .video-size {
   font-weight: 600;
   font-size: 1.2rem;
   margin-bottom: 6px;
   color: #333;
-}
-
-.video-extension {
-  font-size: 1rem;
-  margin-bottom: 10px;
-  color: #555;
 }
 </style>
