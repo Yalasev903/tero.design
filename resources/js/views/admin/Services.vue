@@ -2,7 +2,7 @@
   <div class="page-wrap">
     <header class="header">
       <h1>Услуги</h1>
-      <el-button type="primary" @click="openAddModal">Добавить услугу</el-button>
+      <el-button type="primary" @click="openAddModal"><el-icon><Plus /></el-icon>Добавить услугу</el-button>
       <el-button type="success" @click="saveServices" :loading="saving" class="save-btn">
         <el-icon><Check /></el-icon> Сохранить порядок
       </el-button>
@@ -13,19 +13,25 @@
         v-model="services"
         group="services"
         animation="200"
-        handle=".drag-handle"
         item-key="col_id"
+        cancel=".service-actions, .service-actions *"
       >
         <template #item="{ element: service }">
-          <div class="service-item">
-            <span class="drag-handle" title="Перетащить">
-              <el-icon><Menu /></el-icon>
+          <div class="service-item" title="Перетащить">
+            <span class="drag-handle" aria-hidden="true">
+              <el-icon><Rank /></el-icon>
             </span>
             <div class="service-info">
               <div><b>ID:</b> {{ service.col_id }}</div>
               <div><b>Название:</b> {{ service.col_title }}</div>
             </div>
-            <div class="service-video" @click="openPreview(service.col_video)">
+            <div
+              class="service-video"
+              @click="openPreview(service.col_video)"
+              role="button"
+              tabindex="0"
+              @keydown.enter.prevent="openPreview(service.col_video)"
+            >
               <video
                 v-if="service.col_video"
                 autoplay
@@ -41,8 +47,8 @@
               <div v-else class="no-video">Нет видео</div>
             </div>
             <div class="service-actions">
-              <a href="#" class="icon2" title="Редактировать" @click.prevent="editService(service)">✏️</a>
-              <a href="#" class="icon2" title="Удалить" @click.prevent="deleteService(service.col_id)">🗑</a>
+              <a href="#" class="icon2" title="Редактировать" @click.prevent="editService(service)" tabindex="0"><el-icon><Edit /></el-icon></a>
+              <a href="#" class="icon2" title="Удалить" @click.prevent="deleteService(service.col_id)" tabindex="0"><el-icon><Delete /></el-icon></a>
             </div>
           </div>
         </template>
@@ -187,7 +193,7 @@ import { ref, nextTick, onMounted } from 'vue'
 import draggable from 'vuedraggable'
 import axios from 'axios'
 import { ElNotification, ElMessageBox } from 'element-plus'
-import { Menu, Check } from '@element-plus/icons-vue'
+import { Menu, Check, Rank, Plus, EditPen, Delete } from '@element-plus/icons-vue'
 
 const services = ref([])
 const saving = ref(false)
@@ -230,6 +236,7 @@ const vueFinderRequest = {
   xsrfHeaderName: 'X-XSRF-TOKEN',
 }
 
+// Открытие модалки для добавления новой услуги
 function openAddModal() {
   isEditing.value = false
   editingServiceId.value = null
@@ -238,6 +245,7 @@ function openAddModal() {
   videoFormatError.value = false
 }
 
+// Сброс данных формы услуги
 function resetNewService() {
   newService.value = {
     col_title: '',
@@ -249,6 +257,7 @@ function resetNewService() {
   mediaPreviewVideoSize.value = { width: 0, height: 0 }
 }
 
+// Закрытие модалки
 function closeAddModal() {
   addModalVisible.value = false
   videoFormatError.value = false
@@ -256,6 +265,7 @@ function closeAddModal() {
   editingServiceId.value = null
 }
 
+// Открытие модалки для редактирования услуги
 function editService(service) {
   isEditing.value = true
   editingServiceId.value = service.col_id
@@ -263,7 +273,6 @@ function editService(service) {
   newService.value.col_title = service.col_title
   newService.value.col_description = service.col_description
 
-  // Формируем ссылку для превью видео
   if (service.col_video) {
     const videoPath = service.col_video.startsWith('/multimedia/')
       ? service.col_video
@@ -280,6 +289,7 @@ function editService(service) {
   addModalVisible.value = true
 }
 
+// Обновление услуги
 async function updateService() {
   if (!newService.value.col_title.trim()) {
     ElNotification({ title: 'Ошибка', message: 'Название услуги обязательно', type: 'error' })
@@ -320,6 +330,67 @@ async function updateService() {
   }
 }
 
+// Добавление новой услуги
+async function submitNewService() {
+  if (!newService.value.col_title.trim()) {
+    ElNotification({ title: 'Ошибка', message: 'Название услуги обязательно', type: 'error' })
+    return
+  }
+  if (videoFormatError.value) {
+    ElNotification({ title: 'Ошибка', message: 'Пожалуйста, выберите видео формата .webm', type: 'error' })
+    return
+  }
+
+  adding.value = true
+  try {
+    const payload = {
+      col_title: newService.value.col_title,
+      col_description: newService.value.col_description,
+      col_video: mediaPreview.value.type === 'video' ? mediaPreview.value.link.replace(/^\/?multimedia\//, '') : '',
+    }
+    await axios.post('/api/admin/tbl-services', payload)
+
+    ElNotification({ title: 'Успешно', message: 'Услуга добавлена', type: 'success' })
+    closeAddModal()
+    await fetchServices()
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      const errors = error.response.data.errors
+      let errorMessages = ''
+      for (const key in errors) {
+        if (errors.hasOwnProperty(key)) {
+          errorMessages += errors[key].join(' ') + ' '
+        }
+      }
+      ElNotification({ title: 'Ошибка валидации', message: errorMessages, type: 'error' })
+    } else {
+      ElNotification({ title: 'Ошибка', message: 'Не удалось добавить услугу', type: 'error' })
+    }
+  } finally {
+    adding.value = false
+  }
+}
+
+// Удаление услуги
+async function deleteService(col_id) {
+  try {
+    await ElMessageBox.confirm('Вы уверены, что хотите удалить эту услугу?', 'Подтверждение', {
+      confirmButtonText: 'Удалить',
+      cancelButtonText: 'Отмена',
+      type: 'warning',
+    })
+
+    await axios.delete(`/api/admin/tbl-services/${col_id}`)
+
+    ElNotification({ title: 'Успешно', message: 'Услуга удалена', type: 'success' })
+    await fetchServices()
+  } catch (error) {
+    if (error !== 'cancel') {
+      ElNotification({ title: 'Ошибка', message: 'Не удалось удалить услугу', type: 'error' })
+    }
+  }
+}
+
 function closeFileManager() {
   showFileManager.value = false
 }
@@ -328,6 +399,7 @@ function openFileManager() {
   showFileManager.value = true
 }
 
+// Загрузка списка услуг с сервера
 async function fetchServices() {
   try {
     const res = await axios.get('/api/admin/tbl-services')
@@ -349,6 +421,7 @@ async function fetchServices() {
   }
 }
 
+// Сохранение порядка услуг
 async function saveServices() {
   saving.value = true
   try {
@@ -364,8 +437,6 @@ async function saveServices() {
   }
   saving.value = false
 }
-
-// --- остальные функции getVideoMimeType, getVideoExtension, openPreview и т.д. без изменений
 
 function getVideoExtension(url) {
   if (!url) return ''
@@ -501,70 +572,187 @@ onMounted(() => fetchServices())
 
 <style scoped>
 .page-wrap {
-  padding: 20px;
-  max-width: 900px;
-  margin: auto;
+  padding: 24px 30px;
+  max-width: 960px;
+  margin: 0 auto;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: #2c3e50;
 }
+
 .header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 14px;
+  margin-bottom: 25px;
+  user-select: none;
 }
-.save-btn {
+
+h1 {
+  font-weight: 700;
+  font-size: 1.9rem;
+  color: #34495e;
+  margin: 0;
+  user-select: text;
+}
+
+.btn-add {
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 7px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-save {
   margin-left: auto;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 7px 18px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+
+.services-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Карточка услуги */
 .service-item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  background: #fafafa;
+  gap: 20px;
+  padding: 16px 18px;
+  background: #fff;
+  box-shadow: 0 3px 8px rgb(0 0 0 / 0.12);
+  border-radius: 12px;
   user-select: none;
+  transition: box-shadow 0.25s ease, transform 0.15s ease;
+  cursor: grab;
 }
+
+.service-item:active {
+  cursor: grabbing;
+  transform: scale(0.99);
+  box-shadow: 0 6px 16px rgb(0 0 0 / 0.18);
+}
+
 .drag-handle {
   cursor: grab;
-  color: #999;
-  font-size: 20px;
+  color: #7f8c8d;
+  font-size: 22px;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  transition: color 0.25s ease;
 }
+
+.drag-handle:hover {
+  color: #409eff;
+}
+
 .service-info {
   flex-grow: 1;
-  min-width: 150px;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: #34495e;
 }
+
+.service-id {
+  font-weight: 600;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.service-id span {
+  font-weight: 400;
+  color: #34495e;
+}
+
+.service-title {
+  font-weight: 700;
+  font-size: 1.18rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .service-video {
   width: 180px;
   height: 120px;
   position: relative;
   cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 5px rgb(0 0 0 / 0.12);
+  background: #f8f9fa;
+  flex-shrink: 0;
+  transition: box-shadow 0.3s ease;
 }
+
+.service-video:hover {
+  box-shadow: 0 5px 15px rgb(0 0 0 / 0.25);
+}
+
+.video-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  pointer-events: none;
+  user-select: none;
+}
+
 .no-video {
-  width: 180px;
-  height: 120px;
-  background: #eee;
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #888;
+  color: #bdc3c7;
   font-style: italic;
-}
-.service-actions {
-  display: flex;
-  gap: 10px;
-  font-size: 22px;
+  font-size: 0.95rem;
   user-select: none;
 }
-.icon2 {
+
+.service-actions {
+  display: flex;
+  gap: 14px;
+  font-size: 24px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.icon-btn {
   cursor: pointer;
-  color: #555;
-}
-.icon2:hover {
-  color: #409eff;
-}
-.media-preview {
+  color: #7f8c8d;
+  transition: color 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
   border-radius: 8px;
+}
+
+.icon-btn:hover {
+  color: #409eff;
+  background: rgba(64, 158, 255, 0.1);
+}
+
+/* Модальное окно формы */
+.form-service {
+  font-size: 1rem;
+}
+
+.media-preview {
+  border-radius: 10px;
   height: 180px;
   display: flex;
   flex-direction: column;
@@ -573,49 +761,102 @@ onMounted(() => fetchServices())
   cursor: pointer;
   background: #f0f8ff;
   margin-top: 5px;
+  box-shadow: inset 0 0 6px rgb(0 123 255 / 0.3);
+  transition: background 0.25s ease;
 }
+
+.media-preview:hover {
+  background: #dbeeff;
+}
+
+.media-size {
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+  user-select: text;
+}
+
+.media-video {
+  max-width: 100%;
+  max-height: 180px;
+  border-radius: 8px;
+  cursor: pointer;
+  user-select: none;
+}
+
 .no-media {
   color: #aaa;
   font-style: italic;
   user-select: none;
   padding: 0 10px;
 }
+
+.alert-video-error {
+  margin-bottom: 8px;
+}
+
+/* Файловый менеджер */
 .finder-modal {
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
   z-index: 10500 !important;
   display: flex;
   justify-content: center;
   align-items: center;
 }
+
 .finder-homegrid {
-  width: 90%;
+  width: 92%;
   height: 90%;
-  background: white;
-  border-radius: 8px;
+  background: #fff;
+  border-radius: 10px;
   overflow: hidden;
   position: relative;
+  box-shadow: 0 6px 20px rgb(0 0 0 / 0.25);
 }
+
 .close-btn {
   position: absolute;
-  top: 10px;
-  right: 15px;
-  background: #e00;
+  top: 12px;
+  right: 16px;
+  background: #e74c3c;
   color: white;
   border: none;
-  border-radius: 6px;
-  padding: 5px 10px;
+  border-radius: 8px;
+  padding: 7px 12px;
   cursor: pointer;
-  z-index: 10;
+  font-size: 1.2rem;
+  font-weight: 600;
+  transition: background 0.3s ease;
+  z-index: 15;
 }
+
+.close-btn:hover {
+  background: #c0392b;
+}
+
+/* Предпросмотр видео */
 .preview-content {
   text-align: center;
 }
+
 .video-size {
   font-weight: 600;
   font-size: 1.2rem;
   margin-bottom: 6px;
   color: #333;
+}
+
+.no-data {
+  text-align: center;
+  font-style: italic;
+  color: #999;
+  margin-top: 50px;
+  font-size: 1.1rem;
+  user-select: none;
 }
 </style>
