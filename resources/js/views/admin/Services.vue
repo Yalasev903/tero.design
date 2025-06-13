@@ -41,7 +41,7 @@
               <div v-else class="no-video">Нет видео</div>
             </div>
             <div class="service-actions">
-              <RouterLink :to="`/services/${service.col_id}/edit`" class="icon2" title="Редактировать">✏️</RouterLink>
+              <a href="#" class="icon2" title="Редактировать" @click.prevent="editService(service)">✏️</a>
               <a href="#" class="icon2" title="Удалить" @click.prevent="deleteService(service.col_id)">🗑</a>
             </div>
           </div>
@@ -51,10 +51,10 @@
 
     <p v-else>Нет данных</p>
 
-    <!-- Модалка добавления услуги -->
+    <!-- Модалка добавления/редактирования услуги -->
     <el-dialog
       v-model="addModalVisible"
-      title="Добавить новую услугу"
+      :title="isEditing ? 'Редактировать услугу' : 'Добавить новую услугу'"
       width="60%"
       :before-close="handleBeforeClose"
       destroy-on-close
@@ -118,7 +118,14 @@
 
       <template #footer>
         <el-button @click="closeAddModal">Отмена</el-button>
-        <el-button type="primary" :loading="adding" @click="submitNewService" :disabled="videoFormatError">Добавить</el-button>
+        <el-button
+          type="primary"
+          :loading="adding"
+          @click="isEditing ? updateService() : submitNewService()"
+          :disabled="videoFormatError"
+        >
+          {{ isEditing ? 'Сохранить' : 'Добавить' }}
+        </el-button>
       </template>
     </el-dialog>
 
@@ -201,6 +208,9 @@ const addModalVisible = ref(false)
 const adding = ref(false)
 const videoFormatError = ref(false)
 
+const isEditing = ref(false) // режим редактирования
+const editingServiceId = ref(null) // id редактируемой услуги
+
 const newService = ref({
   col_title: '',
   col_description: '',
@@ -220,33 +230,104 @@ const vueFinderRequest = {
   xsrfHeaderName: 'X-XSRF-TOKEN',
 }
 
-// Открытие модалки добавления
 function openAddModal() {
+  isEditing.value = false
+  editingServiceId.value = null
+  resetNewService()
   addModalVisible.value = true
-  newService.value = { col_title: '', col_description: '', col_video: '' }
+  videoFormatError.value = false
+}
+
+function resetNewService() {
+  newService.value = {
+    col_title: '',
+    col_description: '',
+    col_video: ''
+  }
   mediaPreview.value = { type: '', link: '' }
   mediaPreviewRealSize.value = { width: 0, height: 0 }
   mediaPreviewVideoSize.value = { width: 0, height: 0 }
-  videoFormatError.value = false
 }
 
-// Закрытие модалки добавления
 function closeAddModal() {
   addModalVisible.value = false
   videoFormatError.value = false
+  isEditing.value = false
+  editingServiceId.value = null
 }
 
-// Закрытие файлового менеджера
+function editService(service) {
+  isEditing.value = true
+  editingServiceId.value = service.col_id
+
+  newService.value.col_title = service.col_title
+  newService.value.col_description = service.col_description
+
+  // Формируем ссылку для превью видео
+  if (service.col_video) {
+    const videoPath = service.col_video.startsWith('/multimedia/')
+      ? service.col_video
+      : `/multimedia/${service.col_video}`
+    mediaPreview.value = { type: 'video', link: videoPath }
+  } else {
+    mediaPreview.value = { type: '', link: '' }
+  }
+
+  mediaPreviewRealSize.value = { width: 0, height: 0 }
+  mediaPreviewVideoSize.value = { width: 0, height: 0 }
+  videoFormatError.value = false
+
+  addModalVisible.value = true
+}
+
+async function updateService() {
+  if (!newService.value.col_title.trim()) {
+    ElNotification({ title: 'Ошибка', message: 'Название услуги обязательно', type: 'error' })
+    return
+  }
+  if (videoFormatError.value) {
+    ElNotification({ title: 'Ошибка', message: 'Пожалуйста, выберите видео формата .webm', type: 'error' })
+    return
+  }
+
+  adding.value = true
+  try {
+    const payload = {
+      col_title: newService.value.col_title,
+      col_description: newService.value.col_description,
+      col_video: mediaPreview.value.type === 'video' ? mediaPreview.value.link.replace(/^\/?multimedia\//, '') : '',
+    }
+    await axios.put(`/api/admin/tbl-services/${editingServiceId.value}`, payload)
+
+    ElNotification({ title: 'Успешно', message: 'Услуга обновлена', type: 'success' })
+    closeAddModal()
+    await fetchServices()
+  } catch (error) {
+    if (error.response && error.response.status === 422) {
+      const errors = error.response.data.errors
+      let errorMessages = ''
+      for (const key in errors) {
+        if (errors.hasOwnProperty(key)) {
+          errorMessages += errors[key].join(' ') + ' '
+        }
+      }
+      ElNotification({ title: 'Ошибка валидации', message: errorMessages, type: 'error' })
+    } else {
+      ElNotification({ title: 'Ошибка', message: 'Не удалось обновить услугу', type: 'error' })
+    }
+  } finally {
+    adding.value = false
+  }
+}
+
 function closeFileManager() {
   showFileManager.value = false
 }
 
-// Открытие файлового менеджера
 function openFileManager() {
   showFileManager.value = true
 }
 
-// Получение списка услуг
 async function fetchServices() {
   try {
     const res = await axios.get('/api/admin/tbl-services')
@@ -268,7 +349,6 @@ async function fetchServices() {
   }
 }
 
-// Сохранение порядка услуг
 async function saveServices() {
   saving.value = true
   try {
@@ -285,39 +365,14 @@ async function saveServices() {
   saving.value = false
 }
 
-// Удаление услуги
-async function deleteService(id) {
-  try {
-    await ElMessageBox.confirm('Удалить услугу?', 'Внимание', {
-      confirmButtonText: 'Удалить',
-      cancelButtonText: 'Отмена',
-      type: 'warning',
-    })
-    await axios.delete(`/api/admin/tbl-services/${id}`)
-    await fetchServices()
-    ElNotification({ title: 'Успешно', message: 'Услуга удалена', type: 'success' })
-  } catch (e) {
-    if (e !== 'cancel') {
-      ElNotification({ title: 'Ошибка', message: 'Не удалось удалить услугу', type: 'error' })
-    }
-  }
-}
+// --- остальные функции getVideoMimeType, getVideoExtension, openPreview и т.д. без изменений
 
-// Формируем URL для видео
-const videoUrl = (video) => {
-  if (!video) return ''
-  if (video.startsWith('/multimedia/')) return video
-  return `/multimedia/${video}`
-}
-
-// Получаем расширение файла из URL
 function getVideoExtension(url) {
   if (!url) return ''
   const cleanUrl = url.split('?')[0]
   return cleanUrl.split('.').pop().toLowerCase()
 }
 
-// Получаем MIME тип для видео по расширению
 function getVideoMimeType(url) {
   if (!url) return 'video/mp4'
   const ext = getVideoExtension(url)
@@ -330,7 +385,6 @@ function getVideoMimeType(url) {
   }
 }
 
-// Открываем модалку предпросмотра видео
 function openPreview(video) {
   const url = videoUrl(video)
   if (!url) return
@@ -348,7 +402,12 @@ function openPreview(video) {
   })
 }
 
-// Обработка загрузки метаданных видео для предпросмотра
+function videoUrl(video) {
+  if (!video) return ''
+  if (video.startsWith('/multimedia/')) return video
+  return `/multimedia/${video}`
+}
+
 function onLoadedMetadata(event) {
   const video = event.target
   const realW = video.videoWidth
@@ -364,7 +423,6 @@ function onLoadedMetadata(event) {
   previewDisplaySize.value = { width: displayW, height: displayH }
 }
 
-// Обработка загрузки метаданных видео для превью в форме
 function onLoadedMetadataMediaPreview(event) {
   const el = event.target
   let realW, realH
@@ -379,7 +437,6 @@ function onLoadedMetadataMediaPreview(event) {
 
   mediaPreviewRealSize.value = { width: realW, height: realH }
 
-  // Масштабируем под max 320x180 для превью
   const maxWidth = 320
   const maxHeight = 180
   const ratio = Math.min(maxWidth / realW, maxHeight / realH, 1)
@@ -389,7 +446,6 @@ function onLoadedMetadataMediaPreview(event) {
   mediaPreviewVideoSize.value = { width: displayW, height: displayH }
 }
 
-// Закрываем модалку предпросмотра
 function closePreview() {
   previewVisible.value = false
   previewVideo.value = ''
@@ -416,7 +472,6 @@ function handleFileSelect(items) {
     path = `/multimedia/${path}`
   }
 
-  // Если файл не видео или не .webm - показываем ошибку и закрываем файловый менеджер
   if (type !== 'video' || ext !== 'webm') {
     videoFormatError.value = true
     mediaPreview.value = { type: '', link: '' }
@@ -429,60 +484,16 @@ function handleFileSelect(items) {
       duration: 5000,
       position: 'top-right',
     })
-    // Закрываем файловый менеджер, чтобы уведомление было видно
     showFileManager.value = false
     return
   } else {
     videoFormatError.value = false
   }
 
-  // Корректный файл - принимаем и закрываем файловый менеджер
   mediaPreview.value = { type, link: path }
   mediaPreviewRealSize.value = { width: 0, height: 0 }
   mediaPreviewVideoSize.value = { width: 0, height: 0 }
   showFileManager.value = false
-}
-
-// Отправка новой услуги
-async function submitNewService() {
-  if (!newService.value.col_title.trim()) {
-    ElNotification({ title: 'Ошибка', message: 'Название услуги обязательно', type: 'error' })
-    return
-  }
-  if (videoFormatError.value) {
-    ElNotification({ title: 'Ошибка', message: 'Пожалуйста, выберите видео формата .webm', type: 'error' })
-    return
-  }
-
-  adding.value = true
-  try {
-    const payload = {
-      col_title: newService.value.col_title,
-      col_description: newService.value.col_description,
-      col_video: mediaPreview.value.type === 'video' ? mediaPreview.value.link.replace(/^\/?multimedia\//, '') : '',
-    }
-
-    await axios.post('/api/admin/tbl-services', payload)
-
-    ElNotification({ title: 'Успешно', message: 'Услуга добавлена', type: 'success' })
-    closeAddModal()
-    await fetchServices()
-  } catch (error) {
-    if (error.response && error.response.status === 422) {
-      const errors = error.response.data.errors
-      let errorMessages = ''
-      for (const key in errors) {
-        if (errors.hasOwnProperty(key)) {
-          errorMessages += errors[key].join(' ') + ' '
-        }
-      }
-      ElNotification({ title: 'Ошибка валидации', message: errorMessages, type: 'error' })
-    } else {
-      ElNotification({ title: 'Ошибка', message: 'Не удалось добавить услугу', type: 'error' })
-    }
-  } finally {
-    adding.value = false
-  }
 }
 
 onMounted(() => fetchServices())
@@ -556,7 +567,7 @@ onMounted(() => fetchServices())
   border-radius: 8px;
   height: 180px;
   display: flex;
-  flex-direction: column; /* чтобы размер был над медиаконтентом */
+  flex-direction: column;
   justify-content: center;
   align-items: center;
   cursor: pointer;
@@ -573,7 +584,7 @@ onMounted(() => fetchServices())
   position: fixed;
   top: 0; left: 0; width: 100vw; height: 100vh;
   background: rgba(0,0,0,0.5);
-  z-index: 10500 !important; /* Увеличенный z-index */
+  z-index: 10500 !important;
   display: flex;
   justify-content: center;
   align-items: center;
