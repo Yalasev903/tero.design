@@ -607,6 +607,13 @@ onMounted(() => {
   border-radius: 10px;
   box-shadow: 0 3px 16px rgba(0, 0, 0, 0.18);
 }
+:deep(.el-select .el-tag) {
+  background-color: transparent !important;
+  border: 1px solid rgb(64, 255, 89) !important;
+  color: #409EFF !important;
+  font-weight: 500;
+  border-radius: 6px;
+}
 @media (max-width: 900px) {
   .preview-img, .preview-video {
     max-width: 95vw;

@@ -23,6 +23,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
     Route::get('/pages/home-seo', [PageSeoController::class, 'getHomeSeo']);
     Route::post('/pages/home-seo', [PageSeoController::class, 'updateHomeSeo']);
+    Route::get('/pages/{pageName}-seo', [PageSeoController::class, 'getSeo']);
+    Route::post('/pages/{pageName}-seo', [PageSeoController::class, 'updateSeo']);
 
     Route::get('/settings', [SettingsController::class, 'show']);
     Route::post('/settings', [SettingsController::class, 'update']);

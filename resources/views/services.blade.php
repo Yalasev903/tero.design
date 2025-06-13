@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('header_title', $seo->col_meta_title ?? 'Услуги - Tero Design')
+@section('header_description', $seo->col_meta_description ?? 'Описание страницы услуг')
+@section('header_keywords', $seo->col_meta_keywords ?? 'ключевые, слова, по, умолчанию')
+
 @section('content')
     <div class="services">
         @foreach($service_list->sortBy('position') as $service)

@@ -1,7 +1,8 @@
 <template>
   <div class="page-wrap">
+        <!-- SEO -->
+        <SeoServices title="SEO страницы Услуги" pageName="services" />
     <header class="header">
-      <h1>Услуги</h1>
       <el-button type="primary" @click="openAddModal"><el-icon><Plus /></el-icon>Добавить услугу</el-button>
       <el-button type="success" @click="saveServices" :loading="saving" class="save-btn">
         <el-icon><Check /></el-icon> Сохранить порядок
@@ -189,11 +190,35 @@
 </template>
 
 <script setup>
+import SeoServices from '@/components/admin/SeoServices.vue'
 import { ref, nextTick, onMounted } from 'vue'
 import draggable from 'vuedraggable'
 import axios from 'axios'
 import { ElNotification, ElMessageBox } from 'element-plus'
 import { Menu, Check, Rank, Plus, EditPen, Delete } from '@element-plus/icons-vue'
+
+const seoForm = ref({
+  seo_title: '',
+  seo_description: '',
+  seo_keywords: []
+})
+
+const loadSeo = async () => {
+  try {
+    const res = await axios.get('/api/admin/pages/services-seo')
+    seoForm.value.seo_title = res.data.seo_title || ''
+    seoForm.value.seo_description = res.data.seo_description || ''
+    seoForm.value.seo_keywords = res.data.seo_keywords
+      ? res.data.seo_keywords.split(',').map(s => s.trim())
+      : []
+  } catch {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Ошибка при загрузке SEO',
+      type: 'error'
+    })
+  }
+}
 
 const services = ref([])
 const saving = ref(false)
@@ -567,7 +592,11 @@ function handleFileSelect(items) {
   showFileManager.value = false
 }
 
-onMounted(() => fetchServices())
+onMounted(() => {
+    loadSeo()
+    fetchServices()
+
+    })
 </script>
 
 <style scoped>
