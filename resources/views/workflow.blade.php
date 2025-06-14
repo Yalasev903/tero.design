@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('header_title', $seo->title ?? 'Tero Design')
+@section('header_description', $seo->description ?? '')
+@section('header_keywords', $seo->keywords ?? '')
+@section('header_meta_title', $seo->title ?? 'Tero Design')
 @section('content')
     <div class="workflow">
         <div class="workflow-container">

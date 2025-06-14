@@ -1,7 +1,8 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
+import SeoServices from '@/components/admin/SeoServices.vue'
 import { ElNotification } from 'element-plus'
 
 const model = ref({
@@ -11,9 +12,15 @@ const model = ref({
   col_description: ''
 })
 
+const posterDimensions = ref('')
+const videoDimensions = ref('')
+
 const expanded = ref(null)
 const showFileManager = ref(false)
 const currentType = ref(null)
+
+const posterSrc = computed(() => model.value.col_poster ? `/multimedia/${model.value.col_poster}` : '')
+const videoSrc = computed(() => model.value.col_video ? `/multimedia/${model.value.col_video}` : '')
 
 const openManager = (type) => {
   currentType.value = type
@@ -25,6 +32,11 @@ const handleSelect = (items) => {
   const path = items[0].path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
   model.value[currentType.value] = path
   showFileManager.value = false
+
+  nextTick(() => {
+    if (currentType.value === 'col_poster') updatePosterDimensions()
+    if (currentType.value === 'col_video') updateVideoDimensions()
+  })
 }
 
 const loadWorkflow = async () => {
@@ -36,6 +48,9 @@ const loadWorkflow = async () => {
       col_video: data?.col_video || '',
       col_description: data?.col_description || ''
     }
+    await nextTick()
+    updatePosterDimensions()
+    updateVideoDimensions()
   } catch (e) {
     console.error('Ошибка загрузки workflow', e)
   }
@@ -50,8 +65,22 @@ const saveWorkflow = async () => {
   }
 }
 
-const posterSrc = computed(() => model.value.col_poster ? `/multimedia/${model.value.col_poster}` : '')
-const videoSrc = computed(() => model.value.col_video ? `/multimedia/${model.value.col_video}` : '')
+const updatePosterDimensions = () => {
+  const img = new Image()
+  img.onload = () => {
+    posterDimensions.value = `${img.naturalWidth}x${img.naturalHeight}px`
+  }
+  img.src = posterSrc.value
+}
+
+const updateVideoDimensions = () => {
+  const video = document.querySelector('.js-video')
+  if (video) {
+    video.onloadedmetadata = () => {
+      videoDimensions.value = `${video.videoWidth}x${video.videoHeight}px`
+    }
+  }
+}
 
 const toggleExpand = (type) => {
   expanded.value = expanded.value === type ? null : type
@@ -64,44 +93,54 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="workflow-block">
-    <h3>🎬 Видео Workflow</h3>
+  <div class="page-layout">
+    <!-- Левая колонка: SEO -->
+    <div class="left-column">
+      <SeoServices title="SEO для Workflow" pageName="workflow" />
+    </div>
 
-    <!-- Постер -->
-    <div class="media-box" :class="{ expanded: expanded === 'poster' }" @click="toggleExpand('poster')">
-      <img :src="posterSrc" :alt="model.col_poster_alt || 'Постер'" />
-      <div class="overlay">
-        <span class="upload-icon" @click.stop="openManager('col_poster')">📤 Заменить</span>
+    <!-- Правая колонка: Workflow контент -->
+    <div class="right-column">
+      <h3>🎬 Видео Workflow</h3>
+
+      <!-- Постер -->
+      <div class="media-box" :class="{ expanded: expanded === 'poster' }" @click="toggleExpand('poster')">
+        <div class="media-label">Постер ({{ posterDimensions }})</div>
+        <img :src="posterSrc" :alt="model.col_poster_alt || 'Постер'" />
+        <div class="overlay">
+          <span class="upload-icon" @click.stop="openManager('col_poster')">📤 Заменить</span>
+        </div>
       </div>
-    </div>
-    <el-input
-      v-model="model.col_poster_alt"
-      placeholder="Альтернативный текст для постера (alt)"
-      style="margin-top: 10px"
-    />
-    <p class="filename">{{ model.col_poster }}</p>
+      <el-input
+        v-model="model.col_poster_alt"
+        placeholder="Альтернативный текст для постера (alt)"
+        style="margin-top: 10px"
+      />
+      <p class="filename">{{ model.col_poster }}</p>
 
-    <!-- Видео -->
-    <div class="media-box" :class="{ expanded: expanded === 'video' }" @click="toggleExpand('video')">
-      <video :key="videoSrc" autoplay loop muted playsinline>
-        <source :src="videoSrc" :type="'video/' + videoSrc.split('.').pop()" />
-        Ваш браузер не поддерживает видео.
-      </video>
-      <div class="overlay">
-        <span class="upload-icon" @click.stop="openManager('col_video')">📤 Заменить</span>
+      <!-- Видео -->
+      <div class="media-box" :class="{ expanded: expanded === 'video' }" @click="toggleExpand('video')">
+        <div class="media-label">Видео ({{ videoDimensions }})</div>
+        <video class="js-video" :key="videoSrc" autoplay loop muted playsinline>
+          <source :src="videoSrc" :type="'video/' + videoSrc.split('.').pop()" />
+          Ваш браузер не поддерживает видео.
+        </video>
+        <div class="overlay">
+          <span class="upload-icon" @click.stop="openManager('col_video')">📤 Заменить</span>
+        </div>
       </div>
-    </div>
-    <p class="filename">{{ model.col_video }}</p>
+      <p class="filename">{{ model.col_video }}</p>
 
-    <!-- TinyMCE -->
-    <div class="editor-wrap">
-      <h4>Описание</h4>
-      <TinyEditor v-model="model.col_description" />
-    </div>
+      <!-- TinyMCE -->
+      <div class="editor-wrap">
+        <h4>Описание</h4>
+        <TinyEditor v-model="model.col_description" />
+      </div>
 
-    <!-- Кнопки -->
-    <div class="save-button">
-      <el-button type="success" @click="saveWorkflow">Сохранить</el-button>
+      <!-- Кнопки -->
+      <div class="save-button">
+        <el-button type="success" @click="saveWorkflow">Сохранить</el-button>
+      </div>
     </div>
 
     <!-- VueFinder -->
@@ -120,11 +159,19 @@ onMounted(() => {
 </template>
 
 <style scoped>
-.workflow-block {
+.page-layout {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+.left-column {
+  width: 50%;
+}
+.right-column {
+  width: 50%;
   background: white;
   padding: 20px;
   border-radius: 8px;
-  max-width: 860px;
 }
 .media-box {
   position: relative;
@@ -133,13 +180,11 @@ onMounted(() => {
   border: 2px dashed #ccc;
   border-radius: 6px;
   overflow: hidden;
-  width: 320px;
+  width: 100%;
   height: 180px;
   transition: all 0.4s ease;
 }
 .media-box.expanded {
-  width: 100%;
-  max-width: 720px;
   height: 405px;
 }
 .media-box img,
@@ -148,6 +193,17 @@ onMounted(() => {
   height: 100%;
   object-fit: cover;
   border-radius: 6px;
+}
+.media-label {
+  position: absolute;
+  top: 5px;
+  left: 8px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  padding: 2px 8px;
+  font-size: 13px;
+  z-index: 2;
+  border-radius: 4px;
 }
 .overlay {
   position: absolute;
