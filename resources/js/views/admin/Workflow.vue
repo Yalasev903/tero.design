@@ -4,6 +4,7 @@ import axios from 'axios'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import SeoServices from '@/components/admin/SeoServices.vue'
 import { ElNotification } from 'element-plus'
+import { Edit, EditPen, Delete } from '@element-plus/icons-vue'
 
 const model = ref({
   col_poster: '',
@@ -14,10 +15,10 @@ const model = ref({
 
 const posterDimensions = ref('')
 const videoDimensions = ref('')
-
 const expanded = ref(null)
 const showFileManager = ref(false)
 const currentType = ref(null)
+const faqList = ref([])
 
 const posterSrc = computed(() => model.value.col_poster ? `/multimedia/${model.value.col_poster}` : '')
 const videoSrc = computed(() => model.value.col_video ? `/multimedia/${model.value.col_video}` : '')
@@ -32,11 +33,27 @@ const handleSelect = (items) => {
   const path = items[0].path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
   model.value[currentType.value] = path
   showFileManager.value = false
-
   nextTick(() => {
     if (currentType.value === 'col_poster') updatePosterDimensions()
     if (currentType.value === 'col_video') updateVideoDimensions()
   })
+}
+
+const updatePosterDimensions = () => {
+  const img = new Image()
+  img.onload = () => {
+    posterDimensions.value = `${img.naturalWidth}x${img.naturalHeight}px`
+  }
+  img.src = posterSrc.value
+}
+
+const updateVideoDimensions = () => {
+  const video = document.querySelector('.js-video')
+  if (video) {
+    video.onloadedmetadata = () => {
+      videoDimensions.value = `${video.videoWidth}x${video.videoHeight}px`
+    }
+  }
 }
 
 const loadWorkflow = async () => {
@@ -65,22 +82,34 @@ const saveWorkflow = async () => {
   }
 }
 
-const updatePosterDimensions = () => {
-  const img = new Image()
-  img.onload = () => {
-    posterDimensions.value = `${img.naturalWidth}x${img.naturalHeight}px`
+const loadFaq = async () => {
+  try {
+    const { data } = await axios.get('/api/admin/faq')
+    faqList.value = data
+  } catch (e) {
+    console.error('Ошибка загрузки FAQ', e)
   }
-  img.src = posterSrc.value
 }
 
-const updateVideoDimensions = () => {
-  const video = document.querySelector('.js-video')
-  if (video) {
-    video.onloadedmetadata = () => {
-      videoDimensions.value = `${video.videoWidth}x${video.videoHeight}px`
-    }
+const deleteFaq = async (id) => {
+  try {
+    await axios.delete(`/api/admin/faq/${id}`)
+    faqList.value = faqList.value.filter(f => f.col_id !== id)
+    ElNotification({ title: 'Удалено', message: 'Вопрос удалён', type: 'success' })
+  } catch (e) {
+    ElNotification({ title: 'Ошибка', message: 'Не удалось удалить', type: 'error' })
   }
 }
+
+const saveFaq = async () => {
+  try {
+    await axios.post('/api/admin/faq/save-all', faqList.value)
+    ElNotification({ title: 'Успешно', message: 'FAQ сохранены', type: 'success' })
+  } catch (e) {
+    ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить FAQ', type: 'error' })
+  }
+}
+
 
 const toggleExpand = (type) => {
   expanded.value = expanded.value === type ? null : type
@@ -89,17 +118,49 @@ const toggleExpand = (type) => {
 onMounted(() => {
   axios.get('/sanctum/csrf-cookie')
   loadWorkflow()
+  loadFaq()
 })
 </script>
 
 <template>
   <div class="page-layout">
-    <!-- Левая колонка: SEO -->
     <div class="left-column">
       <SeoServices title="SEO для Workflow" pageName="workflow" />
+
+
+      <!-- FAQ таблица -->
+      <el-card style="margin-top: 30px;">
+        <template #header>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">FAQ</h3>
+            <el-button type="primary">
+              <el-icon><Edit /></el-icon> Добавить
+            </el-button>
+          </div>
+        </template>
+
+        <el-table :data="faqList" style="width: 100%">
+          <el-table-column prop="col_id" label="ID" width="60" />
+          <el-table-column prop="col_question" label="Вопрос" />
+          <el-table-column label="Действия" width="120">
+            <template #default="{ row }">
+              <el-button size="small" type="primary">
+                <el-icon><EditPen /></el-icon>
+              </el-button>
+              <el-button size="small" type="danger" @click="deleteFaq(row.col_id)">
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+          <!-- Кнопка сохранить FAQ -->
+        <div class="save-button">
+            <el-button type="success" @click="saveFaq">Сохранить</el-button>
+        </div>
+      </el-card>
     </div>
 
-    <!-- Правая колонка: Workflow контент -->
     <div class="right-column">
       <h3>🎬 Видео Workflow</h3>
 
@@ -131,16 +192,17 @@ onMounted(() => {
       </div>
       <p class="filename">{{ model.col_video }}</p>
 
-      <!-- TinyMCE -->
+      <!-- Описание -->
       <div class="editor-wrap">
         <h4>Описание</h4>
         <TinyEditor v-model="model.col_description" />
       </div>
 
-      <!-- Кнопки -->
+      <!-- Кнопка сохранения -->
       <div class="save-button">
         <el-button type="success" @click="saveWorkflow">Сохранить</el-button>
       </div>
+
     </div>
 
     <!-- VueFinder -->
@@ -159,6 +221,7 @@ onMounted(() => {
 </template>
 
 <style scoped>
+
 .page-layout {
   display: flex;
   gap: 20px;
@@ -181,18 +244,25 @@ onMounted(() => {
   border-radius: 6px;
   overflow: hidden;
   width: 100%;
-  height: 180px;
+  max-width: 360px;
+  aspect-ratio: 16 / 9;
   transition: all 0.4s ease;
+  background: #f9f9f9;
 }
+
 .media-box.expanded {
-  height: 405px;
+  max-width: 720px;
+  aspect-ratio: 16 / 9;
 }
+
 .media-box img,
 .media-box video {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: 6px;
+  display: block;
+  background: #000;
 }
 .media-label {
   position: absolute;

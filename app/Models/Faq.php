@@ -6,11 +6,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Faq extends Model
 {
-    protected $table = 'faq';
+    protected $table = 'tbl_faq';
+    protected $primaryKey = 'col_id';
+    public $timestamps = true;
 
     protected $fillable = [
-        'position',
-        'question',
-        'answer',
+        'col_question',
+        'col_answer',
     ];
 }
+
