@@ -7,7 +7,7 @@
             <div class="workflow-description">{!! $workflow->col_description ?? '' !!}</div>
             <div class="workflow-player js-player">
                 <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
-                     alt="Workflow poster"
+                     alt="{{ $workflow->col_poster_alt ?? 'Workflow poster' }}"
                      class="workflow-player-poster b-lazy">
                 <div class="workflow-player-play js-video-play">
                     <img src="/img/play.png" alt="play image">

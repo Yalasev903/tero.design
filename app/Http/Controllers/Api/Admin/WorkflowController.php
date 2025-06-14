@@ -18,6 +18,7 @@ class WorkflowController extends Controller
         DB::table('tbl_workflow')->update([
             'col_description' => $request->col_description,
             'col_poster' => $request->col_poster,
+            'col_poster_alt' => $request->col_poster_alt,
             'col_video' => $request->col_video,
         ]);
 

@@ -6,6 +6,7 @@ import { ElNotification } from 'element-plus'
 
 const model = ref({
   col_poster: '',
+  col_poster_alt: '',
   col_video: '',
   col_description: ''
 })
@@ -31,6 +32,7 @@ const loadWorkflow = async () => {
     const { data } = await axios.get('/api/admin/workflow')
     model.value = {
       col_poster: data?.col_poster || '',
+      col_poster_alt: data?.col_poster_alt || '',
       col_video: data?.col_video || '',
       col_description: data?.col_description || ''
     }
@@ -67,11 +69,16 @@ onMounted(() => {
 
     <!-- Постер -->
     <div class="media-box" :class="{ expanded: expanded === 'poster' }" @click="toggleExpand('poster')">
-      <img :src="posterSrc" alt="Постер" />
+      <img :src="posterSrc" :alt="model.col_poster_alt || 'Постер'" />
       <div class="overlay">
         <span class="upload-icon" @click.stop="openManager('col_poster')">📤 Заменить</span>
       </div>
     </div>
+    <el-input
+      v-model="model.col_poster_alt"
+      placeholder="Альтернативный текст для постера (alt)"
+      style="margin-top: 10px"
+    />
     <p class="filename">{{ model.col_poster }}</p>
 
     <!-- Видео -->
