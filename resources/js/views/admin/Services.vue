@@ -73,12 +73,7 @@
         </el-form-item>
 
         <el-form-item label="Описание услуги" required>
-          <el-input
-            type="textarea"
-            v-model="newService.col_description"
-            placeholder="Введите описание услуги"
-            :rows="6"
-          />
+            <TinyEditor v-model="newService.col_description" />
         </el-form-item>
 
         <el-form-item label="Видео">
@@ -190,6 +185,7 @@
 </template>
 
 <script setup>
+import TinyEditor from '@/components/admin/TinyEditor.vue'
 import SeoServices from '@/components/admin/SeoServices.vue'
 import { ref, nextTick, onMounted } from 'vue'
 import draggable from 'vuedraggable'
