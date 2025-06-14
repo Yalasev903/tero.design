@@ -1,11 +1,13 @@
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import axios from 'axios'
+import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import SeoServices from '@/components/admin/SeoServices.vue'
 import { ElNotification } from 'element-plus'
-import { Edit, EditPen, Delete } from '@element-plus/icons-vue'
+import { Edit, EditPen, Delete, Rank } from '@element-plus/icons-vue'
 
+// Workflow модель
 const model = ref({
   col_poster: '',
   col_poster_alt: '',
@@ -18,11 +20,17 @@ const videoDimensions = ref('')
 const expanded = ref(null)
 const showFileManager = ref(false)
 const currentType = ref(null)
+
+// FAQ
 const faqList = ref([])
+const showFaqModal = ref(false)
+const isEditingFaq = ref(false)
+const faqForm = ref({ col_id: null, col_question: '', col_answer: '' })
 
 const posterSrc = computed(() => model.value.col_poster ? `/multimedia/${model.value.col_poster}` : '')
 const videoSrc = computed(() => model.value.col_video ? `/multimedia/${model.value.col_video}` : '')
 
+// --- Файл-менеджер ---
 const openManager = (type) => {
   currentType.value = type
   showFileManager.value = true
@@ -39,6 +47,7 @@ const handleSelect = (items) => {
   })
 }
 
+// --- Размеры ---
 const updatePosterDimensions = () => {
   const img = new Image()
   img.onload = () => {
@@ -46,7 +55,6 @@ const updatePosterDimensions = () => {
   }
   img.src = posterSrc.value
 }
-
 const updateVideoDimensions = () => {
   const video = document.querySelector('.js-video')
   if (video) {
@@ -56,60 +64,94 @@ const updateVideoDimensions = () => {
   }
 }
 
+// --- Загрузка ---
 const loadWorkflow = async () => {
-  try {
-    const { data } = await axios.get('/api/admin/workflow')
-    model.value = {
-      col_poster: data?.col_poster || '',
-      col_poster_alt: data?.col_poster_alt || '',
-      col_video: data?.col_video || '',
-      col_description: data?.col_description || ''
-    }
-    await nextTick()
-    updatePosterDimensions()
-    updateVideoDimensions()
-  } catch (e) {
-    console.error('Ошибка загрузки workflow', e)
-  }
+  const { data } = await axios.get('/api/admin/workflow')
+  model.value = data
+  await nextTick()
+  updatePosterDimensions()
+  updateVideoDimensions()
+}
+const loadFaq = async () => {
+  const { data } = await axios.get('/api/admin/faq')
+  faqList.value = data
 }
 
+// --- Сохранение ---
 const saveWorkflow = async () => {
   try {
     await axios.post('/api/admin/workflow', model.value)
     ElNotification({ title: 'Успешно', message: 'Сохранено', type: 'success' })
-  } catch (e) {
+  } catch {
     ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить', type: 'error' })
   }
 }
-
-const loadFaq = async () => {
+const saveFaq = async () => {
   try {
-    const { data } = await axios.get('/api/admin/faq')
-    faqList.value = data
-  } catch (e) {
-    console.error('Ошибка загрузки FAQ', e)
+    await axios.post('/api/admin/faq/save-all', faqList.value)
+    ElNotification({ title: 'Успешно', message: 'FAQ сохранены', type: 'success' })
+  } catch {
+    ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить FAQ', type: 'error' })
   }
 }
-
 const deleteFaq = async (id) => {
   try {
     await axios.delete(`/api/admin/faq/${id}`)
     faqList.value = faqList.value.filter(f => f.col_id !== id)
     ElNotification({ title: 'Удалено', message: 'Вопрос удалён', type: 'success' })
-  } catch (e) {
-    ElNotification({ title: 'Ошибка', message: 'Не удалось удалить', type: 'error' })
+  } catch {
+    ElNotification({ title: 'Ошибка', message: 'Ошибка удаления', type: 'error' })
   }
 }
 
-const saveFaq = async () => {
-  try {
-    await axios.post('/api/admin/faq/save-all', faqList.value)
-    ElNotification({ title: 'Успешно', message: 'FAQ сохранены', type: 'success' })
-  } catch (e) {
-    ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить FAQ', type: 'error' })
+// --- FAQ Модалка ---
+const openFaqModal = (faq = null) => {
+  if (faq) {
+    isEditingFaq.value = true
+    faqForm.value = { ...faq }
+  } else {
+    isEditingFaq.value = false
+    faqForm.value = { col_id: null, col_question: '', col_answer: '' }
   }
+  showFaqModal.value = true
 }
+const closeFaqModal = () => showFaqModal.value = false
+const submitFaq = async () => {
+  const { col_question, col_answer } = faqForm.value
 
+  const cleanQuestion = col_question.trim()
+  const cleanAnswer = col_answer.trim().replace(/<(.|\n)*?>/g, '').trim()
+
+  if (!cleanQuestion || !cleanAnswer) {
+    ElNotification({ title: 'Ошибка', message: 'Заполните вопрос и ответ', type: 'warning' })
+    return
+  }
+
+  if (isEditingFaq.value) {
+    const index = faqList.value.findIndex(f => f.col_id === faqForm.value.col_id)
+    if (index !== -1) {
+      faqList.value[index].col_question = cleanQuestion
+      faqList.value[index].col_answer = faqForm.value.col_answer
+      ElNotification({ title: 'Изменено', message: 'Вопрос обновлён', type: 'success' })
+    }
+  } else {
+    try {
+      const { data } = await axios.post('/api/admin/faq', {
+        col_question: cleanQuestion,
+        col_answer: faqForm.value.col_answer,
+        position: faqList.value.length
+      })
+
+      faqList.value.push(data)
+
+      ElNotification({ title: 'Добавлено', message: 'Вопрос добавлен', type: 'success' })
+    } catch {
+      ElNotification({ title: 'Ошибка', message: 'Не удалось добавить', type: 'error' })
+    }
+  }
+
+  showFaqModal.value = false
+}
 
 const toggleExpand = (type) => {
   expanded.value = expanded.value === type ? null : type
@@ -127,36 +169,42 @@ onMounted(() => {
     <div class="left-column">
       <SeoServices title="SEO для Workflow" pageName="workflow" />
 
-
-      <!-- FAQ таблица -->
       <el-card style="margin-top: 30px;">
         <template #header>
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <h3 style="margin: 0;">FAQ</h3>
-            <el-button type="primary">
+            <el-button type="primary" @click="openFaqModal()">
               <el-icon><Edit /></el-icon> Добавить
             </el-button>
           </div>
         </template>
 
-        <el-table :data="faqList" style="width: 100%">
-          <el-table-column prop="col_id" label="ID" width="60" />
-          <el-table-column prop="col_question" label="Вопрос" />
-          <el-table-column label="Действия" width="120">
-            <template #default="{ row }">
-              <el-button size="small" type="primary">
-                <el-icon><EditPen /></el-icon>
-              </el-button>
-              <el-button size="small" type="danger" @click="deleteFaq(row.col_id)">
-                <el-icon><Delete /></el-icon>
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <draggable
+          v-model="faqList"
+          item-key="col_id"
+          :animation="200"
+          :ghost-class="'dragging'"
+          :cancel="'.faq-actions, .faq-actions *'"
+        >
+          <template #item="{ element }">
+            <div class="faq-row">
+              <span class="drag-handle" title="Перетащить"><el-icon><Rank /></el-icon></span>
+              <div class="faq-id">ID: {{ element.col_id }}</div>
+              <div class="faq-question">{{ element.col_question }}</div>
+              <div class="faq-actions">
+                <el-button size="small" type="primary" @click="openFaqModal(element)">
+                  <el-icon><EditPen /></el-icon>
+                </el-button>
+                <el-button size="small" type="danger" @click="deleteFaq(element.col_id)">
+                  <el-icon><Delete /></el-icon>
+                </el-button>
+              </div>
+            </div>
+          </template>
+        </draggable>
 
-          <!-- Кнопка сохранить FAQ -->
         <div class="save-button">
-            <el-button type="success" @click="saveFaq">Сохранить</el-button>
+          <el-button type="success" @click="saveFaq">Сохранить</el-button>
         </div>
       </el-card>
     </div>
@@ -164,45 +212,31 @@ onMounted(() => {
     <div class="right-column">
       <h3>🎬 Видео Workflow</h3>
 
-      <!-- Постер -->
       <div class="media-box" :class="{ expanded: expanded === 'poster' }" @click="toggleExpand('poster')">
         <div class="media-label">Постер ({{ posterDimensions }})</div>
         <img :src="posterSrc" :alt="model.col_poster_alt || 'Постер'" />
-        <div class="overlay">
-          <span class="upload-icon" @click.stop="openManager('col_poster')">📤 Заменить</span>
-        </div>
+        <div class="overlay"><span class="upload-icon" @click.stop="openManager('col_poster')">📤 Заменить</span></div>
       </div>
-      <el-input
-        v-model="model.col_poster_alt"
-        placeholder="Альтернативный текст для постера (alt)"
-        style="margin-top: 10px"
-      />
+      <el-input v-model="model.col_poster_alt" placeholder="Alt постера" style="margin-top: 10px" />
       <p class="filename">{{ model.col_poster }}</p>
 
-      <!-- Видео -->
       <div class="media-box" :class="{ expanded: expanded === 'video' }" @click="toggleExpand('video')">
         <div class="media-label">Видео ({{ videoDimensions }})</div>
         <video class="js-video" :key="videoSrc" autoplay loop muted playsinline>
           <source :src="videoSrc" :type="'video/' + videoSrc.split('.').pop()" />
-          Ваш браузер не поддерживает видео.
         </video>
-        <div class="overlay">
-          <span class="upload-icon" @click.stop="openManager('col_video')">📤 Заменить</span>
-        </div>
+        <div class="overlay"><span class="upload-icon" @click.stop="openManager('col_video')">📤 Заменить</span></div>
       </div>
       <p class="filename">{{ model.col_video }}</p>
 
-      <!-- Описание -->
       <div class="editor-wrap">
         <h4>Описание</h4>
         <TinyEditor v-model="model.col_description" />
       </div>
 
-      <!-- Кнопка сохранения -->
       <div class="save-button">
         <el-button type="success" @click="saveWorkflow">Сохранить</el-button>
       </div>
-
     </div>
 
     <!-- VueFinder -->
@@ -217,11 +251,33 @@ onMounted(() => {
         </div>
       </div>
     </teleport>
+
+    <!-- Модалка FAQ -->
+    <el-dialog
+    v-model="showFaqModal"
+    :title="isEditingFaq ? 'Редактировать вопрос' : 'Добавить вопрос'"
+    width="600px"
+    destroy-on-close
+    >
+    <el-form :model="faqForm" label-position="top">
+        <el-form-item label="Вопрос">
+        <el-input v-model="faqForm.col_question" type="textarea" placeholder="Введите вопрос" />
+        </el-form-item>
+        <el-form-item label="Ответ">
+        <TinyEditor v-model="faqForm.col_answer" />
+        </el-form-item>
+    </el-form>
+    <template #footer>
+        <el-button @click="closeFaqModal">Отмена</el-button>
+        <el-button type="primary" @click="submitFaq">
+        {{ isEditingFaq ? 'Сохранить' : 'Добавить' }}
+        </el-button>
+    </template>
+    </el-dialog>
   </div>
 </template>
 
 <style scoped>
-
 .page-layout {
   display: flex;
   gap: 20px;
@@ -236,6 +292,44 @@ onMounted(() => {
   padding: 20px;
   border-radius: 8px;
 }
+.faq-id {
+  font-weight: bold;
+  font-size: 13px;
+  color: #999;
+  margin-right: 15px;
+  width: 50px;
+}
+.faq-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-bottom: 1px solid #eaeaea;
+  background: #fff;
+  transition: background 0.2s ease;
+}
+.faq-row:hover {
+  background: #f9f9f9;
+}
+.drag-handle {
+  cursor: move;
+  display: flex;
+  align-items: center;
+  margin-right: 12px;
+  color: #999;
+}
+.faq-question {
+  flex: 1;
+  font-size: 14px;
+}
+.faq-actions {
+  display: flex;
+  gap: 6px;
+}
+.dragging {
+  background-color: #eef;
+  opacity: 0.9;
+}
 .media-box {
   position: relative;
   margin-top: 20px;
@@ -249,12 +343,10 @@ onMounted(() => {
   transition: all 0.4s ease;
   background: #f9f9f9;
 }
-
 .media-box.expanded {
   max-width: 720px;
   aspect-ratio: 16 / 9;
 }
-
 .media-box img,
 .media-box video {
   width: 100%;

@@ -11,7 +11,7 @@ class WorkflowController extends Controller
     public function index()
     {
         $workflow = TblWorkflow::first();
-        $faq_list = \App\Models\Faq::orderBy('col_id')->get();
+        $faq_list = \App\Models\Faq::orderBy('position')->get();
 
          $seo = DB::table('tbl_pages')
             ->select([

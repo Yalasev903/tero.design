@@ -49,7 +49,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
 
     Route::get('/faq', [FaqController::class, 'index']);
     Route::delete('/faq/{id}', [FaqController::class, 'destroy']);
-    Route::post('/faq/save-all', [FaqController::class, 'updateAll']); 
+    Route::post('/faq/save-all', [FaqController::class, 'updateAll']);
+    Route::post('/faq', [FaqController::class, 'store']);
 });
 
 Route::get('/user', function (Request $request) {

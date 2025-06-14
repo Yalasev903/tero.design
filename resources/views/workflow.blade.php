@@ -34,7 +34,7 @@
         <div class="faq">
             <h2 class="workflow-title">Questions</h2>
 
-            @foreach($faq_list as $item)
+            @foreach($faq_list->sortBy('position') as $item)
                 <div class="faq-item">
                     <div class="faq-question js-question">
                         <svg class="faq-question-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21.2 11.6">
