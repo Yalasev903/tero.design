@@ -850,8 +850,8 @@ h1 {
 
 .close-btn {
   position: absolute;
-  top: 12px;
-  right: 16px;
+  top: 5px;
+  right: 95px;
   background: #e74c3c;
   color: white;
   border: none;

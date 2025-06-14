@@ -396,7 +396,7 @@ onMounted(() => {
 .add-col { margin-top: 7px; }
 .finder-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); z-index: 9999; display: flex; justify-content: center; align-items: center; }
 .finder-container { width: 90%; height: 90%; background: #fff; border-radius: 8px; overflow: hidden; position: relative; }
-.close-btn { position: absolute; top: 10px; right: 15px; background: #e00; color: #fff; padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; z-index: 10; }
+.close-btn { position: absolute; top: 98px; right: 95px; background: #e00; color: #fff; padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; z-index: 10; }
 
 .row-header {
   display: flex;

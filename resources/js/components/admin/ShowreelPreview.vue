@@ -65,7 +65,6 @@ import {
   Iphone,
   VideoCamera
 } from '@element-plus/icons-vue'
-import VueFinder from 'vuefinder'
 
 
 const model = reactive({ poster: '', video: '' })
@@ -246,8 +245,8 @@ onMounted(() => {
 }
 .close-btn {
   position: absolute;
-  top: 10px;
-  right: 15px;
+  top: 5px;
+  right: 95px;
   background: #e00;
   color: #fff;
   padding: 5px 10px;
