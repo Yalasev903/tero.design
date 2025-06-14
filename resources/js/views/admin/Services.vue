@@ -1,5 +1,9 @@
 <template>
   <div class="page-wrap">
+                    <a href="/services" target="_blank" class="inline-flex items-center text-blue-600 hover:underline text-lg font-medium mb-4">
+                    <el-icon class="mr-1"><House /></el-icon>
+                    Открыть страницу
+                    </a>
         <!-- SEO -->
         <SeoServices title="SEO страницы Услуги" pageName="services" />
     <header class="header">
