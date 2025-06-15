@@ -8,6 +8,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import 'vuefinder/dist/style.css'
 import VueFinder from 'vuefinder'
 import ShowreelPlayer from './components/ShowreelPlayer.vue'
+import PriceCalculator from './components/PriceCalculator.vue'
 
 const app = createApp(App)
 
@@ -26,5 +27,6 @@ app.use(VueFinder, {
 })
 
 app.component('ShowreelPlayer', ShowreelPlayer)
+app.component('PriceCalculator', PriceCalculator
 
 app.mount('#app')

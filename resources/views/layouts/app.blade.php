@@ -23,6 +23,7 @@
     <link rel="icon" href="{{ asset('favicon.png') }}?v={{ filemtime(public_path('favicon.png')) }}" sizes="32x32"/>
     <link rel="icon" href="{{ asset('favicon.png') }}" sizes="192x192"/>
     <link rel="apple-touch-icon-precomposed" href="{{ asset('favicon.png') }}"/>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet">
     <meta name="msapplication-TileImage" content="{{ asset('favicon.png') }}"/>
 
     {{-- SEO OpenGraph --}}
@@ -55,9 +56,14 @@
     @section('header_styles')
         <link rel="stylesheet" href="{{ asset('css/style.min.css?v=5.92') }}"/>
     @show
+     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <script src="{{ asset('js/header.min.js?v=5.92') }}" type="application/javascript"></script>
     @stack('styles')
     <style>
+        body {
+    font-family: 'Montserrat', sans-serif;
+}
+
         .showreel {
             pointer-events: auto;
             position: fixed;
