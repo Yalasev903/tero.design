@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\Admin\HomeGridController;
 use App\Http\Controllers\Api\Admin\TblServiceController;
 use App\Http\Controllers\Api\Admin\WorkflowController;
 use App\Http\Controllers\Api\Admin\FaqController;
+use App\Http\Controllers\Api\Admin\ProjectController;
 
 Route::post('/admin/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy']);
@@ -51,6 +52,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::delete('/faq/{id}', [FaqController::class, 'destroy']);
     Route::post('/faq/save-all', [FaqController::class, 'updateAll']);
     Route::post('/faq', [FaqController::class, 'store']);
+
+    Route::post('/admin/projects', [ProjectController::class, 'store']);
 });
 
 Route::get('/user', function (Request $request) {

@@ -27,6 +27,6 @@ app.use(VueFinder, {
 })
 
 app.component('ShowreelPlayer', ShowreelPlayer)
-app.component('PriceCalculator', PriceCalculator
+app.component('PriceCalculator', PriceCalculator)
 
 app.mount('#app')

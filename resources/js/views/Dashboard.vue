@@ -24,11 +24,25 @@
     <aside v-show="sidebarOpen" class="admin-sidebar">
       <nav>
         <ul>
-          <li v-for="item in menuItems" :key="item.path">
-            <a href="#" :class="{active: activeTab.path === item.path}" @click.prevent="openTab(item)">
-              <span v-if="item.icon">{{ item.icon }}</span> {{ item.label }}
-            </a>
-          </li>
+            <li v-for="item in menuItems" :key="item.path">
+            <template v-if="item.children">
+                <div class="submenu-label" @click="toggleSubmenu(item.path)">
+                {{ item.icon }} {{ item.label }}
+                </div>
+                <ul class="submenu" v-show="openSubmenus[item.path]">
+                <li v-for="child in item.children" :key="child.path">
+                    <a href="#" :class="{active: activeTab.path === child.path}" @click.prevent="openTab(child)">
+                    → {{ child.label }}
+                    </a>
+                </li>
+                </ul>
+            </template>
+            <template v-else>
+                <a href="#" :class="{active: activeTab.path === item.path}" @click.prevent="openTab(item)">
+                <span v-if="item.icon">{{ item.icon }}</span> {{ item.label }}
+                </a>
+            </template>
+            </li>
         </ul>
       </nav>
     </aside>
@@ -66,6 +80,7 @@ import { useRouter, useRoute } from 'vue-router'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
 import Projects from './admin/Projects.vue'
+import CreateProject from './admin/CreateProject.vue' // 👈 ДОБАВИЛ ЭТО
 import Workflow from './admin/Workflow.vue'
 import Services from './admin/Services.vue'
 import axios from 'axios'
@@ -76,29 +91,37 @@ const route = useRoute()
 const sidebarOpen = ref(true)
 const showSettings = ref(false)
 const tabsMode = ref(true)
+const openSubmenus = ref({})
 
+// 👇 Обновлённое меню с вложенным блоком "Проекты"
 const menuItems = [
   { path: '/dashboard', label: 'Панель управления', icon: '📊', component: markRaw(DashboardIndex) },
   { path: '/home-grid', label: 'Home Grid', icon: '🏠', component: markRaw(HomeGrid) },
-  { path: '/projects', label: 'Проекты', icon: '📂', component: markRaw(Projects) },
+  {
+    path: '/projects',
+    label: 'Проекты',
+    icon: '📂',
+    children: [
+      { path: '/projects/create', label: 'Создать проект', component: markRaw(CreateProject) },
+      { path: '/projects/list', label: 'Список проектов', component: markRaw(Projects) }
+    ]
+  },
   { path: '/workflow', label: 'Workflow', icon: '🔁', component: markRaw(Workflow) },
   { path: '/services', label: 'Услуги', icon: '🛠️', component: markRaw(Services) }
 ]
 
-// tabs — массив открытых вкладок
 const tabs = ref([
   { ...menuItems[0] }
 ])
+
 const activeTab = ref(tabs.value[0])
 
-// хлебные крошки (по активной вкладке)
 const breadcrumbs = computed(() => {
   const tab = activeTab.value
   if (!tab) return []
   return ['Админка', tab.label]
 })
 
-// открыть новую вкладку (или сфокусироваться если уже есть)
 function openTab(item) {
   let tab = tabs.value.find(t => t.path === item.path)
   if (!tab) {
@@ -107,35 +130,32 @@ function openTab(item) {
   }
   activeTab.value = tab
   if (!tabsMode.value) {
-    // для классического режима просто перейти по роуту
     router.push(item.path)
   }
 }
-// переключить вкладку
 function switchTab(tab) {
   activeTab.value = tab
   router.push(tab.path)
 }
-// закрыть вкладку
 function closeTab(tab) {
   const idx = tabs.value.indexOf(tab)
   if (idx !== -1) {
     tabs.value.splice(idx, 1)
-    // если была активной — переключить на соседнюю
     if (activeTab.value === tab) {
       activeTab.value = tabs.value[idx] || tabs.value[idx - 1] || tabs.value[0]
       router.push(activeTab.value.path)
     }
   }
 }
-
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
 }
-
-// синхронизация роута с вкладками (при ручном вводе url)
+function toggleSubmenu(path) {
+  openSubmenus.value[path] = !openSubmenus.value[path]
+}
 router.afterEach((to) => {
-  const item = menuItems.find(m => m.path === to.path)
+  const flatItems = menuItems.flatMap(item => item.children ?? [item])
+  const item = flatItems.find(m => m.path === to.path)
   if (item) openTab(item)
 })
 
@@ -289,5 +309,19 @@ const logout = async () => {
   cursor: pointer;
   border-radius: 5px;
   font-size: 15px;
+}
+
+.submenu {
+  padding-left: 10px;
+  margin-top: 4px;
+}
+.submenu a {
+  font-size: 15px;
+  padding: 8px 36px;
+}
+.submenu-label {
+  font-weight: bold;
+  color: #aac9ff;
+  margin-left: 28px;
 }
 </style>
