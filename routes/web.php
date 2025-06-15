@@ -20,3 +20,6 @@ Route::get('/projects/{id}', [ProjectController::class, 'show'])->name('projects
 
 Route::view('/admin', 'admin');
 Route::get('/admin/{any}', fn () => view('admin'))->where('any', '.*');
+Route::get('/login', function () {
+    return 'Login page not implemented';
+})->name('login');

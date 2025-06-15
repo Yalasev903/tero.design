@@ -53,7 +53,11 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/faq/save-all', [FaqController::class, 'updateAll']);
     Route::post('/faq', [FaqController::class, 'store']);
 
-    Route::post('/admin/projects', [ProjectController::class, 'store']);
+    Route::get('/projects', [ProjectController::class, 'index']);
+    Route::post('/projects', [ProjectController::class, 'store']);
+    Route::get('/projects/{id}', [ProjectController::class, 'show']);
+    Route::put('/projects/{id}', [ProjectController::class, 'update']);
+    Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 });
 
 Route::get('/user', function (Request $request) {
