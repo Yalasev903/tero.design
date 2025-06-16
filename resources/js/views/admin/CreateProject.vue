@@ -133,11 +133,12 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, onMounted, watch, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
+import Projects from './Projects.vue'
 import { ElNotification } from 'element-plus'
 import { Plus, Check, Delete, Edit, Picture, Menu } from '@element-plus/icons-vue'
 
@@ -158,6 +159,9 @@ const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
 const showFileManager = ref(false)
 const previewVisible = ref(false)
 const previewItem = ref({})
+
+const openTab = inject('openTab')
+const tabsMode = inject('tabsMode')
 
 // Добавление строки
 const addRow = () => {
@@ -214,7 +218,6 @@ const openPreview = async (media) => {
 // Отправка формы
 const submit = async () => {
   try {
-    // Преобразуем данные для отправки
     form.value.multimedia_grid = gridRows.value.map(row => {
       return row.items.map(col => ({
         ...(col.media || {}),
@@ -230,8 +233,16 @@ const submit = async () => {
       ElNotification({ title: 'Успешно', message: 'Проект создан', type: 'success' })
     }
 
-    // Переход к списку проектов
-    router.push('/projects')
+    if (tabsMode?.value && openTab) {
+        openTab({
+        path: '/projects/list',
+        label: 'Список проектов',
+        component: Projects
+        })
+    } else {
+      router.push('/projects')
+    }
+
   } catch (e) {
     ElNotification({
       title: 'Ошибка',

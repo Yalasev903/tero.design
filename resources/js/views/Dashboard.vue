@@ -77,7 +77,7 @@
 </template>
 
 <script setup>
-import { ref, computed, markRaw } from 'vue'
+import { ref, computed, markRaw, provide } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
@@ -86,6 +86,7 @@ import CreateProject from './admin/CreateProject.vue' // 👈 ДОБАВИЛ Э�
 import Workflow from './admin/Workflow.vue'
 import Services from './admin/Services.vue'
 import axios from 'axios'
+
 
 const router = useRouter()
 const route = useRoute()
@@ -174,6 +175,9 @@ router.afterEach((to) => {
     })
   }
 })
+
+provide('openTab', openTab)
+provide('tabsMode', tabsMode)
 
 const logout = async () => {
   await axios.post('/api/admin/logout')
