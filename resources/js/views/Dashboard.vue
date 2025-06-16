@@ -49,21 +49,23 @@
 
     <!-- Окна-вкладки -->
     <main class="admin-content">
-      <div v-if="tabsMode" class="tabs-container">
-        <div class="tab-list">
-          <div v-for="tab in tabs" :key="tab.path" :class="['tab', {active: tab.path === activeTab.path}]" @click="switchTab(tab)">
-            <span>{{ tab.label }}</span>
-            <button v-if="tabs.length > 1" class="close-tab" @click.stop="closeTab(tab)">×</button>
-          </div>
+        <div v-if="tabsMode" class="tabs-container">
+            <div class="tab-list">
+            <div v-for="tab in tabs" :key="tab.path" :class="['tab', {active: tab.path === activeTab.path}]" @click="switchTab(tab)">
+                <span>{{ tab.label }}</span>
+                <button v-if="tabs.length > 1" class="close-tab" @click.stop="closeTab(tab)">×</button>
+            </div>
+            </div>
+            <div class="tab-content">
+            <component :is="activeTab.component" />
+            </div>
         </div>
-        <div class="tab-content">
-          <component :is="activeTab.component" />
+
+        <!-- 👇 Классический режим — через router-view -->
+        <div v-else class="tab-content">
+            <router-view />
         </div>
-      </div>
-      <div v-else>
-        <component :is="activeTab.component" />
-      </div>
-    </main>
+        </main>
 
     <!-- Настройки -->
     <el-dialog v-model="showSettings" title="Настройки" width="350px">
@@ -127,12 +129,16 @@ function openTab(item) {
   if (!tab) {
     tab = { ...item }
     tabs.value.push(tab)
+  } else if (item.label) {
+    // Обновляем label если нужно
+    tab.label = item.label
   }
   activeTab.value = tab
   if (!tabsMode.value) {
     router.push(item.path)
   }
 }
+
 function switchTab(tab) {
   activeTab.value = tab
   router.push(tab.path)
@@ -156,7 +162,17 @@ function toggleSubmenu(path) {
 router.afterEach((to) => {
   const flatItems = menuItems.flatMap(item => item.children ?? [item])
   const item = flatItems.find(m => m.path === to.path)
-  if (item) openTab(item)
+
+  if (item) {
+    openTab(item)
+  } else if (to.name === 'EditProject') {
+    // Открываем вкладку вручную с заголовком
+    openTab({
+      path: to.path,
+      label: 'Редактирование проекта',
+      component: markRaw(CreateProject)
+    })
+  }
 })
 
 const logout = async () => {

@@ -214,24 +214,30 @@ const openPreview = async (media) => {
 // Отправка формы
 const submit = async () => {
   try {
-    // Преобразуем обратно в формат без обёртки media
+    // Преобразуем данные для отправки
     form.value.multimedia_grid = gridRows.value.map(row => {
-      return row.items.map(col => {
-        return {
-          ...(col.media || {}),
-          title: col.title || ''
-        }
-      })
+      return row.items.map(col => ({
+        ...(col.media || {}),
+        title: col.title || ''
+      }))
     })
 
-    const res = isEditing.value
-      ? await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
-      : await axios.post('/api/admin/projects', form.value)
+    if (isEditing.value) {
+      await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
+      ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
+    } else {
+      await axios.post('/api/admin/projects', form.value)
+      ElNotification({ title: 'Успешно', message: 'Проект создан', type: 'success' })
+    }
 
-    ElNotification({ title: 'Успешно', message: 'Проект сохранён', type: 'success' })
+    // Переход к списку проектов
     router.push('/projects')
-  } catch {
-    ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить', type: 'error' })
+  } catch (e) {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Не удалось сохранить проект',
+      type: 'error'
+    })
   }
 }
 

@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import Login from '../views/Login.vue'
 import Dashboard from '../views/Dashboard.vue'
-import ShowreelPreview from '@/components/admin/ShowreelPreview.vue'
+import DashboardIndex from '../views/admin/DashboardIndex.vue'
 import HomeGrid from '../views/admin/HomeGrid.vue'
 import ProjectsList from '../views/admin/Projects.vue'
 import CreateProject from '../views/admin/CreateProject.vue'
@@ -15,40 +15,22 @@ const routes = [
     redirect: '/dashboard'
   },
   {
-    path: '/dashboard',
+    path: '/',
     component: Dashboard,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/home-grid',
-    component: HomeGrid,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/projects',
-    component: ProjectsList,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/projects/create',
-    component: CreateProject,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/projects/edit/:id',
-    name: 'EditProject',
-    component: CreateProject,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/workflow',
-    component: Workflow,
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/services',
-    component: Services,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
+    children: [
+      { path: 'dashboard', component: DashboardIndex },
+      { path: 'home-grid', component: HomeGrid },
+      { path: 'projects', component: ProjectsList },
+      { path: 'projects/create', component: CreateProject },
+      {
+        path: 'projects/edit/:id',
+        name: 'EditProject',
+        component: CreateProject
+      },
+      { path: 'workflow', component: Workflow },
+      { path: 'services', component: Services }
+    ]
   },
   {
     path: '/login',
@@ -62,7 +44,7 @@ const routes = [
 
 const router = createRouter({
   history: createWebHistory('/admin/'),
-  routes,
+  routes
 })
 
 router.beforeEach(async (to, from, next) => {
