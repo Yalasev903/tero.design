@@ -58,7 +58,11 @@
                           <el-icon><Edit /></el-icon>
                         </span>
                       </div>
-                      <span class="media-name">{{ col.title || 'Без названия' }}</span>
+                      <span class="media-name">
+                    <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
+                    <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
+                    {{ col.title || (col.media?.type === 'video' ? 'Видео' : col.media?.type === 'img' ? 'Изображение' : 'Без названия') }}
+                    </span>
                       <el-input
                         v-model="col.title"
                         size="small"
