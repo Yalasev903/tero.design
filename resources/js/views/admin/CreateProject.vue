@@ -88,16 +88,7 @@
                       <span class="media-name">
                         <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
                         <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
-                        {{ col.media?.type === 'img' ? (col.title || 'Изображение') : 'Видео' }}
                       </span>
-
-                      <el-input
-                        v-if="col.media?.type === 'img'"
-                        v-model="col.title"
-                        size="small"
-                        placeholder="Название / alt"
-                        style="margin-top: 8px; width: 100%; text-align: center;"
-                      />
 
                       <div class="item-toolbar">
                         <el-button size="small" type="danger" circle @click="removeCol(rowIdx, colIdx)">
@@ -172,6 +163,14 @@
         <div v-else>
           <p>Нет данных для предпросмотра</p>
         </div>
+
+        <!-- Добавлено поле input только в модалке -->
+        <el-input
+          v-if="previewItem?.type === 'img'"
+          v-model="previewItem.title"
+          placeholder="Название / alt"
+          style="margin-top: 16px; width: 100%; text-align: center;"
+        />
       </div>
     </el-dialog>
   </div>
@@ -247,13 +246,27 @@ const handleFileSelect = (items) => {
 
 const previewSize = ref({ w: null, h: null })
 const openPreview = async (col) => {
-  previewItem.value = col.media || {}
+  previewItem.value = {
+    ...col.media,
+    title: col.title ?? ''
+  }
+  previewItem.value.__ref = col
   previewVisible.value = true
+
   await nextTick()
-  const el = document.querySelector('.preview-modal-content video, .preview-modal-content img')
-  if (el?.tagName === 'IMG') previewSize.value = { w: el.naturalWidth, h: el.naturalHeight }
-  else if (el?.tagName === 'VIDEO') previewSize.value = { w: el.videoWidth, h: el.videoHeight }
-  else previewSize.value = { w: null, h: null }
+
+  const img = document.querySelector('.preview-modal-content img')
+  const video = document.querySelector('.preview-modal-content video')
+
+  if (img) {
+    previewSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+  } else if (video) {
+    video.addEventListener('loadedmetadata', () => {
+      previewSize.value = { w: video.videoWidth, h: video.videoHeight }
+    }, { once: true })
+  } else {
+    previewSize.value = { w: null, h: null }
+  }
 }
 
 const submit = async () => {
