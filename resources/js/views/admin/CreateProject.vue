@@ -95,30 +95,46 @@
       </div>
     </teleport>
 
-    <el-dialog v-model="previewVisible" title="Предпросмотр" width="50%" append-to-body>
-      <div class="preview-modal-content">
-        <div v-if="previewItem?.type === 'img'">
-          <img :src="'/multimedia/' + previewItem.link" class="preview-img" />
+        <el-dialog
+        v-model="previewVisible"
+        title="Предпросмотр"
+        width="50%"
+        class="preview-dialog"
+        :append-to-body="true"
+        >
+        <div class="preview-modal-content">
+            <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
+            {{ previewSize.w }} × {{ previewSize.h }} px
+            </div>
+
+            <div v-if="previewItem?.type === 'img' && previewItem.link">
+            <img :src="`/multimedia/${previewItem.link}`" class="preview-img" />
+            </div>
+
+            <div v-else-if="previewItem?.type === 'video' && previewItem.links?.length">
+            <video
+                class="preview-video"
+                controls
+                autoplay
+                loop
+                muted
+                playsinline
+                :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
+            >
+                <source
+                v-for="(link, i) in previewItem.links"
+                :key="i"
+                :src="`/multimedia/${link.link}`"
+                :type="link.mime || 'video/mp4'"
+                />
+            </video>
+            </div>
+
+            <div v-else>
+            <p>Нет данных для предпросмотра</p>
+            </div>
         </div>
-        <div v-else-if="previewItem?.type === 'video'">
-          <video
-            class="preview-video"
-            autoplay muted loop playsinline
-            preload="metadata" controls
-            :poster="'/multimedia/' + previewItem.poster"
-            @loadedmetadata="e => e.target.play().catch(()=>{})">
-            <source
-              v-for="(link, i) in previewItem.links || []"
-              :key="i"
-              :src="'/multimedia/' + link.link"
-              :type="link.mime || 'video/mp4'" />
-          </video>
-        </div>
-        <div v-else>
-          <p>Нет данных для предпросмотра</p>
-        </div>
-      </div>
-    </el-dialog>
+        </el-dialog>
   </div>
 </template>
 
@@ -182,12 +198,22 @@ const handleFileSelect = (items) => {
   showFileManager.value = false
 }
 
-const openPreview = async media => {
-  previewItem.value = media
+const previewSize = ref({ w: null, h: null })
+
+const openPreview = async (col) => {
+  previewItem.value = col.media || {}
   previewVisible.value = true
+
   await nextTick()
-  const el = document.querySelector('.preview-modal-content video')
-  if(el) el.play().catch(()=>{})
+
+  const el = document.querySelector('.preview-modal-content video, .preview-modal-content img')
+  if (el?.tagName === 'IMG') {
+    previewSize.value = { w: el.naturalWidth, h: el.naturalHeight }
+  } else if (el?.tagName === 'VIDEO') {
+    previewSize.value = { w: el.videoWidth, h: el.videoHeight }
+  } else {
+    previewSize.value = { w: null, h: null }
+  }
 }
 
 const submit = async () => {
