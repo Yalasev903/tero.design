@@ -99,7 +99,7 @@
                   </template>
                 </draggable>
 
-                <el-dropdown trigger="click" @command="type => addCol(rowIdx, type)">
+                    <el-dropdown trigger="click" @command="type => handleAddCol(rowIdx, type)">
                     <el-button size="small" circle type="primary" class="add-col-btn">
                         <el-icon><Plus /></el-icon>
                     </el-button>
@@ -227,6 +227,22 @@ const addCol = (rowIdx, type = null) => {
   if (type === 'vr') media.type = 'vr'
   if (type === 'curtain') media.type = 'curtain'
   gridRows.value[rowIdx].items.push({ media, title: '' })
+}
+const handleAddCol = (rowIdx, type = null) => {
+  const media = {}
+  if (type === 'img') media.type = 'img'
+  if (type === 'video') media.type = 'video'
+  if (type === 'vr') media.type = 'vr'
+  if (type === 'curtain') media.type = 'curtain'
+
+  const newCol = { media, title: '' }
+  gridRows.value[rowIdx].items.push(newCol)
+
+  // Открываем менеджер только для img и video
+  if (['img', 'video'].includes(type)) {
+    const newColIdx = gridRows.value[rowIdx].items.length - 1
+    nextTick(() => openFileManager(rowIdx, newColIdx))
+  }
 }
 
 const removeCol = (r, c) => gridRows.value[r].items.splice(c, 1)
