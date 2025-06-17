@@ -99,9 +99,19 @@
                   </template>
                 </draggable>
 
-                <el-button size="small" circle type="primary" class="add-col-btn" @click="addCol(rowIdx)">
-                  <el-icon><Plus /></el-icon>
-                </el-button>
+                <el-dropdown trigger="click" @command="type => addCol(rowIdx, type)">
+                    <el-button size="small" circle type="primary" class="add-col-btn">
+                        <el-icon><Plus /></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                        <el-dropdown-item command="img">Изображение</el-dropdown-item>
+                        <el-dropdown-item command="video">Видео</el-dropdown-item>
+                        <el-dropdown-item command="vr">3D тур</el-dropdown-item>
+                        <el-dropdown-item command="curtain">Шторка</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                    </el-dropdown>
               </div>
             </div>
           </template>
@@ -210,7 +220,15 @@ const previewItem = ref({})
 
 const addRow = () => gridRows.value.push({ id: Date.now() + Math.random(), items: [] })
 const removeRow = idx => gridRows.value.splice(idx, 1)
-const addCol = rowIdx => gridRows.value[rowIdx].items.push({ media: {}, title: '' })
+const addCol = (rowIdx, type = null) => {
+  const media = {}
+  if (type === 'img') media.type = 'img'
+  if (type === 'video') media.type = 'video'
+  if (type === 'vr') media.type = 'vr'
+  if (type === 'curtain') media.type = 'curtain'
+  gridRows.value[rowIdx].items.push({ media, title: '' })
+}
+
 const removeCol = (r, c) => gridRows.value[r].items.splice(c, 1)
 
 const openFileManager = (r, c) => {
