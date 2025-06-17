@@ -43,43 +43,35 @@
                 >
                   <template #item="{ element: col, index: colIdx }">
                     <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
-                      <div
-                        class="media-thumb"
-                        @click="openPreview(col)"
-                        @mousedown="onMouseDown"
-                        @mouseup="onMouseUp"
-                      >
+                      <div class="media-thumb" @click="openPreview(col)">
                         <template v-if="col.media?.type === 'img'">
-                          <img
-                            :src="'/multimedia/' + col.media.link"
-                            :alt="col.title || 'Изображение'"
-                            class="grid-img"
-                          />
+                          <img :src="'/multimedia/' + col.media.link" class="grid-img" />
                         </template>
-
                         <template v-else-if="col.media?.type === 'video'">
-                          <video
-                            class="grid-video"
-                            autoplay
-                            muted
-                            loop
-                            playsinline
-                            preload="metadata"
-                            :poster="col.media.poster ? '/multimedia/' + col.media.poster : undefined"
-                          >
+                          <video class="grid-video" autoplay muted loop playsinline preload="metadata"
+                            :poster="col.media.poster ? '/multimedia/' + col.media.poster : undefined">
                             <source
                               v-for="(link, i) in col.media.links || []"
                               :key="i"
                               :src="'/multimedia/' + link.link"
-                              :type="link.mime || 'video/mp4'"
-                            />
+                              :type="link.mime || 'video/mp4'" />
                           </video>
                         </template>
-
+                        <template v-else-if="col.media?.type === 'vr'">
+                          <iframe
+                            class="grid-iframe"
+                            :src="extractIframeSrc(col.media.link)"
+                            :width="col.media.width"
+                            :height="col.media.height"
+                            frameborder="0"
+                            allowfullscreen
+                            allow="xr-spatial-tracking; gyroscope; accelerometer"
+                            scrolling="no"
+                          ></iframe>
+                        </template>
                         <div v-else class="empty-media">
                           <el-icon><Picture /></el-icon>
                         </div>
-
                         <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)">
                           <el-icon><Edit /></el-icon>
                         </span>
@@ -88,6 +80,8 @@
                       <span class="media-name">
                         <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
                         <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
+                        <el-icon v-else-if="col.media?.type === 'vr'"><View /></el-icon>
+                        <el-icon v-else-if="col.media?.type === 'curtain'"><Connection /></el-icon>
                       </span>
 
                       <div class="item-toolbar">
@@ -99,19 +93,20 @@
                   </template>
                 </draggable>
 
-                    <el-dropdown trigger="click" @command="type => handleAddCol(rowIdx, type)">
-                    <el-button size="small" circle type="primary" class="add-col-btn">
-                        <el-icon><Plus /></el-icon>
-                    </el-button>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                        <el-dropdown-item command="img">Изображение</el-dropdown-item>
-                        <el-dropdown-item command="video">Видео</el-dropdown-item>
-                        <el-dropdown-item command="vr">3D тур</el-dropdown-item>
-                        <el-dropdown-item command="curtain">Шторка</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                    </el-dropdown>
+                <!-- Меню выбора типа медиа -->
+                <el-dropdown trigger="click" @command="type => handleAddCol(rowIdx, type)">
+                  <el-button size="small" circle type="primary" class="add-col-btn">
+                    <el-icon><Plus /></el-icon>
+                  </el-button>
+                  <template #dropdown>
+                    <el-dropdown-menu>
+                      <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
+                      <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
+                      <el-dropdown-item command="vr"><el-icon><View /></el-icon>VR</el-dropdown-item>
+                      <el-dropdown-item command="curtain"><el-icon><Connection /></el-icon>Шторка</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </template>
+                </el-dropdown>
               </div>
             </div>
           </template>
@@ -119,6 +114,76 @@
       </div>
     </el-form>
 
+    <!-- Модалка предпросмотра -->
+    <el-dialog v-model="previewVisible" title="Предпросмотр" width="50%" :append-to-body="true">
+    <div class="preview-modal-content">
+        <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
+        {{ previewSize.w }} × {{ previewSize.h }} px
+        </div>
+
+        <img v-if="previewItem?.type === 'img'" :src="`/multimedia/${previewItem.link}`" class="preview-img" />
+
+        <video v-else-if="previewItem?.type === 'video'" class="preview-video" controls autoplay loop muted playsinline
+        :poster="`/multimedia/${previewItem.poster || previewItem.link}`">
+        <source v-for="(link, i) in previewItem.links" :key="i" :src="`/multimedia/${link.link}`" />
+        </video>
+
+        <iframe v-else-if="previewItem?.type === 'vr'"
+        class="preview-iframe"
+        :src="extractIframeSrc(previewItem.link)"
+        :width="previewItem.width || 800"
+        :height="previewItem.height || 500"
+        frameborder="0"
+        allowfullscreen
+        allow="xr-spatial-tracking; gyroscope; accelerometer"
+        scrolling="no"
+        ></iframe>
+
+        <p v-else>Нет данных для предпросмотра</p>
+
+        <el-input
+        v-if="previewItem?.type === 'img'"
+        v-model="previewItem.title"
+        placeholder="Название / alt"
+        style="margin-top: 16px; width: 100%; text-align: center;"
+        />
+    </div>
+    </el-dialog>
+
+    <!-- Модалка добавления VR -->
+    <el-dialog v-model="showVrModal" title="Добавление VR-тура" width="600px" :append-to-body="true">
+      <el-form label-position="top">
+        <el-form-item label="HTML iframe код">
+          <el-input
+            type="textarea"
+            v-model="vrIframeCode"
+            rows="4"
+            placeholder='<iframe src="..." width="..." height="..." ...></iframe>'
+          />
+        </el-form-item>
+
+        <el-row :gutter="10">
+          <el-col :span="12">
+            <el-form-item label="Ширина">
+              <el-input-number v-model="vrWidth" :min="100" :step="100" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="Высота">
+              <el-input-number v-model="vrHeight" :min="100" :step="100" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </el-form>
+
+      <template #footer>
+        <el-button @click="cancelVrInsert">Отмена</el-button>
+        <el-button type="primary" @click="insertVrIframe">Добавить</el-button>
+        <el-button @click="detectVrIframeSize">Определить размер</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- FileManager -->
     <teleport to="body">
       <div v-if="showFileManager" class="finder-modal">
         <div class="finder-container">
@@ -130,59 +195,6 @@
         </div>
       </div>
     </teleport>
-
-    <el-dialog
-      v-model="previewVisible"
-      title="Предпросмотр"
-      width="50%"
-      class="preview-dialog"
-      :append-to-body="true"
-    >
-      <div class="preview-modal-content">
-        <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
-          {{ previewSize.w }} × {{ previewSize.h }} px
-        </div>
-
-        <div v-if="previewItem?.type === 'img' && previewItem.link">
-          <img
-            :src="`/multimedia/${previewItem.link}`"
-            :alt="previewItem.title || 'Изображение'"
-            class="preview-img"
-          />
-        </div>
-
-        <div v-else-if="previewItem?.type === 'video' && previewItem.links?.length">
-          <video
-            class="preview-video"
-            controls
-            autoplay
-            loop
-            muted
-            playsinline
-            :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
-          >
-            <source
-              v-for="(link, i) in previewItem.links"
-              :key="i"
-              :src="`/multimedia/${link.link}`"
-              :type="link.mime || 'video/mp4'"
-            />
-          </video>
-        </div>
-
-        <div v-else>
-          <p>Нет данных для предпросмотра</p>
-        </div>
-
-        <!-- Добавлено поле input только в модалке -->
-        <el-input
-          v-if="previewItem?.type === 'img'"
-          v-model="previewItem.title"
-          placeholder="Название / alt"
-          style="margin-top: 16px; width: 100%; text-align: center;"
-        />
-      </div>
-    </el-dialog>
   </div>
 </template>
 
@@ -194,7 +206,7 @@ import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import Projects from './Projects.vue'
 import { ElNotification } from 'element-plus'
-import { Plus, Check, Delete, Edit, Picture, Menu, VideoCamera } from '@element-plus/icons-vue'
+import { Plus, Check, Delete, Edit, Picture, Menu, VideoCamera, View, Connection } from '@element-plus/icons-vue'
 
 const route = useRoute(), router = useRouter()
 const openTab = inject('openTab'), tabsMode = inject('tabsMode')
@@ -218,6 +230,12 @@ const showFileManager = ref(false)
 const previewVisible = ref(false)
 const previewItem = ref({})
 
+const showVrModal = ref(false)
+const vrIframeCode = ref('')
+const vrWidth = ref(1920)
+const vrHeight = ref(1080)
+const pendingVrRowIdx = ref(null)
+
 const addRow = () => gridRows.value.push({ id: Date.now() + Math.random(), items: [] })
 const removeRow = idx => gridRows.value.splice(idx, 1)
 const addCol = (rowIdx, type = null) => {
@@ -232,7 +250,13 @@ const handleAddCol = (rowIdx, type = null) => {
   const media = {}
   if (type === 'img') media.type = 'img'
   if (type === 'video') media.type = 'video'
-  if (type === 'vr') media.type = 'vr'
+  if (type === 'vr') {
+  const newCol = { media: { type: 'vr', link: '' }, title: '' }
+    // здесь открываем модалку
+  pendingVrRowIdx.value = rowIdx
+  showVrModal.value = true
+  return
+}
   if (type === 'curtain') media.type = 'curtain'
 
   const newCol = { media, title: '' }
@@ -245,7 +269,77 @@ const handleAddCol = (rowIdx, type = null) => {
   }
 }
 
+const extractIframeSrc = (html) => {
+  const match = html.match(/src=["']([^"']+)["']/)
+  return match ? match[1] : ''
+}
+
+const cancelVrInsert = () => {
+  showVrModal.value = false
+  pendingVrRowIdx.value = null
+  vrIframeCode.value = ''
+  vrWidth.value = 1920
+  vrHeight.value = 1080
+}
+
 const removeCol = (r, c) => gridRows.value[r].items.splice(c, 1)
+
+const insertVrIframe = async () => {
+  if (pendingVrRowIdx.value !== null && vrIframeCode.value.trim()) {
+    const newCol = {
+      title: '',
+      media: {
+        type: 'vr',
+        link: vrIframeCode.value.trim(),
+        width: vrWidth.value,
+        height: vrHeight.value
+      }
+    }
+
+    gridRows.value[pendingVrRowIdx.value].items.push(newCol)
+
+    showVrModal.value = false
+    pendingVrRowIdx.value = null
+    vrIframeCode.value = ''
+    vrWidth.value = 1920
+    vrHeight.value = 1080
+
+    ElNotification({
+      title: 'Добавлено',
+      message: 'VR-тур успешно добавлен',
+      type: 'success'
+    })
+
+    await nextTick()
+  } else {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Введите iframe-код перед добавлением',
+      type: 'warning'
+    })
+  }
+}
+
+const detectVrIframeSize = () => {
+  if (!vrIframeCode.value) return
+
+  const widthMatch = vrIframeCode.value.match(/width=["']?(\d+)/i)
+  const heightMatch = vrIframeCode.value.match(/height=["']?(\d+)/i)
+
+  if (widthMatch) {
+    vrWidth.value = parseInt(widthMatch[1])
+  }
+
+  if (heightMatch) {
+    vrHeight.value = parseInt(heightMatch[1])
+  }
+
+  ElNotification({
+    title: 'Размер определён',
+    message: `Ширина: ${vrWidth.value}px, Высота: ${vrHeight.value}px`,
+    type: 'success',
+  })
+}
 
 const openFileManager = (r, c) => {
   selectedCell.value = { rowIdx: r, colIdx: c }
@@ -571,5 +665,45 @@ watch(() => route.params.id, loadProject)
   background: #000;
   border-radius: 10px;
   box-shadow: 0 3px 16px rgba(0, 0, 0, 0.18);
+}
+.grid-iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: 10px;
+}
+.media-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #fafafa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #aaa;
+  font-size: 14px;
+  text-align: center;
+}
+.media-placeholder .el-icon {
+  font-size: 34px;
+  margin-bottom: 4px;
+}
+.media-placeholder .media-label {
+  font-size: 13px;
+  font-weight: 500;
+}
+.vr-placeholder {
+  background: #e8f5ff;
+}
+.curtain-placeholder {
+  background: #fff6e6;
+}
+.preview-iframe {
+  width: 100%;
+  max-width: 100%;
+  min-height: 400px;
+  border-radius: 10px;
+  box-shadow: 0 3px 16px rgba(0, 0, 0, 0.18);
+  background: #000;
 }
 </style>
