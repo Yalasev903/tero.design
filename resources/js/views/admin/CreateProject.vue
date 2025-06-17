@@ -1,6 +1,7 @@
 <template>
   <div class="project-create-page">
     <h2 class="page-title">{{ isEditing ? 'Редактирование проекта' : 'Создание проекта' }}</h2>
+
     <el-form :model="form" label-position="top" @submit.prevent="submit">
       <el-form-item label="Название проекта">
         <el-input v-model="form.title" />
@@ -30,44 +31,74 @@
                   <el-icon><Delete /></el-icon>
                 </el-button>
               </div>
+
               <div class="grid-row">
-                <draggable v-model="row.items" group="cols" handle=".grid-item" animation="180" item-key="colIdx" class="columns-draggable">
+                <draggable
+                  v-model="row.items"
+                  group="cols"
+                  handle=".grid-item"
+                  animation="180"
+                  item-key="colIdx"
+                  class="columns-draggable"
+                >
                   <template #item="{ element: col, index: colIdx }">
                     <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
-                      <div class="media-thumb" @click="openPreview(col)" @mousedown="onMouseDown" @mouseup="onMouseUp">
+                      <div
+                        class="media-thumb"
+                        @click="openPreview(col)"
+                        @mousedown="onMouseDown"
+                        @mouseup="onMouseUp"
+                      >
                         <template v-if="col.media?.type === 'img'">
-                          <img :src="'/multimedia/' + col.media.link" class="grid-img" />
+                          <img
+                            :src="'/multimedia/' + col.media.link"
+                            :alt="col.title || 'Изображение'"
+                            class="grid-img"
+                          />
                         </template>
+
                         <template v-else-if="col.media?.type === 'video'">
                           <video
                             class="grid-video"
-                            autoplay muted loop playsinline
+                            autoplay
+                            muted
+                            loop
+                            playsinline
                             preload="metadata"
-                            :poster="col.media.poster ? '/multimedia/' + col.media.poster : undefined">
+                            :poster="col.media.poster ? '/multimedia/' + col.media.poster : undefined"
+                          >
                             <source
                               v-for="(link, i) in col.media.links || []"
                               :key="i"
                               :src="'/multimedia/' + link.link"
-                              :type="link.mime || 'video/mp4'" />
+                              :type="link.mime || 'video/mp4'"
+                            />
                           </video>
                         </template>
+
                         <div v-else class="empty-media">
                           <el-icon><Picture /></el-icon>
                         </div>
+
                         <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)">
                           <el-icon><Edit /></el-icon>
                         </span>
                       </div>
+
                       <span class="media-name">
-                    <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
-                    <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
-                    {{ col.title || (col.media?.type === 'video' ? 'Видео' : col.media?.type === 'img' ? 'Изображение' : 'Без названия') }}
-                    </span>
+                        <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
+                        <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
+                        {{ col.media?.type === 'img' ? (col.title || 'Изображение') : 'Видео' }}
+                      </span>
+
                       <el-input
+                        v-if="col.media?.type === 'img'"
                         v-model="col.title"
                         size="small"
-                        placeholder="Название"
-                        style="margin-top: 8px; width: 100%; text-align: center;" />
+                        placeholder="Название / alt"
+                        style="margin-top: 8px; width: 100%; text-align: center;"
+                      />
+
                       <div class="item-toolbar">
                         <el-button size="small" type="danger" circle @click="removeCol(rowIdx, colIdx)">
                           <el-icon><Delete /></el-icon>
@@ -76,6 +107,7 @@
                     </div>
                   </template>
                 </draggable>
+
                 <el-button size="small" circle type="primary" class="add-col-btn" @click="addCol(rowIdx)">
                   <el-icon><Plus /></el-icon>
                 </el-button>
@@ -89,52 +121,59 @@
     <teleport to="body">
       <div v-if="showFileManager" class="finder-modal">
         <div class="finder-container">
-          <vue-finder :request="{ baseUrl:'/api/vuefinder', adapter:'local', xsrfHeaderName:'X-XSRF-TOKEN' }" @select="handleFileSelect" />
+          <vue-finder
+            :request="{ baseUrl:'/api/vuefinder', adapter:'local', xsrfHeaderName:'X-XSRF-TOKEN' }"
+            @select="handleFileSelect"
+          />
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
       </div>
     </teleport>
 
-        <el-dialog
-        v-model="previewVisible"
-        title="Предпросмотр"
-        width="50%"
-        class="preview-dialog"
-        :append-to-body="true"
-        >
-        <div class="preview-modal-content">
-            <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
-            {{ previewSize.w }} × {{ previewSize.h }} px
-            </div>
-
-            <div v-if="previewItem?.type === 'img' && previewItem.link">
-            <img :src="`/multimedia/${previewItem.link}`" class="preview-img" />
-            </div>
-
-            <div v-else-if="previewItem?.type === 'video' && previewItem.links?.length">
-            <video
-                class="preview-video"
-                controls
-                autoplay
-                loop
-                muted
-                playsinline
-                :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
-            >
-                <source
-                v-for="(link, i) in previewItem.links"
-                :key="i"
-                :src="`/multimedia/${link.link}`"
-                :type="link.mime || 'video/mp4'"
-                />
-            </video>
-            </div>
-
-            <div v-else>
-            <p>Нет данных для предпросмотра</p>
-            </div>
+    <el-dialog
+      v-model="previewVisible"
+      title="Предпросмотр"
+      width="50%"
+      class="preview-dialog"
+      :append-to-body="true"
+    >
+      <div class="preview-modal-content">
+        <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
+          {{ previewSize.w }} × {{ previewSize.h }} px
         </div>
-        </el-dialog>
+
+        <div v-if="previewItem?.type === 'img' && previewItem.link">
+          <img
+            :src="`/multimedia/${previewItem.link}`"
+            :alt="previewItem.title || 'Изображение'"
+            class="preview-img"
+          />
+        </div>
+
+        <div v-else-if="previewItem?.type === 'video' && previewItem.links?.length">
+          <video
+            class="preview-video"
+            controls
+            autoplay
+            loop
+            muted
+            playsinline
+            :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
+          >
+            <source
+              v-for="(link, i) in previewItem.links"
+              :key="i"
+              :src="`/multimedia/${link.link}`"
+              :type="link.mime || 'video/mp4'"
+            />
+          </video>
+        </div>
+
+        <div v-else>
+          <p>Нет данных для предпросмотра</p>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -146,52 +185,60 @@ import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import Projects from './Projects.vue'
 import { ElNotification } from 'element-plus'
-import { Plus, Check, Delete, Edit, Picture, Menu } from '@element-plus/icons-vue'
+import { Plus, Check, Delete, Edit, Picture, Menu, VideoCamera } from '@element-plus/icons-vue'
 
 const route = useRoute(), router = useRouter()
 const openTab = inject('openTab'), tabsMode = inject('tabsMode')
 
-const isEditing = ref(false), projectId = ref(null)
-const form = ref({ title:'', text1:'', text2:'', meta_title:'', meta_description:'', meta_keywords:'', multimedia_grid:[] })
-const gridRows = ref([])
-const selectedCell = ref({ rowIdx:0, colIdx:0 })
-const showFileManager = ref(false), previewVisible = ref(false), previewItem = ref({})
+const isEditing = ref(false)
+const projectId = ref(null)
 
-const addRow = () => gridRows.value.push({ id:Date.now()+Math.random(), items:[] })
-const removeRow = idx => gridRows.value.splice(idx,1)
-const addCol = rowIdx => gridRows.value[rowIdx].items.push({ media:{}, title:'' })
-const removeCol = (r,c) => gridRows.value[r].items.splice(c,1)
-const openFileManager = (r,c) => (selectedCell.value={rowIdx:r,colIdx:c}, showFileManager.value=true)
+const form = ref({
+  title: '',
+  text1: '',
+  text2: '',
+  meta_title: '',
+  meta_description: '',
+  meta_keywords: '',
+  multimedia_grid: []
+})
+
+const gridRows = ref([])
+const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
+const showFileManager = ref(false)
+const previewVisible = ref(false)
+const previewItem = ref({})
+
+const addRow = () => gridRows.value.push({ id: Date.now() + Math.random(), items: [] })
+const removeRow = idx => gridRows.value.splice(idx, 1)
+const addCol = rowIdx => gridRows.value[rowIdx].items.push({ media: {}, title: '' })
+const removeCol = (r, c) => gridRows.value[r].items.splice(c, 1)
+
+const openFileManager = (r, c) => {
+  selectedCell.value = { rowIdx: r, colIdx: c }
+  showFileManager.value = true
+}
+
 const handleFileSelect = (items) => {
   if (!items.length) return
-
   const file = items[0]
   const row = gridRows.value[selectedCell.value.rowIdx]
   const col = row.items[selectedCell.value.colIdx]
+
   const rawPath = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
   const ext = rawPath.split('.').pop()?.toLowerCase()
-
   const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
   const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
 
   if (isVideo) {
     col.media = {
       type: 'video',
-      poster: '', // можно потом отдельно выбрать
-      links: [
-        {
-          link: rawPath,
-          mime: file.mime || 'video/mp4'
-        }
-      ]
+      poster: '',
+      links: [{ link: rawPath, mime: file.mime || 'video/mp4' }]
     }
   } else if (isImage) {
-    col.media = {
-      type: 'img',
-      link: rawPath
-    }
+    col.media = { type: 'img', link: rawPath }
   } else {
-    // неизвестный тип — очищаем
     col.media = {}
   }
 
@@ -199,72 +246,86 @@ const handleFileSelect = (items) => {
 }
 
 const previewSize = ref({ w: null, h: null })
-
 const openPreview = async (col) => {
   previewItem.value = col.media || {}
   previewVisible.value = true
-
   await nextTick()
-
   const el = document.querySelector('.preview-modal-content video, .preview-modal-content img')
-  if (el?.tagName === 'IMG') {
-    previewSize.value = { w: el.naturalWidth, h: el.naturalHeight }
-  } else if (el?.tagName === 'VIDEO') {
-    previewSize.value = { w: el.videoWidth, h: el.videoHeight }
-  } else {
-    previewSize.value = { w: null, h: null }
-  }
+  if (el?.tagName === 'IMG') previewSize.value = { w: el.naturalWidth, h: el.naturalHeight }
+  else if (el?.tagName === 'VIDEO') previewSize.value = { w: el.videoWidth, h: el.videoHeight }
+  else previewSize.value = { w: null, h: null }
 }
 
 const submit = async () => {
   try {
-    form.value.multimedia_grid = gridRows.value.map(row=>row.items.map(col=> ({...(col.media||{}), title:col.title||''})))
-    if(isEditing.value) {
+    form.value.multimedia_grid = gridRows.value.map(row =>
+      row.items.map(col => ({ ...(col.media || {}), title: col.title || '' }))
+    )
+
+    if (isEditing.value) {
       await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
-      ElNotification({title:'Успешно',message:'Проект обновлён',type:'success'})
+      ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
       await axios.post('/api/admin/projects', form.value)
-      ElNotification({title:'Успешно',message:'Проект создан',type:'success'})
+      ElNotification({ title: 'Успешно', message: 'Проект создан', type: 'success' })
     }
-    if(tabsMode?.value && openTab) {
-      openTab({ path:'/projects/list', label:'Список проектов', component:Projects })
-    } else router.push('/projects')
-  } catch {
-    ElNotification({title:'Ошибка',message:'Не удалось сохранить проект',type:'error'})
+
+    if (tabsMode?.value && openTab) {
+      openTab({ path: '/projects/list', label: 'Список проектов', component: Projects })
+    } else {
+      router.push('/projects')
+    }
+  } catch (e) {
+    ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить проект', type: 'error' })
   }
 }
 
 const loadProject = async () => {
-  if(route.name==='EditProject') {
-    isEditing.value=true
-    projectId.value=route.params.id
+  if (route.name === 'EditProject') {
+    isEditing.value = true
+    projectId.value = route.params.id
     const { data } = await axios.get(`/api/admin/projects/${projectId.value}`)
-    form.value = {...data, multimedia_grid:data.multimedia_grid||[]}
-    gridRows.value = form.value.multimedia_grid.map(items=>({
-      id:Date.now()+Math.random(),
-      items: items.map(item=>({
-        title:item.title||'',
-        media:{
-          type:item.type||'img',
-          link:item.link||'',
-          poster:item.poster||'',
-          links:item.links||[],
-          description:item.description||'',
-          width:item.width||null,
-          height:item.height||null
+    form.value = {
+      ...data,
+      multimedia_grid: data.multimedia_grid || []
+    }
+
+    gridRows.value = form.value.multimedia_grid.map(items => ({
+      id: Date.now() + Math.random(),
+      items: items.map(item => {
+        const alt = item.title || item.description || item.link?.split('/').pop() || ''
+        return {
+          title: alt,
+          media: {
+            type: item.type,
+            link: item.link || '',
+            poster: item.poster || '',
+            links: item.links || [],
+            description: item.description || '',
+            width: item.width || null,
+            height: item.height || null
+          }
         }
-      }))
+      })
     }))
   } else {
-    isEditing.value=false
-    projectId.value=null
-    form.value = {title:'',text1:'',text2:'',meta_title:'',meta_description:'',meta_keywords:'',multimedia_grid:[]}
-    gridRows.value=[]
+    isEditing.value = false
+    projectId.value = null
+    form.value = {
+      title: '',
+      text1: '',
+      text2: '',
+      meta_title: '',
+      meta_description: '',
+      meta_keywords: '',
+      multimedia_grid: []
+    }
+    gridRows.value = []
   }
 }
 
 onMounted(loadProject)
-watch(()=>route.params.id, loadProject)
+watch(() => route.params.id, loadProject)
 </script>
 
 <style scoped>
