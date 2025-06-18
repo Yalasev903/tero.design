@@ -52,10 +52,21 @@
             @break
 
           @case('curtain')
-            <div class="grid-item curtain loading curtain-left"
-                 data-media-width="{{ $col['first']['width'] ?? '' }}" data-media-height="{{ $col['first']['height'] ?? '' }}">
-              <img class="tero-lazy-load" data-src="/multimedia/{{ $col['images'][0] ?? '' }}" alt="Curtain Front">
-              <img class="tero-lazy-load" data-src="/multimedia/{{ $col['images'][1] ?? '' }}" alt="Curtain Back">
+            @php
+                $img1 = $col['first']['link'] ?? null;
+                $img2 = $col['last']['link'] ?? null;
+                $w = $col['first']['width'] ?? 1920;
+                $h = $col['first']['height'] ?? 1080;
+            @endphp
+            <div class="grid-item curtain curtain-left twentytwenty-container"
+                data-media-width="{{ $w }}"
+                data-media-height="{{ $h }}">
+                @if ($img1 && $img2)
+                <img class="tero-lazy-load twentytwenty-before" alt="Curtain Front" data-src="/multimedia/{{ $img1 }}">
+                <img class="tero-lazy-load twentytwenty-after" alt="Curtain Back" data-src="/multimedia/{{ $img2 }}">
+                @else
+                <div class="error">⛔ Шторка не содержит изображений</div>
+                @endif
             </div>
             @break
 
