@@ -259,6 +259,7 @@ import TinyEditor from '@/components/admin/TinyEditor.vue'
 import Projects from './Projects.vue'
 import { ElNotification } from 'element-plus'
 import { Plus, Check, Delete, Edit, Picture, Menu, VideoCamera, View, Connection } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 
 const route = useRoute(), router = useRouter()
 const openTab = inject('openTab'), tabsMode = inject('tabsMode')
@@ -302,7 +303,22 @@ const curtainSize2 = ref({ w: null, h: null })
 // Контентная логика
 // =====================
 const addRow = () => gridRows.value.push({ id: Date.now() + Math.random(), items: [] })
-const removeRow = idx => gridRows.value.splice(idx, 1)
+const removeRow = async (idx) => {
+  try {
+    await ElMessageBox.confirm(
+      'Вы уверены, что хотите удалить всю строку с контентом?',
+      'Подтверждение удаления',
+      {
+        confirmButtonText: 'Удалить',
+        cancelButtonText: 'Отмена',
+        type: 'warning',
+      }
+    )
+    gridRows.value.splice(idx, 1)
+  } catch (_) {
+    // Отмена — ничего не делаем
+  }
+}
 
 const handleAddCol = (rowIdx, type = null) => {
   if (type === 'vr') {
@@ -327,7 +343,22 @@ const handleAddCol = (rowIdx, type = null) => {
   }
 }
 
-const removeCol = (r, c) => gridRows.value[r].items.splice(c, 1)
+const removeCol = async (r, c) => {
+  try {
+    await ElMessageBox.confirm(
+      'Вы уверены, что хотите удалить этот элемент?',
+      'Подтверждение удаления',
+      {
+        confirmButtonText: 'Удалить',
+        cancelButtonText: 'Отмена',
+        type: 'warning',
+      }
+    )
+    gridRows.value[r].items.splice(c, 1)
+  } catch (_) {
+    // Отмена — ничего не делаем
+  }
+}
 
 const openFileManager = (r, c) => {
   selectedCell.value = { rowIdx: r, colIdx: c }
