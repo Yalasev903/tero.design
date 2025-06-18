@@ -43,22 +43,24 @@
                 >
                   <template #item="{ element: col, index: colIdx }">
                     <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
-                      <div class="media-thumb" @click="openPreview(col)">
+                        <div class="media-thumb" @click="openPreview(col)">
                         <template v-if="col.media?.type === 'img'">
-                          <img :src="'/multimedia/' + col.media.link" class="grid-img" />
+                            <img :src="'/multimedia/' + col.media.link" class="grid-img" />
                         </template>
+
                         <template v-else-if="col.media?.type === 'video'">
-                          <video class="grid-video" autoplay muted loop playsinline preload="metadata"
+                            <video class="grid-video" autoplay muted loop playsinline preload="metadata"
                             :poster="col.media.poster ? '/multimedia/' + col.media.poster : undefined">
                             <source
-                              v-for="(link, i) in col.media.links || []"
-                              :key="i"
-                              :src="'/multimedia/' + link.link"
-                              :type="link.mime || 'video/mp4'" />
-                          </video>
+                                v-for="(link, i) in col.media.links || []"
+                                :key="i"
+                                :src="'/multimedia/' + link.link"
+                                :type="link.mime || 'video/mp4'" />
+                            </video>
                         </template>
+
                         <template v-else-if="col.media?.type === 'vr'">
-                          <iframe
+                            <iframe
                             class="grid-iframe"
                             :src="extractIframeSrc(col.media.link)"
                             :width="col.media.width"
@@ -67,16 +69,34 @@
                             allowfullscreen
                             allow="xr-spatial-tracking; gyroscope; accelerometer"
                             scrolling="no"
-                          ></iframe>
+                            ></iframe>
                         </template>
-                        <div v-else class="empty-media">
-                          <el-icon><Picture /></el-icon>
-                        </div>
-                        <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)">
-                          <el-icon><Edit /></el-icon>
-                        </span>
-                      </div>
 
+                        <template v-else-if="col.media?.type === 'curtain'">
+                            <div class="curtain-wrapper">
+                            <img
+                                class="curtain-img curtain-front"
+                                :src="'/multimedia/' + col.media.images[0]"
+                                alt="Curtain image 1"
+                            />
+                            <img
+                                class="curtain-img curtain-back"
+                                :src="'/multimedia/' + col.media.images[1]"
+                                alt="Curtain image 2"
+                            />
+                            </div>
+                        </template>
+
+                        <template v-else>
+                            <div class="empty-media">
+                            <el-icon><Picture /></el-icon>
+                            </div>
+                        </template>
+
+                        <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)">
+                            <el-icon><Edit /></el-icon>
+                        </span>
+                        </div>
                       <span class="media-name">
                         <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
                         <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
@@ -809,5 +829,44 @@ watch(() => route.params.id, loadProject)
   border-radius: 10px;
   box-shadow: 0 3px 16px rgba(0, 0, 0, 0.18);
   background: #000;
+}
+.curtain-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.curtain-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 1.4s ease-in-out;
+  will-change: transform;
+}
+
+.curtain-front {
+  z-index: 2;
+  transform: translateX(0%);
+  animation: slide-out 6s ease-in-out infinite alternate;
+}
+
+.curtain-back {
+  z-index: 1;
+  transform: translateX(100%);
+  animation: slide-in 6s ease-in-out infinite alternate;
+}
+
+@keyframes slide-out {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-100%); }
+}
+
+@keyframes slide-in {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(0%); }
 }
 </style>
