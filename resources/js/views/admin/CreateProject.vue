@@ -1,7 +1,7 @@
 <template>
   <div class="project-create-page">
     <h2 class="page-title">{{ isEditing ? 'Редактирование проекта' : 'Создание проекта' }}</h2>
-
+    <SeoProject :title="'SEO для проекта'" :model="form" />
     <el-form :model="form" label-position="top" @submit.prevent="submit">
       <el-form-item label="Название проекта">
         <el-input v-model="form.title" />
@@ -265,6 +265,7 @@ import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
+import SeoProject from '@/components/admin/SeoProject.vue'
 import Projects from './Projects.vue'
 import { ElNotification } from 'element-plus'
 import { Plus, Check, Delete, Edit, Picture, Menu, VideoCamera, View, Connection } from '@element-plus/icons-vue'
