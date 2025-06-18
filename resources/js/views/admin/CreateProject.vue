@@ -183,6 +183,38 @@
       </template>
     </el-dialog>
 
+    <!-- Модалка добавления шторки -->
+    <el-dialog v-model="showCurtainModal" title="Добавление шторки" width="600px" :append-to-body="true">
+    <div style="display: flex; flex-direction: column; gap: 20px">
+        <div>
+        <p><b>Первое изображение:</b></p>
+<div v-if="curtainImage1" class="preview-img">
+  <div v-if="curtainSize1.w && curtainSize1.h" style="margin-bottom: 4px; font-size: 13px; text-align: center;">
+    {{ curtainSize1.w }} × {{ curtainSize1.h }} px
+  </div>
+  <img :src="'/multimedia/' + curtainImage1" style="max-width: 100%;" />
+</div>
+        <el-button @click="selectCurtainImage(1)">Выбрать изображение 1</el-button>
+        </div>
+
+        <div>
+        <p><b>Второе изображение:</b></p>
+<div v-if="curtainImage2" class="preview-img">
+  <div v-if="curtainSize2.w && curtainSize2.h" style="margin-bottom: 4px; font-size: 13px; text-align: center;">
+    {{ curtainSize2.w }} × {{ curtainSize2.h }} px
+  </div>
+  <img :src="'/multimedia/' + curtainImage2" style="max-width: 100%;" />
+</div>
+        <el-button @click="selectCurtainImage(2)">Выбрать изображение 2</el-button>
+        </div>
+    </div>
+
+    <template #footer>
+        <el-button @click="cancelCurtainInsert">Отмена</el-button>
+        <el-button type="primary" @click="insertCurtain">Добавить шторку</el-button>
+    </template>
+    </el-dialog>
+
     <!-- FileManager -->
     <teleport to="body">
       <div v-if="showFileManager" class="finder-modal">
@@ -230,60 +262,109 @@ const showFileManager = ref(false)
 const previewVisible = ref(false)
 const previewItem = ref({})
 
+// VR
 const showVrModal = ref(false)
 const vrIframeCode = ref('')
 const vrWidth = ref(1920)
 const vrHeight = ref(1080)
 const pendingVrRowIdx = ref(null)
 
+// Curtain
+const showCurtainModal = ref(false)
+const pendingCurtainRowIdx = ref(null)
+const curtainImage1 = ref('')
+const curtainImage2 = ref('')
+const selectingCurtainIndex = ref(null)
+const curtainSize1 = ref({ w: null, h: null })
+const curtainSize2 = ref({ w: null, h: null })
+
+// =====================
+// Контентная логика
+// =====================
 const addRow = () => gridRows.value.push({ id: Date.now() + Math.random(), items: [] })
 const removeRow = idx => gridRows.value.splice(idx, 1)
-const addCol = (rowIdx, type = null) => {
-  const media = {}
-  if (type === 'img') media.type = 'img'
-  if (type === 'video') media.type = 'video'
-  if (type === 'vr') media.type = 'vr'
-  if (type === 'curtain') media.type = 'curtain'
-  gridRows.value[rowIdx].items.push({ media, title: '' })
-}
-const handleAddCol = (rowIdx, type = null) => {
-  const media = {}
-  if (type === 'img') media.type = 'img'
-  if (type === 'video') media.type = 'video'
-  if (type === 'vr') {
-  const newCol = { media: { type: 'vr', link: '' }, title: '' }
-    // здесь открываем модалку
-  pendingVrRowIdx.value = rowIdx
-  showVrModal.value = true
-  return
-}
-  if (type === 'curtain') media.type = 'curtain'
 
+const handleAddCol = (rowIdx, type = null) => {
+  if (type === 'vr') {
+    pendingVrRowIdx.value = rowIdx
+    showVrModal.value = true
+    return
+  }
+
+  if (type === 'curtain') {
+    pendingCurtainRowIdx.value = rowIdx
+    showCurtainModal.value = true
+    return
+  }
+
+  const media = { type }
   const newCol = { media, title: '' }
   gridRows.value[rowIdx].items.push(newCol)
 
-  // Открываем менеджер только для img и video
   if (['img', 'video'].includes(type)) {
     const newColIdx = gridRows.value[rowIdx].items.length - 1
     nextTick(() => openFileManager(rowIdx, newColIdx))
   }
 }
 
-const extractIframeSrc = (html) => {
-  const match = html.match(/src=["']([^"']+)["']/)
-  return match ? match[1] : ''
-}
-
-const cancelVrInsert = () => {
-  showVrModal.value = false
-  pendingVrRowIdx.value = null
-  vrIframeCode.value = ''
-  vrWidth.value = 1920
-  vrHeight.value = 1080
-}
-
 const removeCol = (r, c) => gridRows.value[r].items.splice(c, 1)
 
+const openFileManager = (r, c) => {
+  selectedCell.value = { rowIdx: r, colIdx: c }
+  showFileManager.value = true
+}
+
+const handleFileSelect = async (items) => {
+  if (!items.length) return
+  const file = items[0]
+  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
+  const ext = path.split('.').pop()?.toLowerCase()
+  const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
+  const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
+
+  // Выбор изображения для шторки
+  if (selectingCurtainIndex.value) {
+    if (selectingCurtainIndex.value === 1) {
+      curtainImage1.value = path
+      await nextTick()
+      const img = new Image()
+      img.onload = () => curtainSize1.value = { w: img.naturalWidth, h: img.naturalHeight }
+      img.src = `/multimedia/${path}`
+    }
+    if (selectingCurtainIndex.value === 2) {
+      curtainImage2.value = path
+      await nextTick()
+      const img = new Image()
+      img.onload = () => curtainSize2.value = { w: img.naturalWidth, h: img.naturalHeight }
+      img.src = `/multimedia/${path}`
+    }
+    selectingCurtainIndex.value = null
+    showFileManager.value = false
+    return
+  }
+
+  // Остальные типы
+  const row = gridRows.value[selectedCell.value.rowIdx]
+  const col = row.items[selectedCell.value.colIdx]
+
+  if (isVideo) {
+    col.media = {
+      type: 'video',
+      poster: '',
+      links: [{ link: path, mime: file.mime || 'video/mp4' }]
+    }
+  } else if (isImage) {
+    col.media = { type: 'img', link: path }
+  } else {
+    col.media = {}
+  }
+
+  showFileManager.value = false
+}
+
+// =====================
+// VR
+// =====================
 const insertVrIframe = async () => {
   if (pendingVrRowIdx.value !== null && vrIframeCode.value.trim()) {
     const newCol = {
@@ -304,74 +385,76 @@ const insertVrIframe = async () => {
     vrWidth.value = 1920
     vrHeight.value = 1080
 
-    ElNotification({
-      title: 'Добавлено',
-      message: 'VR-тур успешно добавлен',
-      type: 'success'
-    })
-
+    ElNotification({ title: 'Добавлено', message: 'VR-тур успешно добавлен', type: 'success' })
     await nextTick()
   } else {
-    ElNotification({
-      title: 'Ошибка',
-      message: 'Введите iframe-код перед добавлением',
-      type: 'warning'
-    })
+    ElNotification({ title: 'Ошибка', message: 'Введите iframe-код перед добавлением', type: 'warning' })
   }
+}
+
+const cancelVrInsert = () => {
+  showVrModal.value = false
+  pendingVrRowIdx.value = null
+  vrIframeCode.value = ''
+  vrWidth.value = 1920
+  vrHeight.value = 1080
 }
 
 const detectVrIframeSize = () => {
   if (!vrIframeCode.value) return
-
   const widthMatch = vrIframeCode.value.match(/width=["']?(\d+)/i)
   const heightMatch = vrIframeCode.value.match(/height=["']?(\d+)/i)
-
-  if (widthMatch) {
-    vrWidth.value = parseInt(widthMatch[1])
-  }
-
-  if (heightMatch) {
-    vrHeight.value = parseInt(heightMatch[1])
-  }
-
-  ElNotification({
-    title: 'Размер определён',
-    message: `Ширина: ${vrWidth.value}px, Высота: ${vrHeight.value}px`,
-    type: 'success',
-  })
+  if (widthMatch) vrWidth.value = parseInt(widthMatch[1])
+  if (heightMatch) vrHeight.value = parseInt(heightMatch[1])
+  ElNotification({ title: 'Размер определён', message: `Ширина: ${vrWidth.value}px, Высота: ${vrHeight.value}px`, type: 'success' })
 }
 
-const openFileManager = (r, c) => {
-  selectedCell.value = { rowIdx: r, colIdx: c }
+// =====================
+// Curtain
+// =====================
+const selectCurtainImage = (index) => {
+  selectingCurtainIndex.value = index
   showFileManager.value = true
 }
 
-const handleFileSelect = (items) => {
-  if (!items.length) return
-  const file = items[0]
-  const row = gridRows.value[selectedCell.value.rowIdx]
-  const col = row.items[selectedCell.value.colIdx]
-
-  const rawPath = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
-  const ext = rawPath.split('.').pop()?.toLowerCase()
-  const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
-  const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
-
-  if (isVideo) {
-    col.media = {
-      type: 'video',
-      poster: '',
-      links: [{ link: rawPath, mime: file.mime || 'video/mp4' }]
-    }
-  } else if (isImage) {
-    col.media = { type: 'img', link: rawPath }
-  } else {
-    col.media = {}
+const insertCurtain = () => {
+  if (!curtainImage1.value || !curtainImage2.value) {
+    ElNotification({ title: 'Ошибка', message: 'Выберите оба изображения', type: 'warning' })
+    return
   }
 
-  showFileManager.value = false
+  const newCol = {
+    title: '',
+    media: {
+      type: 'curtain',
+      images: [curtainImage1.value, curtainImage2.value]
+    }
+  }
+
+  gridRows.value[pendingCurtainRowIdx.value].items.push(newCol)
+
+  showCurtainModal.value = false
+  curtainImage1.value = ''
+  curtainImage2.value = ''
+  curtainSize1.value = { w: null, h: null }
+  curtainSize2.value = { w: null, h: null }
+  pendingCurtainRowIdx.value = null
+
+  ElNotification({ title: 'Успешно', message: 'Шторка добавлена', type: 'success' })
 }
 
+const cancelCurtainInsert = () => {
+  showCurtainModal.value = false
+  curtainImage1.value = ''
+  curtainImage2.value = ''
+  curtainSize1.value = { w: null, h: null }
+  curtainSize2.value = { w: null, h: null }
+  pendingCurtainRowIdx.value = null
+}
+
+// =====================
+// Предпросмотр
+// =====================
 const previewSize = ref({ w: null, h: null })
 const openPreview = async (col) => {
   previewItem.value = {
@@ -397,10 +480,29 @@ const openPreview = async (col) => {
   }
 }
 
+const extractIframeSrc = (html) => {
+  const match = html.match(/src=["']([^"']+)["']/)
+  return match ? match[1] : ''
+}
+
+// =====================
+// Submit и Load
+// =====================
 const submit = async () => {
   try {
     form.value.multimedia_grid = gridRows.value.map(row =>
-      row.items.map(col => ({ ...(col.media || {}), title: col.title || '' }))
+      row.items.map(col => {
+        const base = {
+          type: col.media?.type,
+          title: col.title || ''
+        }
+
+        if (col.media?.type === 'img') return { ...base, link: col.media.link }
+        if (col.media?.type === 'video') return { ...base, poster: col.media.poster || '', links: col.media.links || [] }
+        if (col.media?.type === 'vr') return { ...base, link: col.media.link, width: col.media.width, height: col.media.height }
+        if (col.media?.type === 'curtain') return { ...base, images: col.media.images }
+        return base
+      })
     )
 
     if (isEditing.value) {
@@ -416,6 +518,7 @@ const submit = async () => {
     } else {
       router.push('/projects')
     }
+
   } catch (e) {
     ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить проект', type: 'error' })
   }
@@ -444,7 +547,8 @@ const loadProject = async () => {
             links: item.links || [],
             description: item.description || '',
             width: item.width || null,
-            height: item.height || null
+            height: item.height || null,
+            images: item.images || []
           }
         }
       })
@@ -630,7 +734,7 @@ watch(() => route.params.id, loadProject)
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  z-index: 3000;
 }
 .finder-container {
   width: 90%;
