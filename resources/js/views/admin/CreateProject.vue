@@ -93,7 +93,7 @@
                             </div>
                         </template>
 
-                        <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)">
+                        <span class="edit-icon" @click.stop="handleEditClick(rowIdx, colIdx, col.media?.type)">
                             <el-icon><Edit /></el-icon>
                         </span>
                         </div>
@@ -278,7 +278,7 @@ const form = ref({
 })
 
 const gridRows = ref([])
-const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
+const selectedCell = ref(null)
 const showFileManager = ref(false)
 const previewVisible = ref(false)
 const previewItem = ref({})
@@ -321,18 +321,21 @@ const removeRow = async (idx) => {
 }
 
 const handleAddCol = (rowIdx, type = null) => {
-  if (type === 'vr') {
-    pendingVrRowIdx.value = rowIdx
-    showVrModal.value = true
-    return
-  }
-
   if (type === 'curtain') {
+    selectedCell.value = null
     pendingCurtainRowIdx.value = rowIdx
     showCurtainModal.value = true
     return
   }
 
+  if (type === 'vr') {
+    selectedCell.value = null
+    pendingVrRowIdx.value = rowIdx
+    showVrModal.value = true
+    return
+  }
+
+  // обычные типы
   const media = { type }
   const newCol = { media, title: '' }
   gridRows.value[rowIdx].items.push(newCol)
@@ -394,6 +397,7 @@ const handleFileSelect = async (items) => {
     return
   }
 
+
   // Остальные типы
   const row = gridRows.value[selectedCell.value.rowIdx]
   const col = row.items[selectedCell.value.colIdx]
@@ -413,34 +417,87 @@ const handleFileSelect = async (items) => {
   showFileManager.value = false
 }
 
+const handleEditClick = (rowIdx, colIdx, type) => {
+  selectedCell.value = { rowIdx, colIdx }
+
+  if (type === 'img' || type === 'video') {
+    showFileManager.value = true
+  }
+
+  if (type === 'vr') {
+    const col = gridRows.value[rowIdx].items[colIdx]
+    pendingVrRowIdx.value = rowIdx
+    vrIframeCode.value = col.media.link || ''
+    vrWidth.value = col.media.width || 1920
+    vrHeight.value = col.media.height || 1080
+    showVrModal.value = true
+  }
+
+  if (type === 'curtain') {
+    const col = gridRows.value[rowIdx].items[colIdx]
+    pendingCurtainRowIdx.value = rowIdx
+    curtainImage1.value = col.media.images?.[0] || ''
+    curtainImage2.value = col.media.images?.[1] || ''
+    showCurtainModal.value = true
+
+    if (curtainImage1.value) {
+      const img1 = new Image()
+      img1.onload = () => (curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight })
+      img1.src = `/multimedia/${curtainImage1.value}`
+    }
+
+    if (curtainImage2.value) {
+      const img2 = new Image()
+      img2.onload = () => (curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight })
+      img2.src = `/multimedia/${curtainImage2.value}`
+    }
+  }
+}
+
 // =====================
 // VR
 // =====================
 const insertVrIframe = async () => {
-  if (pendingVrRowIdx.value !== null && vrIframeCode.value.trim()) {
-    const newCol = {
-      title: '',
-      media: {
-        type: 'vr',
-        link: vrIframeCode.value.trim(),
-        width: vrWidth.value,
-        height: vrHeight.value
-      }
-    }
-
-    gridRows.value[pendingVrRowIdx.value].items.push(newCol)
-
-    showVrModal.value = false
-    pendingVrRowIdx.value = null
-    vrIframeCode.value = ''
-    vrWidth.value = 1920
-    vrHeight.value = 1080
-
-    ElNotification({ title: 'Добавлено', message: 'VR-тур успешно добавлен', type: 'success' })
-    await nextTick()
-  } else {
+  if (!vrIframeCode.value.trim()) {
     ElNotification({ title: 'Ошибка', message: 'Введите iframe-код перед добавлением', type: 'warning' })
+    return
   }
+
+  const col = {
+    title: '',
+    media: {
+      type: 'vr',
+      link: vrIframeCode.value.trim(),
+      width: vrWidth.value,
+      height: vrHeight.value
+    }
+  }
+
+  if (
+    selectedCell.value &&
+    selectedCell.value.rowIdx !== null &&
+    selectedCell.value.colIdx !== null
+  ) {
+    gridRows.value[selectedCell.value.rowIdx].items[selectedCell.value.colIdx] = col
+  } else if (
+    pendingVrRowIdx.value !== null &&
+    gridRows.value[pendingVrRowIdx.value]
+  ) {
+    gridRows.value[pendingVrRowIdx.value].items.push(col)
+  } else {
+    ElNotification({ title: 'Ошибка', message: 'Не удалось определить строку для вставки VR', type: 'error' })
+    return
+  }
+
+  showVrModal.value = false
+  pendingVrRowIdx.value = null
+  selectedCell.value = { rowIdx: null, colIdx: null }
+  vrIframeCode.value = ''
+  vrWidth.value = 1920
+  vrHeight.value = 1080
+
+  ElNotification({ title: 'Успешно', message: 'VR-тур сохранён', type: 'success' })
+  await nextTick()
 }
 
 const cancelVrInsert = () => {
@@ -469,12 +526,17 @@ const selectCurtainImage = (index) => {
 }
 
 const insertCurtain = () => {
+    console.log('--- CURTAIN INSERT ---')
+console.log('pendingCurtainRowIdx', pendingCurtainRowIdx.value)
+console.log('selectedCell', selectedCell.value)
+console.log('gridRows', JSON.stringify(gridRows.value, null, 2))
+
   if (!curtainImage1.value || !curtainImage2.value) {
     ElNotification({ title: 'Ошибка', message: 'Выберите оба изображения', type: 'warning' })
     return
   }
 
-  const newCol = {
+  const col = {
     title: '',
     media: {
       type: 'curtain',
@@ -482,7 +544,29 @@ const insertCurtain = () => {
     }
   }
 
-  gridRows.value[pendingCurtainRowIdx.value].items.push(newCol)
+  const rowIdx = selectedCell.value?.rowIdx ?? null
+  const colIdx = selectedCell.value?.colIdx ?? null
+
+
+  const isEditingExisting =
+    rowIdx !== null &&
+    colIdx !== null &&
+    gridRows.value[rowIdx] &&
+    Array.isArray(gridRows.value[rowIdx].items) &&
+    gridRows.value[rowIdx].items[colIdx]
+
+  if (isEditingExisting) {
+    gridRows.value[rowIdx].items[colIdx] = col
+  } else if (
+    pendingCurtainRowIdx.value !== null &&
+    gridRows.value[pendingCurtainRowIdx.value] &&
+    Array.isArray(gridRows.value[pendingCurtainRowIdx.value].items)
+  ) {
+    gridRows.value[pendingCurtainRowIdx.value].items.push(col)
+  } else {
+    console.warn('Не удалось определить строку для вставки шторки')
+    return
+  }
 
   showCurtainModal.value = false
   curtainImage1.value = ''
@@ -490,8 +574,13 @@ const insertCurtain = () => {
   curtainSize1.value = { w: null, h: null }
   curtainSize2.value = { w: null, h: null }
   pendingCurtainRowIdx.value = null
+  selectedCell.value = { rowIdx: null, colIdx: null }
 
-  ElNotification({ title: 'Успешно', message: 'Шторка добавлена', type: 'success' })
+  ElNotification({ title: 'Успешно', message: 'Шторка сохранена', type: 'success' })
+  nextTick(() => {
+  console.log('ROWS AFTER CURTAIN INSERT:', JSON.stringify(gridRows.value, null, 2))
+})
+
 }
 
 const cancelCurtainInsert = () => {
