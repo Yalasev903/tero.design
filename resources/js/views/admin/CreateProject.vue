@@ -73,7 +73,7 @@
                         </template>
 
                         <template v-else-if="col.media?.type === 'curtain'">
-                            <div class="curtain-wrapper">
+                            <div class="curtain-wrapper with-animation">
                             <img
                                 class="curtain-img curtain-front"
                                 :src="'/multimedia/' + col.media.images[0]"
@@ -158,6 +158,15 @@
         allow="xr-spatial-tracking; gyroscope; accelerometer"
         scrolling="no"
         ></iframe>
+
+            <!-- Curtain-->
+            <div v-else-if="previewItem?.type === 'curtain'" class="curtain-preview-container">
+            <div class="curtain-preview">
+                <img class="curtain-img curtain-front" :src="`/multimedia/${previewItem.images[0]}`" />
+                <img class="curtain-img curtain-back" :src="`/multimedia/${previewItem.images[1]}`" />
+                <div class="curtain-slider" ref="curtainSlider" @mousedown="startCurtainDrag" />
+            </div>
+            </div>
 
         <p v-else>Нет данных для предпросмотра</p>
 
@@ -298,6 +307,32 @@ const curtainImage2 = ref('')
 const selectingCurtainIndex = ref(null)
 const curtainSize1 = ref({ w: null, h: null })
 const curtainSize2 = ref({ w: null, h: null })
+
+const curtainSlider = ref(null)
+
+let isDraggingCurtain = false
+
+const startCurtainDrag = (e) => {
+  isDraggingCurtain = true
+  document.addEventListener('mousemove', onCurtainDrag)
+  document.addEventListener('mouseup', stopCurtainDrag)
+}
+
+const onCurtainDrag = (e) => {
+  if (!isDraggingCurtain || !curtainSlider.value) return
+  const parent = curtainSlider.value.parentElement
+  const bounds = parent.getBoundingClientRect()
+  const x = e.clientX - bounds.left
+  const percent = Math.max(0, Math.min(100, (x / bounds.width) * 100))
+  curtainSlider.value.style.left = `${percent}%`
+  parent.style.setProperty('--clip-pos', `${percent}%`)
+}
+
+const stopCurtainDrag = () => {
+  isDraggingCurtain = false
+  document.removeEventListener('mousemove', onCurtainDrag)
+  document.removeEventListener('mouseup', stopCurtainDrag)
+}
 
 // =====================
 // Контентная логика
@@ -968,16 +1003,23 @@ watch(() => route.params.id, loadProject)
   will-change: transform;
 }
 
-.curtain-front {
+/* В сетке — с анимацией */
+.with-animation .curtain-front {
   z-index: 2;
   transform: translateX(0%);
   animation: slide-out 6s ease-in-out infinite alternate;
 }
-
-.curtain-back {
+.with-animation .curtain-back {
   z-index: 1;
   transform: translateX(100%);
   animation: slide-in 6s ease-in-out infinite alternate;
+}
+
+/* В модалке — без анимации */
+.preview-modal-content .curtain-front,
+.preview-modal-content .curtain-back {
+  animation: none !important;
+  transform: none !important;
 }
 
 @keyframes slide-out {
@@ -988,5 +1030,55 @@ watch(() => route.params.id, loadProject)
 @keyframes slide-in {
   0% { transform: translateX(100%); }
   100% { transform: translateX(0%); }
+}
+
+.curtain-preview-container {
+  width: 100%;
+  max-width: 100%;
+  position: relative;
+  overflow: hidden;
+  border-radius: 10px;
+  aspect-ratio: 16 / 9;
+  background: #000;
+  box-shadow: 0 3px 16px rgba(0,0,0,0.2);
+}
+
+.curtain-preview {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  --clip-pos: 50%;
+    display: block;
+  background: transparent;
+}
+
+.curtain-preview .curtain-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.curtain-preview .curtain-back {
+  z-index: 1;
+}
+
+.curtain-preview .curtain-front {
+  z-index: 2;
+  clip-path: polygon(0 0, var(--clip-pos) 0, var(--clip-pos) 100%, 0 100%);
+}
+
+.curtain-preview .curtain-slider {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--clip-pos);
+  width: 3px;
+  background: #fff;
+  z-index: 3;
+  cursor: ew-resize;
+  transform: translateX(-50%);
 }
 </style>
