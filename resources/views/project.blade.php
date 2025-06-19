@@ -34,9 +34,10 @@
         @switch($col['type'])
 
           @case('img')
-            <div class="grid-item" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+            <a href="/multimedia/{{ $col['link'] }}" class="grid-item grid-item-img js-img"
+               data-media-width="{{ $w }}" data-media-height="{{ $h }}">
               <img data-src="/multimedia/{{ $col['link'] }}" alt="{{ $col['description'] ?? '' }}" class="js-grid-item-media tero-lazy-load">
-            </div>
+            </a>
             @break
 
           @case('video')
@@ -87,6 +88,7 @@
   @endforeach
 </div>
 
+{{-- Скрипт для расчёта размеров + просмотр изображений --}}
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const rows = document.querySelectorAll('.grid-row');
@@ -96,17 +98,25 @@ document.addEventListener("DOMContentLoaded", function () {
     const count = items.length;
     let ratios = [];
 
-    // Устанавливаем класс, если 5+
     if (count >= 5) {
       row.classList.add('is-compact');
-    }
 
-    for (let i = 0; i < count; i++) {
-      let weight = 1.2;
+      for (let i = 0; i < count; i++) {
+        let weight = (rowIndex % 2 === 1 && i === 0) ? 1.6 : 1;
+        const mediaW = parseFloat(items[i].getAttribute('data-media-width')) || 1920;
+        const mediaH = parseFloat(items[i].getAttribute('data-media-height')) || 1080;
+        const aspectRatio = mediaW / mediaH;
+        ratios.push({ el: items[i], r: weight * aspectRatio });
+      }
 
-      if (count >= 5) {
-        weight = 1; // все равномерные квадратные
-      } else {
+      const total = ratios.reduce((sum, r) => sum + r.r, 0);
+      ratios.forEach(({ el, r }) => {
+        el.style.width = `${(r / total) * 100}%`;
+        el.style.aspectRatio = "16 / 9";
+      });
+    } else {
+      for (let i = 0; i < count; i++) {
+        let weight = 1.2;
         if (rowIndex % 2 === 0) {
           if (i === 0) weight = 0.9;
           if (i === 1) weight = 1.6;
@@ -115,14 +125,42 @@ document.addEventListener("DOMContentLoaded", function () {
           if (i === 1) weight = 0.9;
         }
         if (i > 1) weight = 1.0 + Math.random() * 0.2;
+        ratios.push({ el: items[i], r: weight });
       }
 
-      ratios.push({ el: items[i], r: weight });
+      const total = ratios.reduce((sum, r) => sum + r.r, 0);
+      ratios.forEach(({ el, r }) => {
+        el.style.width = `${(r / total) * 100}%`;
+      });
     }
+  });
 
-    const total = ratios.reduce((sum, r) => sum + r.r, 0);
-    ratios.forEach(({ el, r }) => {
-      el.style.width = `${(r / total) * 100}%`;
+  // Простое модальное окно для изображений
+  document.querySelectorAll('.js-img').forEach(el => {
+    el.addEventListener('click', function (e) {
+      e.preventDefault();
+      const src = this.getAttribute('href');
+      const popup = document.createElement('div');
+      popup.style.position = 'fixed';
+      popup.style.top = 0;
+      popup.style.left = 0;
+      popup.style.width = '100vw';
+      popup.style.height = '100vh';
+      popup.style.background = 'rgba(0,0,0,0.9)';
+      popup.style.display = 'flex';
+      popup.style.alignItems = 'center';
+      popup.style.justifyContent = 'center';
+      popup.style.cursor = 'pointer';
+      popup.style.zIndex = 9999;
+
+      const img = document.createElement('img');
+      img.src = src;
+      img.style.maxWidth = '90vw';
+      img.style.maxHeight = '90vh';
+      popup.appendChild(img);
+
+      popup.addEventListener('click', () => popup.remove());
+      document.body.appendChild(popup);
     });
   });
 });
@@ -131,24 +169,23 @@ document.addEventListener("DOMContentLoaded", function () {
 <style>
 .grid-row {
   display: flex;
-  /* gap: 1px; */
-  margin-bottom: px;
-  height: 550px; !important;
-   min-height: 550px;
   align-items: stretch;
+  height: auto;
+  min-height: 550px;
+  margin-bottom: 5px;
 }
 
 .grid-row.is-compact {
-  height: 420px;
+  height: auto;
+  min-height: unset;
 }
 
 .grid-item {
   position: relative;
   overflow: hidden;
-  /* height: 100%; !important; */
-  /* min-height: 550px; */
   background: #000;
   flex-shrink: 0;
+  height: 100%;
 }
 
 .grid-item img,
@@ -163,7 +200,8 @@ document.addEventListener("DOMContentLoaded", function () {
 /* Curtain */
 .grid-item.curtain img {
   position: absolute;
-  top: 0; left: 0;
+  top: 0;
+  left: 0;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -178,7 +216,7 @@ document.addEventListener("DOMContentLoaded", function () {
   clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
 }
 
-/* Мобильная адаптация */
+/* Mobile */
 @media (max-width: 768px) {
   .grid-row {
     flex-direction: column;
