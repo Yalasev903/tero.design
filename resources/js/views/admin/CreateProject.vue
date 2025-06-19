@@ -499,11 +499,15 @@ const insertVrIframe = async () => {
     return
   }
 
+  // Извлекаем src из iframe-кода, если это iframe
+  const match = vrIframeCode.value.trim().match(/src=["']([^"']+)["']/)
+  const cleanSrc = match ? match[1] : vrIframeCode.value.trim()
+
   const col = {
     title: '',
     media: {
       type: 'vr',
-      link: vrIframeCode.value.trim(),
+      link: cleanSrc,
       width: vrWidth.value,
       height: vrHeight.value
     }
@@ -657,8 +661,12 @@ const openPreview = async (col) => {
 }
 
 const extractIframeSrc = (html) => {
-  const match = html.match(/src=["']([^"']+)["']/)
-  return match ? match[1] : ''
+  if (!html) return ''
+  if (html.includes('<iframe')) {
+    const match = html.match(/src=["']([^"']+)["']/)
+    return match ? match[1] : ''
+  }
+  return html // просто URL
 }
 
 // =====================
@@ -714,11 +722,24 @@ const loadProject = async () => {
       id: Date.now() + Math.random(),
       items: items.map(item => {
         const alt = item.title || item.description || item.link?.split('/').pop() || ''
+
+        let link = item.link || ''
+        let type = item.type
+
+        // 🔧 если iframe — значит VR
+        if (item.type === 'iframe') {
+          type = 'vr'
+          if (typeof link === 'string' && link.includes('<iframe')) {
+            const match = link.match(/src=["']([^"']+)["']/)
+            link = match ? match[1] : ''
+          }
+        }
+
         return {
           title: alt,
           media: {
-            type: item.type,
-            link: item.link || '',
+            type,
+            link,
             poster: item.poster || '',
             links: item.links || [],
             description: item.description || '',
@@ -730,6 +751,7 @@ const loadProject = async () => {
       })
     }))
   } else {
+    // при создании
     isEditing.value = false
     projectId.value = null
     form.value = {
