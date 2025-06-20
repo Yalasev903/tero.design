@@ -8,10 +8,12 @@
 <div class="project">
   <div class="project-head row2">
     <h1 class="project-title">{{ $project->title }}</h1>
-    <a href="{{ route('home') }}#js-grid-item{{ $project->id }}" class="project-prev row">
-      <svg class="project-prev-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path d="M136.97 380.485..."/></svg>
-      <span class="project-prev-label">back to portfolio</span>
-    </a>
+
+      <a href="{{ route('home') }}#js-grid-item{{ $project->id }}" class="project-back-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="48" height="48" fill="#fff">
+            <path d="M136.97 380.485l7.071-7.07c4.686-4.686 4.686-12.284 0-16.971L60.113 273H436c6.627 0 12-5.373 12-12v-10c0-6.627-5.373-12-12-12H60.113l83.928-83.444c4.686-4.686 4.686-12.284 0-16.971l-7.071-7.07c-4.686-4.686-12.284-4.686-16.97 0l-116.485 116c-4.686 4.686-4.686 12.284 0 16.971l116.485 116c4.686 4.686 12.284 4.686 16.97-.001z"/>
+            </svg>
+        </a>
   </div>
 
   <div class="project-description">
@@ -50,22 +52,24 @@
             </div>
             @break
 
-          @case('curtain')
-            @php
-              $img1 = $col['first']['link'] ?? null;
-              $img2 = $col['last']['link'] ?? null;
-            @endphp
-            <div class="grid-item curtain twentytwenty-container" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              @if ($img1 && $img2)
-                <img class="tero-lazy-load twentytwenty-before" data-src="/multimedia/{{ $img1 }}">
-                <img class="tero-lazy-load twentytwenty-after" data-src="/multimedia/{{ $img2 }}">
-              @else
-                <div class="error">⛔ Шторка не содержит изображений</div>
-              @endif
-            </div>
-            @break
+@case('curtain')
+    @php
+        $img1 = '/multimedia/' . $col['first']['link'];
+        $img2 = '/multimedia/' . $col['last']['link'];
+        $width = $col['first']['width'] ?? 1920;
+        $height = $col['first']['height'] ?? 1080;
+    @endphp
 
-          @case('vr')
+    <div class="grid-item curtain-container" data-media-width="{{ $width }}" data-media-height="{{ $height }}">
+        <div class="curtain-wrapper">
+            <img src="{{ $img1 }}" alt="before" class="curtain-img curtain-before">
+            <img src="{{ $img2 }}" alt="after" class="curtain-img curtain-after">
+            <div class="curtain-handle"></div>
+        </div>
+    </div>
+@break
+
+            @case('vr')
             @php
               $iframeSrc = $col['link'];
               if (!str_starts_with($iframeSrc, '<iframe')) {
@@ -90,7 +94,31 @@
 
 {{-- Скрипт для расчёта размеров + просмотр изображений --}}
 <script>
-document.addEventListener("DOMContentLoaded", function () {
+window.addEventListener('load', function () {
+    // 1. Инициализация шторок
+    document.querySelectorAll('.curtain-wrapper').forEach(wrapper => {
+        const handle = wrapper.querySelector('.curtain-handle');
+        const afterImg = wrapper.querySelector('.curtain-after');
+
+        const drag = e => {
+            const bounds = wrapper.getBoundingClientRect();
+            let posX = ((e.clientX || e.touches[0].clientX) - bounds.left);
+            posX = Math.max(0, Math.min(bounds.width, posX));
+            const percent = posX / bounds.width * 100;
+            afterImg.style.clipPath = `inset(0 0 0 ${percent}%)`;
+            handle.style.left = `${percent}%`;
+        };
+
+        let dragging = false;
+        handle.addEventListener('mousedown', () => dragging = true);
+        handle.addEventListener('touchstart', () => dragging = true);
+        window.addEventListener('mousemove', e => dragging && drag(e));
+        window.addEventListener('touchmove', e => dragging && drag(e));
+        window.addEventListener('mouseup', () => dragging = false);
+        window.addEventListener('touchend', () => dragging = false);
+    });
+
+  // 2. Инициализация размеров сетки
   const rows = document.querySelectorAll('.grid-row');
 
   rows.forEach((row, rowIndex) => {
@@ -135,34 +163,14 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  // Простое модальное окно для изображений
-  document.querySelectorAll('.js-img').forEach(el => {
-    el.addEventListener('click', function (e) {
-      e.preventDefault();
-      const src = this.getAttribute('href');
-      const popup = document.createElement('div');
-      popup.style.position = 'fixed';
-      popup.style.top = 0;
-      popup.style.left = 0;
-      popup.style.width = '100vw';
-      popup.style.height = '100vh';
-      popup.style.background = 'rgba(0,0,0,0.9)';
-      popup.style.display = 'flex';
-      popup.style.alignItems = 'center';
-      popup.style.justifyContent = 'center';
-      popup.style.cursor = 'pointer';
-      popup.style.zIndex = 9999;
-
-      const img = document.createElement('img');
-      img.src = src;
-      img.style.maxWidth = '90vw';
-      img.style.maxHeight = '90vh';
-      popup.appendChild(img);
-
-      popup.addEventListener('click', () => popup.remove());
-      document.body.appendChild(popup);
+    // Автоинициализация LightGallery при загрузке
+    lightGallery(document.getElementById('js-gallery'), {
+    selector: '.js-img',
+    download: false,
+    zoom: true,
+    fullScreen: true,
+    share: false
     });
-  });
 });
 </script>
 
@@ -197,6 +205,87 @@ document.addEventListener("DOMContentLoaded", function () {
   display: block;
 }
 
+.project-head {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-right: 60px;
+}
+
+
+.img-popup {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.img-popup-img {
+  max-width: 90vw;
+  max-height: 90vh;
+  box-shadow: 0 0 20px rgba(255,255,255,0.1);
+}
+
+.img-popup-close {
+  position: fixed;
+  top: 20px; right: 30px;
+  font-size: 40px;
+  color: #fff;
+  cursor: pointer;
+  z-index: 10000;
+  font-weight: bold;
+}
+
+.img-popup-arrow {
+  position: fixed;
+  top: 50%;
+  font-size: 60px;
+  color: #fff;
+  cursor: pointer;
+  user-select: none;
+  z-index: 10000;
+  transform: translateY(-50%);
+}
+.img-popup-arrow.prev { left: 20px; }
+.img-popup-arrow.next { right: 20px; }
+
+.img-popup-arrow:hover,
+.img-popup-close:hover {
+  color: #ccc;
+}
+
+.project-head {
+  position: relative;
+  padding-top: 20px;
+  padding-bottom: 20px;
+}
+
+.project-back-icon {
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 60px;   /* Больше */
+  height: 60px;  /* Больше */
+  color: #fff;
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.project-back-icon:hover {
+  opacity: 1;
+}
+
+
 /* Curtain */
 .grid-item.curtain img {
   position: absolute;
@@ -207,13 +296,46 @@ document.addEventListener("DOMContentLoaded", function () {
   object-fit: cover;
 }
 
-.grid-item.curtain .twentytwenty-after {
-  z-index: 1;
+.before-after-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
 }
 
-.grid-item.curtain .twentytwenty-before {
-  z-index: 2;
-  clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+.curtain-container {
+    position: relative;
+    overflow: hidden;
+}
+.curtain-wrapper {
+    position: relative;
+    width: 100%;
+    height: 550px;
+    aspect-ratio: 16/9;
+    max-height: 80vh;
+}
+.curtain-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+.curtain-after {
+    clip-path: inset(0 0 0 50%);
+    transition: clip-path 0.3s;
+}
+.curtain-handle {
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 4px;
+    height: 100%;
+    background: rgba(255,255,255,0.8);
+    cursor: ew-resize;
+    z-index: 5;
 }
 
 /* Mobile */

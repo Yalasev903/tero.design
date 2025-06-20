@@ -55,6 +55,8 @@
 
     @section('header_styles')
         <link rel="stylesheet" href="{{ asset('css/style.min.css?v=5.92') }}"/>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/before-after.js/dist/before-after.min.css">
+...
     @show
      <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <script src="{{ asset('js/header.min.js?v=5.92') }}" type="application/javascript"></script>
@@ -273,10 +275,19 @@
         <script src="{{ asset('js/jquery.event.move.min.js') }}"></script>
         <script src="{{ asset('js/jquery.twentytwenty.min.js') }}"></script>
         <script src="{{ asset('js/main.min.js?v=5.92') }}"></script>
+        <script src="https://cdn.jsdelivr.net/npm/beerslider/dist/BeerSlider.min.js"></script>
+        <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            document.querySelectorAll('.beer-slider').forEach(el => {
+            new BeerSlider(el)
+            })
+        })
+        </script>
     @show
+
     <script>
     document.addEventListener('DOMContentLoaded', async function () {
-        const posterImg = document.getElementById('showreel-poster-img');
+                const posterImg = document.getElementById('showreel-poster-img');
         const videoEl = document.getElementById('js-video');
 
         try {
