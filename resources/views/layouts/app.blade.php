@@ -56,7 +56,6 @@
     @section('header_styles')
         <link rel="stylesheet" href="{{ asset('css/style.min.css?v=5.92') }}"/>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/before-after.js/dist/before-after.min.css">
-...
     @show
      <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <script src="{{ asset('js/header.min.js?v=5.92') }}" type="application/javascript"></script>
