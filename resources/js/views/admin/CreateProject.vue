@@ -726,6 +726,20 @@ const loadProject = async () => {
         let link = item.link || ''
         let type = item.type
 
+
+        if (item.type === 'curtain') {
+        const first = item.first?.link || item.images?.[0]
+        const last = item.last?.link || item.images?.[1]
+
+        return {
+            title: alt,
+            media: {
+            type: 'curtain',
+            images: [first, last].filter(Boolean)
+            }
+        }
+        }
+
         // 🔧 если iframe — значит VR
         if (item.type === 'iframe') {
           type = 'vr'

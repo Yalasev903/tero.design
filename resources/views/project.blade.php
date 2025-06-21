@@ -52,25 +52,26 @@
             </div>
             @break
 
-@case('curtain')
-@php
-    $img1 = '/multimedia/' . $col['first']['link'];
-    $img2 = '/multimedia/' . $col['last']['link'];
-    $width = $col['first']['width'] ?? 1920;
-    $height = $col['first']['height'] ?? 1080;
-@endphp
-<div class="grid-item curtain-container"
-     data-img1="{{ asset($img1) }}"
-     data-img2="{{ asset($img2) }}"
-     data-media-width="{{ $width }}"
-     data-media-height="{{ $height }}">
-  <canvas class="curtain-canvas"></canvas>
-  <div class="curtain-handle">
-    <span class="curtain-arrow left">←</span>
-    <span class="curtain-arrow right">→</span>
-  </div>
-</div>
-@break
+            @case('curtain')
+            @php
+                $isNewFormat = isset($col['images']);
+                $img1 = '/multimedia/' . ($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
+                $img2 = '/multimedia/' . ($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
+                $width = $col['width'] ?? ($isNewFormat ? 1920 : ($col['first']['width'] ?? 1920));
+                $height = $col['height'] ?? ($isNewFormat ? 1080 : ($col['first']['height'] ?? 1080));
+            @endphp
+            <div class="grid-item curtain-container"
+                data-img1="{{ asset($img1) }}"
+                data-img2="{{ asset($img2) }}"
+                data-media-width="{{ $width }}"
+                data-media-height="{{ $height }}">
+            <canvas class="curtain-canvas"></canvas>
+            <div class="curtain-handle">
+                <span class="curtain-arrow left">←</span>
+                <span class="curtain-arrow right">→</span>
+            </div>
+            </div>
+            @break
 
             @case('vr')
             @php
