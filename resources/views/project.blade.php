@@ -53,20 +53,23 @@
             @break
 
 @case('curtain')
-    @php
-        $img1 = '/multimedia/' . $col['first']['link'];
-        $img2 = '/multimedia/' . $col['last']['link'];
-        $width = $col['first']['width'] ?? 1920;
-        $height = $col['first']['height'] ?? 1080;
-    @endphp
+  @php
+      $img1 = '/multimedia/' . $col['first']['link'];
+      $img2 = '/multimedia/' . $col['last']['link'];
+      $width = $col['first']['width'] ?? 1920;
+      $height = $col['first']['height'] ?? 1080;
+  @endphp
 
-    <div class="grid-item curtain-container" data-media-width="{{ $width }}" data-media-height="{{ $height }}">
-        <div class="curtain-wrapper">
-            <img src="{{ $img1 }}" alt="before" class="curtain-img curtain-before">
-            <img src="{{ $img2 }}" alt="after" class="curtain-img curtain-after">
-            <div class="curtain-handle"></div>
-        </div>
+  <div class="grid-item curtain-container" data-media-width="{{ $width }}" data-media-height="{{ $height }}">
+    <div class="curtain-wrapper">
+      <img src="{{ $img2 }}" alt="after" class="curtain-img curtain-after">
+      <img src="{{ $img1 }}" alt="before" class="curtain-img curtain-before">
+      <div class="curtain-handle">
+        <span class="curtain-arrow left">←</span>
+        <span class="curtain-arrow right">→</span>
+      </div>
     </div>
+  </div>
 @break
 
             @case('vr')
@@ -96,28 +99,53 @@
 <script>
 window.addEventListener('load', function () {
     // 1. Инициализация шторок
-    document.querySelectorAll('.curtain-wrapper').forEach(wrapper => {
-        const handle = wrapper.querySelector('.curtain-handle');
-        const afterImg = wrapper.querySelector('.curtain-after');
+  document.querySelectorAll('.curtain-wrapper').forEach(wrapper => {
+    const handle = wrapper.querySelector('.curtain-handle');
+    const before = wrapper.querySelector('.curtain-before');
 
-        const drag = e => {
-            const bounds = wrapper.getBoundingClientRect();
-            let posX = ((e.clientX || e.touches[0].clientX) - bounds.left);
-            posX = Math.max(0, Math.min(bounds.width, posX));
-            const percent = posX / bounds.width * 100;
-            afterImg.style.clipPath = `inset(0 0 0 ${percent}%)`;
-            handle.style.left = `${percent}%`;
-        };
+    let active = false;
+    let frameId = null;
 
-        let dragging = false;
-        handle.addEventListener('mousedown', () => dragging = true);
-        handle.addEventListener('touchstart', () => dragging = true);
-        window.addEventListener('mousemove', e => dragging && drag(e));
-        window.addEventListener('touchmove', e => dragging && drag(e));
-        window.addEventListener('mouseup', () => dragging = false);
-        window.addEventListener('touchend', () => dragging = false);
-    });
+    const drag = e => {
+      if (!active) return;
 
+      const bounds = wrapper.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      let x = Math.max(1, Math.min(clientX - bounds.left, bounds.width - 1));
+      let percent = (x / bounds.width) * 100;
+
+      before.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
+      handle.style.left = `${percent}%`;
+    };
+
+    const rafDrag = e => {
+      if (frameId) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => drag(e));
+    };
+
+    const startDrag = e => {
+      active = true;
+      before.style.transition = 'none';
+      handle.style.transition = 'none';
+      rafDrag(e);
+    };
+
+    const stopDrag = () => {
+      active = false;
+      before.style.transition = 'clip-path 0.1s ease';
+      handle.style.transition = 'left 0.1s ease';
+    };
+
+    handle.addEventListener('mousedown', startDrag);
+    handle.addEventListener('touchstart', startDrag, { passive: true });
+
+    window.addEventListener('mousemove', rafDrag);
+    window.addEventListener('touchmove', rafDrag, { passive: true });
+
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchend', stopDrag);
+    window.addEventListener('mouseleave', stopDrag);
+  });
   // 2. Инициализация размеров сетки
   const rows = document.querySelectorAll('.grid-row');
 
@@ -304,38 +332,69 @@ window.addEventListener('load', function () {
 }
 
 .curtain-container {
-    position: relative;
-    overflow: hidden;
+  position: relative;
+  overflow: hidden;
 }
+
 .curtain-wrapper {
-    position: relative;
-    width: 100%;
-    height: 550px;
-    aspect-ratio: 16/9;
-    max-height: 80vh;
+  position: relative;
+  width: 100%;
+  height: 550px;
+  background: #000;
+  overflow: hidden;
 }
+
 .curtain-img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    object-fit: cover;
-    pointer-events: none;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  top: 0;
+  left: 0;
 }
+.curtain-before {
+  z-index: 2;
+  clip-path: inset(0 50% 0 0); /* ← начальное разделение */
+  transition: clip-path 0.1s ease;
+  background: transparent;
+}
+
 .curtain-after {
-    clip-path: inset(0 0 0 50%);
-    transition: clip-path 0.3s;
+  z-index: 1;
+  background: #000;
 }
+
 .curtain-handle {
-    position: absolute;
-    top: 0;
-    left: 50%;
-    width: 4px;
-    height: 100%;
-    background: rgba(255,255,255,0.8);
-    cursor: ew-resize;
-    z-index: 5;
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 6px;
+  height: 100%;
+  background: rgba(255,255,255,0.8);
+  z-index: 3;
+  cursor: ew-resize;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.curtain-arrow {
+  position: relative;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 3px rgba(0, 0, 0, 0.8);
+  pointer-events: none;
+  user-select: none;
+  padding: 0 6px;
+}
+
+.curtain-arrow.left {
+  left: -33px;
+}
+
+.curtain-arrow.right {
+  right: 33px;
 }
 
 /* Mobile */
