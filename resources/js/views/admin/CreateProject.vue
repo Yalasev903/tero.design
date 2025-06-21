@@ -224,6 +224,11 @@
   <img :src="'/multimedia/' + curtainImage1" style="max-width: 100%;" />
 </div>
         <el-button @click="selectCurtainImage(1)">Выбрать изображение 1</el-button>
+        <el-input
+            v-model="curtainTitle1"
+            placeholder="alt для первого изображения"
+            style="margin-top: 10px"
+            />
         </div>
 
         <div>
@@ -235,6 +240,11 @@
   <img :src="'/multimedia/' + curtainImage2" style="max-width: 100%;" />
 </div>
         <el-button @click="selectCurtainImage(2)">Выбрать изображение 2</el-button>
+        <el-input
+            v-model="curtainTitle2"
+            placeholder="alt для второго изображения"
+            style="margin-top: 10px"
+            />
         </div>
     </div>
 
@@ -270,6 +280,10 @@ import Projects from './Projects.vue'
 import { ElNotification } from 'element-plus'
 import { Plus, Check, Delete, Edit, Picture, Menu, VideoCamera, View, Connection } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
+
+
+const curtainTitle1 = ref('')
+const curtainTitle2 = ref('')
 
 const route = useRoute(), router = useRouter()
 const openTab = inject('openTab'), tabsMode = inject('tabsMode')
@@ -469,25 +483,27 @@ const handleEditClick = (rowIdx, colIdx, type) => {
     showVrModal.value = true
   }
 
-  if (type === 'curtain') {
+    if (type === 'curtain') {
     const col = gridRows.value[rowIdx].items[colIdx]
     pendingCurtainRowIdx.value = rowIdx
     curtainImage1.value = col.media.images?.[0] || ''
     curtainImage2.value = col.media.images?.[1] || ''
+    curtainTitle1.value = col.media.titles?.[0] || form.value.meta_title || ''
+    curtainTitle2.value = col.media.titles?.[1] || form.value.meta_title || ''
     showCurtainModal.value = true
 
     if (curtainImage1.value) {
-      const img1 = new Image()
-      img1.onload = () => (curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight })
-      img1.src = `/multimedia/${curtainImage1.value}`
+        const img1 = new Image()
+        img1.onload = () => (curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight })
+        img1.src = `/multimedia/${curtainImage1.value}`
     }
 
     if (curtainImage2.value) {
-      const img2 = new Image()
-      img2.onload = () => (curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight })
-      img2.src = `/multimedia/${curtainImage2.value}`
+        const img2 = new Image()
+        img2.onload = () => (curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight })
+        img2.src = `/multimedia/${curtainImage2.value}`
     }
-  }
+    }
 }
 
 // =====================
@@ -567,26 +583,28 @@ const selectCurtainImage = (index) => {
 
 const insertCurtain = () => {
     console.log('--- CURTAIN INSERT ---')
-console.log('pendingCurtainRowIdx', pendingCurtainRowIdx.value)
-console.log('selectedCell', selectedCell.value)
-console.log('gridRows', JSON.stringify(gridRows.value, null, 2))
+    console.log('pendingCurtainRowIdx', pendingCurtainRowIdx.value)
+    console.log('selectedCell', selectedCell.value)
+    console.log('gridRows', JSON.stringify(gridRows.value, null, 2))
 
   if (!curtainImage1.value || !curtainImage2.value) {
     ElNotification({ title: 'Ошибка', message: 'Выберите оба изображения', type: 'warning' })
     return
   }
 
-  const col = {
-    title: '',
-    media: {
-      type: 'curtain',
-      images: [curtainImage1.value, curtainImage2.value]
-    }
+    const defaultTitle = form.value.meta_title || ''
+
+const col = {
+  title: '',
+  media: {
+    type: 'curtain',
+    images: [curtainImage1.value, curtainImage2.value],
+    titles: [curtainTitle1.value || form.value.meta_title, curtainTitle2.value || form.value.meta_title]
   }
+}
 
   const rowIdx = selectedCell.value?.rowIdx ?? null
   const colIdx = selectedCell.value?.colIdx ?? null
-
 
   const isEditingExisting =
     rowIdx !== null &&
@@ -609,6 +627,8 @@ console.log('gridRows', JSON.stringify(gridRows.value, null, 2))
   }
 
   showCurtainModal.value = false
+  curtainTitle1.value = ''
+  curtainTitle2.value = ''
   curtainImage1.value = ''
   curtainImage2.value = ''
   curtainSize1.value = { w: null, h: null }
@@ -625,6 +645,8 @@ console.log('gridRows', JSON.stringify(gridRows.value, null, 2))
 
 const cancelCurtainInsert = () => {
   showCurtainModal.value = false
+  curtainTitle1.value = ''
+  curtainTitle2.value = ''
   curtainImage1.value = ''
   curtainImage2.value = ''
   curtainSize1.value = { w: null, h: null }
@@ -684,7 +706,12 @@ const submit = async () => {
         if (col.media?.type === 'img') return { ...base, link: col.media.link }
         if (col.media?.type === 'video') return { ...base, poster: col.media.poster || '', links: col.media.links || [] }
         if (col.media?.type === 'vr') return { ...base, link: col.media.link, width: col.media.width, height: col.media.height }
-        if (col.media?.type === 'curtain') return { ...base, images: col.media.images }
+        if (col.media?.type === 'curtain') return {
+        ...base,
+        images: col.media.images,
+        titles: col.media.titles || []
+        }
+
         return base
       })
     )
@@ -734,10 +761,11 @@ const loadProject = async () => {
         return {
             title: alt,
             media: {
-            type: 'curtain',
-            images: [first, last].filter(Boolean)
+                type: 'curtain',
+                images: [first, last].filter(Boolean),
+                titles: item.titles || []
+                }
             }
-        }
         }
 
         // 🔧 если iframe — значит VR
