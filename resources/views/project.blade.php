@@ -53,23 +53,23 @@
             @break
 
 @case('curtain')
-  @php
-      $img1 = '/multimedia/' . $col['first']['link'];
-      $img2 = '/multimedia/' . $col['last']['link'];
-      $width = $col['first']['width'] ?? 1920;
-      $height = $col['first']['height'] ?? 1080;
-  @endphp
-
-  <div class="grid-item curtain-container" data-media-width="{{ $width }}" data-media-height="{{ $height }}">
-    <div class="curtain-wrapper">
-      <img src="{{ $img2 }}" alt="after" class="curtain-img curtain-after">
-      <img src="{{ $img1 }}" alt="before" class="curtain-img curtain-before">
-      <div class="curtain-handle">
-        <span class="curtain-arrow left">←</span>
-        <span class="curtain-arrow right">→</span>
-      </div>
-    </div>
+@php
+    $img1 = '/multimedia/' . $col['first']['link'];
+    $img2 = '/multimedia/' . $col['last']['link'];
+    $width = $col['first']['width'] ?? 1920;
+    $height = $col['first']['height'] ?? 1080;
+@endphp
+<div class="grid-item curtain-container"
+     data-img1="{{ asset($img1) }}"
+     data-img2="{{ asset($img2) }}"
+     data-media-width="{{ $width }}"
+     data-media-height="{{ $height }}">
+  <canvas class="curtain-canvas"></canvas>
+  <div class="curtain-handle">
+    <span class="curtain-arrow left">←</span>
+    <span class="curtain-arrow right">→</span>
   </div>
+</div>
 @break
 
             @case('vr')
@@ -95,57 +95,77 @@
   @endforeach
 </div>
 
+<script>
+function initCurtainCanvas(canvas, img1src, img2src) {
+  const ctx = canvas.getContext('2d');
+  const handle = canvas.parentElement.querySelector('.curtain-handle');
+
+  const img1 = new Image();
+  const img2 = new Image();
+
+  let divider = 0.5;
+  let dragging = false;
+
+  const draw = () => {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(img2, 0, 0, w, h);
+    ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
+  };
+
+  const updateHandle = () => {
+    handle.style.left = `${divider * 100}%`;
+  };
+
+  const onMove = e => {
+    if (!dragging) return;
+    const bounds = canvas.getBoundingClientRect();
+    const x = (e.touches ? e.touches[0].clientX : e.clientX) - bounds.left;
+    divider = Math.max(0.01, Math.min(0.99, x / bounds.width));
+
+    // Сначала двигаем полосу (чтобы сразу визуально отреагировала)
+    updateHandle();
+    draw();
+};
+
+  handle.addEventListener('mousedown', () => (dragging = true));
+  handle.addEventListener('touchstart', () => (dragging = true), { passive: true });
+  window.addEventListener('mouseup', () => (dragging = false));
+  window.addEventListener('touchend', () => (dragging = false));
+  window.addEventListener('mousemove', onMove);
+  window.addEventListener('touchmove', onMove, { passive: true });
+
+  img1.onload = img2.onload = () => {
+    draw();
+    updateHandle();
+  };
+
+  img1.src = img1src;
+  img2.src = img2src;
+}
+</script>
+
 {{-- Скрипт для расчёта размеров + просмотр изображений --}}
 <script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.curtain-container').forEach(container => {
+    const canvas = container.querySelector('.curtain-canvas');
+    const img1 = container.getAttribute('data-img1');
+    const img2 = container.getAttribute('data-img2');
+    const w = parseInt(container.getAttribute('data-media-width'));
+    const h = parseInt(container.getAttribute('data-media-height'));
+
+    canvas.width = w;
+    canvas.height = h;
+
+    initCurtainCanvas(canvas, img1, img2);
+  });
+});
+
 window.addEventListener('load', function () {
     // 1. Инициализация шторок
-  document.querySelectorAll('.curtain-wrapper').forEach(wrapper => {
-    const handle = wrapper.querySelector('.curtain-handle');
-    const before = wrapper.querySelector('.curtain-before');
 
-    let active = false;
-    let frameId = null;
-
-    const drag = e => {
-      if (!active) return;
-
-      const bounds = wrapper.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      let x = Math.max(1, Math.min(clientX - bounds.left, bounds.width - 1));
-      let percent = (x / bounds.width) * 100;
-
-      before.style.clipPath = `inset(0 ${100 - percent}% 0 0)`;
-      handle.style.left = `${percent}%`;
-    };
-
-    const rafDrag = e => {
-      if (frameId) cancelAnimationFrame(frameId);
-      frameId = requestAnimationFrame(() => drag(e));
-    };
-
-    const startDrag = e => {
-      active = true;
-      before.style.transition = 'none';
-      handle.style.transition = 'none';
-      rafDrag(e);
-    };
-
-    const stopDrag = () => {
-      active = false;
-      before.style.transition = 'clip-path 0.1s ease';
-      handle.style.transition = 'left 0.1s ease';
-    };
-
-    handle.addEventListener('mousedown', startDrag);
-    handle.addEventListener('touchstart', startDrag, { passive: true });
-
-    window.addEventListener('mousemove', rafDrag);
-    window.addEventListener('touchmove', rafDrag, { passive: true });
-
-    window.addEventListener('mouseup', stopDrag);
-    window.addEventListener('touchend', stopDrag);
-    window.addEventListener('mouseleave', stopDrag);
-  });
   // 2. Инициализация размеров сетки
   const rows = document.querySelectorAll('.grid-row');
 
@@ -324,6 +344,12 @@ window.addEventListener('load', function () {
   object-fit: cover;
 }
 
+.grid-item.curtain-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
 .before-after-wrapper {
   width: 100%;
   height: 100%;
@@ -333,7 +359,14 @@ window.addEventListener('load', function () {
 
 .curtain-container {
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  height: 100%; /* ← важно! чтобы соответствовать соседним */
+  aspect-ratio: auto; /* убираем ограничение */
+}
+.curtain-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .curtain-wrapper {
@@ -370,14 +403,14 @@ window.addEventListener('load', function () {
   left: 50%;
   width: 6px;
   height: 100%;
-  background: rgba(255,255,255,0.8);
-  z-index: 3;
+  background: rgba(255,255,255,0.7);
+  z-index: 10;
   cursor: ew-resize;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  transition: none;
 }
-
 .curtain-arrow {
   position: relative;
   font-size: 24px;
@@ -395,6 +428,25 @@ window.addEventListener('load', function () {
 
 .curtain-arrow.right {
   right: 33px;
+}
+
+.curtain-before,
+.curtain-after {
+  backface-visibility: hidden;
+  will-change: clip-path;
+  transition: none;
+}
+
+.curtain-img {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.curtain-wrapper.loaded .curtain-img {
+  opacity: 1;
+}
+.curtain-wrapper:not(.loaded) {
+  visibility: hidden;
 }
 
 /* Mobile */
