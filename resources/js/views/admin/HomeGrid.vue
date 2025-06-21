@@ -136,20 +136,57 @@
                             </div>
                         </template>
                         </draggable>
-                        <el-button
-                        size="small"
-                        circle
-                        type="primary"
-                        class="add-col-btn"
-                        @click="addCol(rowIdx)"
-                        title="Добавить колонку"
-                        >
-                        <el-icon><Plus /></el-icon>
-                        </el-button>
+<el-dropdown trigger="click" @command="type => openMediaModal(type, rowIdx)">
+  <el-button type="primary">
+    <el-icon><Plus /></el-icon>
+  </el-button>
+  <template #dropdown>
+    <el-dropdown-menu>
+      <el-dropdown-item command="img">Изображение</el-dropdown-item>
+      <el-dropdown-item command="video">Видео</el-dropdown-item>
+    </el-dropdown-menu>
+  </template>
+</el-dropdown>
                     </div>
                     </div>
                 </template>
                 </draggable>
+
+<el-dialog v-model="showMediaModal" title="Добавление медиа" width="600px" :append-to-body="true">
+  <el-form label-position="top">
+    <el-form-item label="Выберите проект">
+      <el-select v-model="selectedProjectId" placeholder="Проект" style="width: 100%">
+        <el-option v-for="p in projects" :key="p.id" :label="p.title" :value="p.id" />
+      </el-select>
+    </el-form-item>
+
+    <el-form-item v-if="mediaType === 'img'" label="Изображение">
+      <el-button @click="openFileManagerForModal">Выбрать изображение</el-button>
+      <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
+        {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
+        </div>
+      <div v-if="selectedPath" class="preview-img">
+        <img :src="`/multimedia/${selectedPath}`" style="max-width: 100%; margin-top: 10px" />
+      </div>
+    </el-form-item>
+
+    <el-form-item v-if="mediaType === 'video'" label="Видео">
+      <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
+      <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
+        {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
+        </div>
+      <div v-if="selectedPath" class="preview-img">
+        <video autoplay loop muted playsinline style="width: 100%; margin-top: 10px"
+          :src="`/multimedia/${selectedPath}`" />
+      </div>
+    </el-form-item>
+  </el-form>
+
+  <template #footer>
+    <el-button @click="cancelMediaInsert">Отмена</el-button>
+    <el-button type="primary" @click="insertMedia">Добавить</el-button>
+  </template>
+</el-dialog>
             </div>
             </div>
         </div>
@@ -230,6 +267,7 @@ import {
   VideoCamera,
   House
 } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 
 // --- Переменные ---
 const gridRows = ref([])
@@ -241,6 +279,7 @@ const previewItem = ref({})
 
 const showFileManager = ref(false)
 const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
+const modalMediaSize = ref({ w: null, h: null })
 
 const imgSizes = ref({})
 const videoSizes = ref({})
@@ -274,7 +313,22 @@ const addRow = () => {
   })
 }
 
-const removeRow = (rowIdx) => gridRows.value.splice(rowIdx, 1)
+const removeRow = async (rowIdx) => {
+  try {
+    await ElMessageBox.confirm(
+      'Вы уверены, что хотите удалить всю строку с контентом?',
+      'Подтверждение удаления',
+      {
+        confirmButtonText: 'Удалить',
+        cancelButtonText: 'Отмена',
+        type: 'warning',
+      }
+    )
+    gridRows.value.splice(rowIdx, 1)
+  } catch (_) {
+    // Отменено — ничего не делаем
+  }
+}
 
 const addCol = (rowIdx) => {
   gridRows.value[rowIdx].items.push({
@@ -286,8 +340,21 @@ const addCol = (rowIdx) => {
   })
 }
 
-const removeCol = (rowIdx, colIdx) => {
-  gridRows.value[rowIdx].items.splice(colIdx, 1)
+const removeCol = async (rowIdx, colIdx) => {
+  try {
+    await ElMessageBox.confirm(
+      'Вы уверены, что хотите удалить колонку?',
+      'Подтверждение удаления',
+      {
+        confirmButtonText: 'Удалить',
+        cancelButtonText: 'Отмена',
+        type: 'warning',
+      }
+    )
+    gridRows.value[rowIdx].items.splice(colIdx, 1)
+  } catch (_) {
+    // Отменено — ничего не делаем
+  }
 }
 
 const saveGrid = async () => {
@@ -313,13 +380,36 @@ const openFileManager = (rowIdx, colIdx) => {
 const handleFileSelect = (items) => {
   if (!items.length) return
   const file = items[0]
+  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '') // ← вот тут
+  selectedPath.value = path // ← ставим сразу после path
+
+  nextTick(() => {
+  setTimeout(() => {
+    const el = document.querySelector('.el-dialog__body .preview-img img, .el-dialog__body .preview-img video')
+
+    if (!el) return
+
+    if (el.tagName === 'IMG') {
+      modalMediaSize.value = {
+        w: el.naturalWidth,
+        h: el.naturalHeight
+      }
+    } else if (el.tagName === 'VIDEO') {
+      el.addEventListener('loadedmetadata', () => {
+        modalMediaSize.value = {
+          w: el.videoWidth,
+          h: el.videoHeight
+        }
+      }, { once: true })
+    }
+  }, 150)
+})
+
   let type = 'img'
   if (file.mime?.includes('video')) type = 'video'
 
   const row = gridRows.value[selectedCell.value.rowIdx]
   const col = row.items[selectedCell.value.colIdx]
-
-  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
 
   if (type === 'img') {
     col.media = {
@@ -336,6 +426,7 @@ const handleFileSelect = (items) => {
 
   showFileManager.value = false
 }
+
 const previewSize = ref({ w: null, h: null })
 
 // --- Предпросмотр ---
@@ -376,10 +467,103 @@ const getImgSize = (rowIdx, colIdx) =>
 const getVideoSize = (rowIdx, colIdx) =>
   videoSizes.value[makeKey(rowIdx, colIdx)] || { w: null, h: null }
 
+
+//col
+const showMediaModal = ref(false)
+const mediaType = ref('img')
+const selectedProjectId = ref(null)
+const selectedPath = ref('')
+const targetRowIdx = ref(0) // по умолчанию 0 строка
+const projects = ref([])
+
+const openMediaModal = (type, rowIdx = 0) => {
+  mediaType.value = type
+  targetRowIdx.value = rowIdx
+  showMediaModal.value = true
+  loadProjects()
+}
+
+
+const openFileManagerForModal = () => {
+  showFileManager.value = true
+}
+
+const cancelMediaInsert = () => {
+  showMediaModal.value = false
+  selectedPath.value = ''
+  selectedProjectId.value = null
+}
+
+const insertMedia = () => {
+  if (!selectedPath.value || !selectedProjectId.value) {
+    ElNotification({ title: 'Ошибка', message: 'Выберите проект и файл', type: 'warning' })
+    return
+  }
+
+  const project = projects.value.find(p => p.id === selectedProjectId.value)
+
+  const col = {
+    project_id: selectedProjectId.value,
+    title: project?.title || 'Без названия',
+    media: mediaType.value === 'img'
+      ? { type: 'img', link: selectedPath.value }
+      : {
+          type: 'video',
+          poster: selectedPath.value,
+          links: [{ link: selectedPath.value, mime: 'video/mp4' }]
+        },
+    is_mobile: false
+  }
+
+  const rowIdx = targetRowIdx.value
+  gridRows.value[rowIdx].items.push(col)
+
+  ElNotification({ title: 'Добавлено', message: 'Контент успешно добавлен', type: 'success' })
+
+  cancelMediaInsert()
+
+  nextTick(() => {
+    setTimeout(() => {
+      const colIdx = gridRows.value[rowIdx].items.length - 1
+
+      const gridRow = document.querySelectorAll('.grid-row')[rowIdx]
+      if (!gridRow) return
+
+      const mediaEl = gridRow.querySelectorAll('.grid-item img, .grid-item video')[colIdx]
+      if (!mediaEl) return
+
+      if (mediaEl.tagName === 'IMG') {
+        setPreviewImgSize({ target: mediaEl }, rowIdx, colIdx)
+      } else if (mediaEl.tagName === 'VIDEO') {
+        mediaEl.addEventListener('loadedmetadata', () => {
+          setPreviewVideoSize({ target: mediaEl }, rowIdx, colIdx)
+        }, { once: true })
+      }
+    }, 200)
+  })
+}
+
+
+const loadProjects = async () => {
+  try {
+    const { data } = await axios.get('/api/admin/projects')
+    projects.value = data
+    console.log('Проекты загружены:', data)
+  } catch (e) {
+    console.error('Ошибка при загрузке проектов:', e)
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Не удалось загрузить проекты',
+      type: 'error'
+    })
+  }
+}
+
 // --- Инициализация ---
 onMounted(() => {
   loadGrid()
   loadSeo()
+  loadProjects()
 })
 </script>
 
@@ -614,6 +798,15 @@ onMounted(() => {
   font-weight: 500;
   border-radius: 6px;
 }
+
+.preview-img video,
+.preview-img img {
+  max-width: 100%;
+  max-height: 50vh;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
 @media (max-width: 900px) {
   .preview-img, .preview-video {
     max-width: 95vw;
