@@ -18,7 +18,6 @@ public function index(Request $request)
             ->first();
 
         $query = DB::table('home_projects_grid')
-            ->where('row_number', '>', 0)
             ->leftJoin('projects', 'home_projects_grid.project_id', '=', 'projects.id')
             ->select(
                 'home_projects_grid.*',

@@ -51,7 +51,7 @@
                         group="cols"
                         handle=".grid-item"
                         animation="180"
-                        item-key="colIdx"
+                        item-key="id"
                         class="columns-draggable"
                         :style="{ display: 'flex', gap: '16px', width: '100%' }"
                         >
@@ -287,13 +287,49 @@ const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
 
 // --- Загрузка данных ---
 const loadGrid = async () => {
-  const { data } = await axios.get('/api/admin/home-grid')
-  gridRows.value = data
-    .filter(r => Array.isArray(r) && r.length > 0)
-    .map((row, i) => ({
-      id: Date.now() + i,
-      items: row
-    }))
+  try {
+    gridRows.value = []
+    
+    const { data } = await axios.get('/api/admin/home-grid')
+    const flatGrid = data || []
+
+    const grouped = {}
+
+    flatGrid.forEach((item, index) => {
+      const rowIdx = item.row_number ?? 0
+      const colIdx = item.col_number ?? 0
+
+      if (!grouped[rowIdx]) grouped[rowIdx] = []
+
+      grouped[rowIdx][colIdx] = {
+        id: `cell_${Date.now()}_${Math.random()}`,
+        project_id: item.project_id,
+        media: typeof item.media === 'string'
+          ? JSON.parse(item.media || '{}')
+          : (item.media || {}),
+        is_mobile: item.is_mobile || false,
+        title: item.title || 'Без названия',
+        text2: item.text2 || ''
+      }
+    }) // ← закрыли forEach ✅
+
+    // Теперь правильно инициализируем gridRows
+    gridRows.value = Object.keys(grouped)
+      .sort((a, b) => +a - +b)
+      .map(rowIdx => ({
+        id: `row_${rowIdx}`,
+        items: Object.keys(grouped[rowIdx])
+          .sort((a, b) => +a - +b)
+          .map(colIdx => grouped[rowIdx][colIdx])
+      }))
+  } catch (e) {
+    console.error('Ошибка при загрузке home-grid', e)
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Не удалось загрузить сетку',
+      type: 'error'
+    })
+  }
 }
 
 const loadSeo = async () => {
@@ -359,16 +395,59 @@ const removeCol = async (rowIdx, colIdx) => {
 
 const saveGrid = async () => {
   saving.value = true
+
   try {
-    const payload = gridRows.value.map(r => r.items)
+    const payload = []
+
+    // 🔥 Сохраняем точный порядок: верхняя строка — row_number = 0
+    gridRows.value.forEach((row, rowIdx) => {
+      row.items.forEach((item, colIdx) => {
+        payload.push({
+          row_number: rowIdx, // ← важен порядок строк
+          col_number: colIdx, // ← и порядок колонок внутри
+          project_id: item.project_id || null,
+          media: item.media || {},
+          is_mobile: item.is_mobile || false,
+          title: item.title || '',
+          text2: item.text2 || ''
+        })
+      })
+    })
+
+    if (payload.length === 0) {
+      ElNotification({
+        title: 'Ошибка',
+        message: 'Сетка пуста',
+        type: 'warning'
+      })
+      saving.value = false
+      return
+    }
+
     await axios.post('/api/admin/home-grid', { grid: payload })
-    ElNotification({ title: 'Успешно', message: 'Сетка сохранена', type: 'success' })
+
+    ElNotification({
+      title: 'Успешно',
+      message: 'Сетка сохранена',
+      type: 'success'
+    })
+
+  console.log('→ ПЕРЕД СОХРАНЕНИЕМ:', JSON.stringify(gridRows.value, null, 2))
+    // Загружаем заново, чтобы синхронизировать структуру
     await loadGrid()
-  } catch {
-    ElNotification({ title: 'Ошибка', message: 'Ошибка при сохранении', type: 'error' })
+  } catch (e) {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Не удалось сохранить сетку',
+      type: 'error'
+    })
+    console.error(e)
   }
+
   saving.value = false
+  console.log('← ПОСЛЕ ЗАГРУЗКИ:', JSON.stringify(gridRows.value, null, 2))
 }
+
 
 // --- Медиа-файлы ---
 const openFileManager = (rowIdx, colIdx) => {
@@ -476,9 +555,20 @@ const selectedPath = ref('')
 const targetRowIdx = ref(0) // по умолчанию 0 строка
 const projects = ref([])
 
-const openMediaModal = (type, rowIdx = 0) => {
+const openMediaModal = (type, rowIdx) => {
   mediaType.value = type
-  targetRowIdx.value = rowIdx
+
+if (typeof rowIdx === 'undefined') {
+  ElNotification({
+    title: 'Ошибка',
+    message: 'Сначала добавьте строку',
+    type: 'warning'
+  })
+  return
+}
+targetRowIdx.value = rowIdx
+
+
   showMediaModal.value = true
   loadProjects()
 }
@@ -494,17 +584,21 @@ const cancelMediaInsert = () => {
   selectedProjectId.value = null
 }
 
-const insertMedia = () => {
-  if (!selectedPath.value || !selectedProjectId.value) {
-    ElNotification({ title: 'Ошибка', message: 'Выберите проект и файл', type: 'warning' })
+const insertMedia = async () => {
+  if (!selectedPath.value) {
+    ElNotification({ title: 'Ошибка', message: 'Выберите файл', type: 'warning' })
     return
   }
 
   const project = projects.value.find(p => p.id === selectedProjectId.value)
 
+  const rowIdx = targetRowIdx.value
+  const colIdx = gridRows.value[rowIdx]?.items.length || 0
+
   const col = {
-    project_id: selectedProjectId.value,
-    title: project?.title || 'Без названия',
+    id: `cell_${Date.now()}_${Math.random()}`,
+    project_id: selectedProjectId.value || null,
+    title: project?.title || 'Без проекта',
     media: mediaType.value === 'img'
       ? { type: 'img', link: selectedPath.value }
       : {
@@ -515,34 +609,20 @@ const insertMedia = () => {
     is_mobile: false
   }
 
-  const rowIdx = targetRowIdx.value
+  if (!gridRows.value[rowIdx]) {
+    ElNotification({ title: 'Ошибка', message: 'Целевая строка не найдена', type: 'error' })
+    return
+  }
+
   gridRows.value[rowIdx].items.push(col)
 
   ElNotification({ title: 'Добавлено', message: 'Контент успешно добавлен', type: 'success' })
 
   cancelMediaInsert()
+  console.log('🟢 ДОБАВЛЕНИЕ КОЛОНКИ В:', rowIdx, colIdx)
+console.log('Содержимое:', JSON.stringify(col, null, 2))
 
-  nextTick(() => {
-    setTimeout(() => {
-      const colIdx = gridRows.value[rowIdx].items.length - 1
-
-      const gridRow = document.querySelectorAll('.grid-row')[rowIdx]
-      if (!gridRow) return
-
-      const mediaEl = gridRow.querySelectorAll('.grid-item img, .grid-item video')[colIdx]
-      if (!mediaEl) return
-
-      if (mediaEl.tagName === 'IMG') {
-        setPreviewImgSize({ target: mediaEl }, rowIdx, colIdx)
-      } else if (mediaEl.tagName === 'VIDEO') {
-        mediaEl.addEventListener('loadedmetadata', () => {
-          setPreviewVideoSize({ target: mediaEl }, rowIdx, colIdx)
-        }, { once: true })
-      }
-    }, 200)
-  })
 }
-
 
 const loadProjects = async () => {
   try {

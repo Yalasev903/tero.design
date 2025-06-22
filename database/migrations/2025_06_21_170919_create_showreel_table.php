@@ -11,13 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('home_projects_grid', function (Blueprint $table) {
+        Schema::create('showreel', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('project_id')->nullable();
-            $table->json('media');
-            $table->boolean('is_mobile')->default(false);
-            $table->integer('row_number');
-            $table->integer('col_number');
             $table->timestamps();
         });
     }
@@ -27,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('home_projects_grid');
+        Schema::dropIfExists('showreel');
     }
 };

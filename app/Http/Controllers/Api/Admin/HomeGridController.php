@@ -22,14 +22,14 @@ class HomeGridController extends Controller
             ->get();
 
         $grid = [];
+
         foreach ($rows as $item) {
             $media = $item->media ?? '';
             $mediaArr = is_array($media) ? $media : (json_decode($media, true) ?: []);
-            // Всегда инициализируем строку как массив!
-            if (!isset($grid[$item->row_number]) || !is_array($grid[$item->row_number])) {
-                $grid[$item->row_number] = [];
-            }
-            $grid[$item->row_number][$item->col_number] = [
+
+            $grid[] = [
+                'row_number' => $item->row_number,
+                'col_number' => $item->col_number,
                 'project_id' => $item->project_id,
                 'media' => $mediaArr,
                 'is_mobile' => $item->is_mobile ?? false,
@@ -38,42 +38,60 @@ class HomeGridController extends Controller
             ];
         }
 
-        // Теперь каждая строка гарантированно массив
-        // Преобразуем в массив массивов (без дыр)
-        $gridOut = [];
-        ksort($grid);
-        foreach ($grid as $row) {
-            if (is_array($row)) {
-                // пересортируем колонки, чтобы не было дыр
-                ksort($row);
-                $gridOut[] = array_values($row);
-            }
-        }
-
-        return response()->json($gridOut);
+        return response()->json($grid);
     }
 
     public function update(Request $request)
     {
         try {
             $grid = $request->input('grid', []);
-            \Log::info('HomeGridController@update — входные данные:', ['grid' => $grid]);
-            \DB::table('home_projects_grid')->truncate();
 
-            foreach ($grid as $rowIdx => $row) {
-                foreach ($row as $colIdx => $col) {
-                    $media = $col['media'] ?? [];
-                    if (is_string($media)) {
-                        $mediaDecoded = json_decode($media, true);
-                        $media = $mediaDecoded !== null ? $mediaDecoded : $media;
+            if (!is_array($grid) || count($grid) === 0) {
+                return response()->json(['error' => 'Нет данных для сохранения'], 400);
+            }
+
+            $keysToKeep = [];
+
+            foreach ($grid as $col) {
+                if (empty($col['project_id']) && empty($col['media'])) continue;
+
+                $row = $col['row_number'] ?? 0;
+                $colNum = $col['col_number'] ?? 0;
+
+                $media = $col['media'] ?? [];
+                if (is_string($media)) {
+                    $decoded = json_decode($media, true);
+                    $media = is_array($decoded) ? $decoded : [];
+                }
+
+                DB::table('home_projects_grid')->updateOrInsert(
+                    ['row_number' => $row, 'col_number' => $colNum],
+                    [
+                        'project_id' => $col['project_id'] ?? null,
+                        'media' => json_encode($media, JSON_UNESCAPED_UNICODE),
+                        'is_mobile' => $col['is_mobile'] ?? false,
+                        'updated_at' => now(),
+                    ]
+                );
+
+                $keysToKeep[] = ['row_number' => $row, 'col_number' => $colNum];
+            }
+
+            // 💥 Вместо whereNotIn — мы удалим по списку исключений вручную
+            if (!empty($keysToKeep)) {
+                $existing = DB::table('home_projects_grid')->get(['row_number', 'col_number']);
+
+                foreach ($existing as $cell) {
+                    $found = collect($keysToKeep)->contains(function ($item) use ($cell) {
+                        return $item['row_number'] == $cell->row_number && $item['col_number'] == $cell->col_number;
+                    });
+
+                    if (!$found) {
+                        DB::table('home_projects_grid')
+                            ->where('row_number', $cell->row_number)
+                            ->where('col_number', $cell->col_number)
+                            ->delete();
                     }
-                    \DB::table('home_projects_grid')->insert([
-                        'row_number'   => $rowIdx,
-                        'col_number'   => $colIdx,
-                        'project_id'   => $col['project_id'] ?? null,
-                        'media'        => json_encode($media, JSON_UNESCAPED_UNICODE),
-                        'is_mobile'    => $col['is_mobile'] ?? false,
-                    ]);
                 }
             }
 
