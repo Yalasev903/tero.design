@@ -156,7 +156,12 @@
   <el-form label-position="top">
     <el-form-item label="Выберите проект">
       <el-select v-model="selectedProjectId" placeholder="Проект" style="width: 100%">
-        <el-option v-for="p in projects" :key="p.id" :label="p.title" :value="p.id" />
+        <el-option
+        v-for="p in projects"
+        :key="p.id"
+        :label="`${p.title} (${p.usageCount})`"
+        :value="p.id"
+        />
       </el-select>
     </el-form-item>
 
@@ -289,7 +294,7 @@ const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
 const loadGrid = async () => {
   try {
     gridRows.value = []
-    
+
     const { data } = await axios.get('/api/admin/home-grid')
     const flatGrid = data || []
 
@@ -627,8 +632,25 @@ console.log('Содержимое:', JSON.stringify(col, null, 2))
 const loadProjects = async () => {
   try {
     const { data } = await axios.get('/api/admin/projects')
-    projects.value = data
-    console.log('Проекты загружены:', data)
+
+    // Подсчёт вхождений каждого project_id в текущей сетке
+    const usageMap = {}
+
+    gridRows.value.forEach(row => {
+      row.items.forEach(col => {
+        if (col.project_id) {
+          usageMap[col.project_id] = (usageMap[col.project_id] || 0) + 1
+        }
+      })
+    })
+
+    // Добавляем счётчик к каждому проекту
+    projects.value = data.map(p => ({
+      ...p,
+      usageCount: usageMap[p.id] || 0
+    }))
+
+    console.log('Проекты с подсчётом:', projects.value)
   } catch (e) {
     console.error('Ошибка при загрузке проектов:', e)
     ElNotification({
