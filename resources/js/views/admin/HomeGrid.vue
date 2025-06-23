@@ -101,7 +101,7 @@
                                 <div v-else class="empty-media">
                                 <el-icon><Picture /></el-icon>
                                 </div>
-                                <span class="edit-icon" @click.stop="openFileManager(rowIdx, colIdx)" title="Заменить медиа">
+                                <span class="edit-icon" @click.stop="openEditModal(rowIdx, colIdx)" title="Редактировать медиа">
                                 <el-icon><Edit /></el-icon>
                                 </span>
                                 <span class="media-name">
@@ -291,6 +291,26 @@ const modalMediaSize = ref({ w: null, h: null })
 const imgSizes = ref({})
 const videoSizes = ref({})
 const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
+
+const isEditingModal = ref(false)
+const editingTarget = ref({ rowIdx: null, colIdx: null })
+
+const openEditModal = (rowIdx, colIdx) => {
+  const cell = gridRows.value[rowIdx].items[colIdx]
+
+  selectedProjectId.value = cell.project_id
+  selectedPath.value = cell.media?.type === 'img'
+    ? cell.media.link
+    : cell.media?.poster || ''
+
+  mediaType.value = cell.media?.type || 'img'
+  modalMediaSize.value = { w: null, h: null }
+
+  editingTarget.value = { rowIdx, colIdx }
+  isEditingModal.value = true
+  showMediaModal.value = true
+  loadProjects()
+}
 
 // --- Загрузка данных ---
 const loadGrid = async () => {
@@ -606,6 +626,8 @@ const cancelMediaInsert = () => {
   selectedProjectId.value = null
   mediaType.value = 'img'
   modalMediaSize.value = { w: null, h: null }
+  isEditingModal.value = false
+  editingTarget.value = { rowIdx: null, colIdx: null }
 }
 
 const insertMedia = async () => {
@@ -615,38 +637,44 @@ const insertMedia = async () => {
   }
 
   const project = projects.value.find(p => p.id === selectedProjectId.value)
-  const rowIdx = targetRowIdx.value
 
-  if (!gridRows.value[rowIdx]) {
-    ElNotification({ title: 'Ошибка', message: 'Целевая строка не найдена', type: 'error' })
-    return
-  }
-
-  const ext = selectedPath.value.split('.').pop()?.toLowerCase()
-  let mimeType = 'video/mp4'
-  if (ext === 'webm') mimeType = 'video/webm'
-  else if (ext === 'ogg') mimeType = 'video/ogg'
-
-  const newMedia =
+  const media =
     mediaType.value === 'img'
       ? { type: 'img', link: selectedPath.value }
       : {
           type: 'video',
           poster: selectedPath.value,
-          links: [{ link: selectedPath.value, mime: mimeType }]
+          links: [{
+            link: selectedPath.value,
+            mime: selectedPath.value.endsWith('.webm')
+              ? 'video/webm'
+              : 'video/mp4'
+          }]
         }
 
-  const newCol = {
-    id: `cell_${targetRowIdx.value}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-    project_id: selectedProjectId.value || null,
-    title: project?.title || 'Без проекта',
-    media: JSON.parse(JSON.stringify(newMedia)),
-    is_mobile: false
+  if (isEditingModal.value) {
+    // Режим редактирования
+    const { rowIdx, colIdx } = editingTarget.value
+    const cell = gridRows.value[rowIdx].items[colIdx]
+    cell.project_id = selectedProjectId.value
+    cell.title = project?.title || 'Без названия'
+    cell.media = JSON.parse(JSON.stringify(media))
+
+    ElNotification({ title: 'Обновлено', message: 'Контент обновлён', type: 'success' })
+  } else {
+    // Режим добавления
+    const rowIdx = targetRowIdx.value
+    const newCol = {
+      id: `cell_${rowIdx}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+      project_id: selectedProjectId.value || null,
+      title: project?.title || 'Без проекта',
+      media: JSON.parse(JSON.stringify(media)),
+      is_mobile: false
+    }
+
+    gridRows.value[rowIdx].items.push(newCol)
+    ElNotification({ title: 'Добавлено', message: 'Контент добавлен', type: 'success' })
   }
-
-  gridRows.value[rowIdx].items.push(newCol)
-
-  ElNotification({ title: 'Добавлено', message: 'Контент успешно добавлен', type: 'success' })
 
   cancelMediaInsert()
 }
