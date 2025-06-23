@@ -307,7 +307,7 @@ const loadGrid = async () => {
       if (!grouped[rowIdx]) grouped[rowIdx] = []
 
       grouped[rowIdx][colIdx] = {
-        id: `cell_${Date.now()}_${Math.random()}`,
+        id: `cell_${rowIdx}_${colIdx}_${item.project_id ?? 'null'}_${Math.random().toString(36).substring(2, 8)}`,
         project_id: item.project_id,
         media: typeof item.media === 'string'
           ? JSON.parse(item.media || '{}')
@@ -464,51 +464,46 @@ const openFileManager = (rowIdx, colIdx) => {
 const handleFileSelect = (items) => {
   if (!items.length) return
   const file = items[0]
-  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '') // ← вот тут
-  selectedPath.value = path // ← ставим сразу после path
+  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
+  selectedPath.value = path
 
-  nextTick(() => {
-  setTimeout(() => {
-    const el = document.querySelector('.el-dialog__body .preview-img img, .el-dialog__body .preview-img video')
+  // если это не модалка вставки, тогда это замена в существующей ячейке
+  if (!showMediaModal.value) {
+    const row = gridRows.value[selectedCell.value.rowIdx]
+    const col = row.items[selectedCell.value.colIdx]
+    const type = file.mime?.includes('video') ? 'video' : 'img'
 
-    if (!el) return
-
-    if (el.tagName === 'IMG') {
-      modalMediaSize.value = {
-        w: el.naturalWidth,
-        h: el.naturalHeight
-      }
-    } else if (el.tagName === 'VIDEO') {
-      el.addEventListener('loadedmetadata', () => {
-        modalMediaSize.value = {
-          w: el.videoWidth,
-          h: el.videoHeight
+    col.media = type === 'img'
+      ? { type: 'img', link: path }
+      : {
+          type: 'video',
+          poster: path,
+          links: [{ link: path, mime: file.mime || 'video/mp4' }]
         }
-      }, { once: true })
-    }
-  }, 150)
-})
-
-  let type = 'img'
-  if (file.mime?.includes('video')) type = 'video'
-
-  const row = gridRows.value[selectedCell.value.rowIdx]
-  const col = row.items[selectedCell.value.colIdx]
-
-  if (type === 'img') {
-    col.media = {
-      type: 'img',
-      link: path
-    }
-  } else {
-    col.media = {
-      type: 'video',
-      poster: path,
-      links: [{ link: path, mime: file.mime || 'video/mp4' }]
-    }
   }
 
   showFileManager.value = false
+
+  // размер
+  nextTick(() => {
+    setTimeout(() => {
+      const el = document.querySelector('.el-dialog__body .preview-img img, .el-dialog__body .preview-img video')
+      if (!el) return
+      if (el.tagName === 'IMG') {
+        modalMediaSize.value = {
+          w: el.naturalWidth,
+          h: el.naturalHeight
+        }
+      } else if (el.tagName === 'VIDEO') {
+        el.addEventListener('loadedmetadata', () => {
+          modalMediaSize.value = {
+            w: el.videoWidth,
+            h: el.videoHeight
+          }
+        }, { once: true })
+      }
+    }, 150)
+  })
 }
 
 const previewSize = ref({ w: null, h: null })
@@ -587,6 +582,8 @@ const cancelMediaInsert = () => {
   showMediaModal.value = false
   selectedPath.value = ''
   selectedProjectId.value = null
+  mediaType.value = 'img'
+  modalMediaSize.value = { w: null, h: null }
 }
 
 const insertMedia = async () => {
@@ -596,37 +593,37 @@ const insertMedia = async () => {
   }
 
   const project = projects.value.find(p => p.id === selectedProjectId.value)
-
   const rowIdx = targetRowIdx.value
-  const colIdx = gridRows.value[rowIdx]?.items.length || 0
-
-  const col = {
-    id: `cell_${Date.now()}_${Math.random()}`,
-    project_id: selectedProjectId.value || null,
-    title: project?.title || 'Без проекта',
-    media: mediaType.value === 'img'
-      ? { type: 'img', link: selectedPath.value }
-      : {
-          type: 'video',
-          poster: selectedPath.value,
-          links: [{ link: selectedPath.value, mime: 'video/mp4' }]
-        },
-    is_mobile: false
-  }
 
   if (!gridRows.value[rowIdx]) {
     ElNotification({ title: 'Ошибка', message: 'Целевая строка не найдена', type: 'error' })
     return
   }
 
-  gridRows.value[rowIdx].items.push(col)
+  const newMedia =
+    mediaType.value === 'img'
+      ? { type: 'img', link: selectedPath.value }
+      : {
+          type: 'video',
+          poster: selectedPath.value,
+          links: [{ link: selectedPath.value, mime: 'video/mp4' }]
+        }
+
+  // Создание нового объекта, чтобы не дублировался по ссылке
+  const newCol = {
+    id: `cell_${targetRowIdx.value}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
+    project_id: selectedProjectId.value || null,
+    title: project?.title || 'Без проекта',
+    media: JSON.parse(JSON.stringify(newMedia)),
+    is_mobile: false
+  }
+
+  gridRows.value[rowIdx].items.push(newCol)
 
   ElNotification({ title: 'Добавлено', message: 'Контент успешно добавлен', type: 'success' })
 
+  // Сброс
   cancelMediaInsert()
-  console.log('🟢 ДОБАВЛЕНИЕ КОЛОНКИ В:', rowIdx, colIdx)
-console.log('Содержимое:', JSON.stringify(col, null, 2))
-
 }
 
 const loadProjects = async () => {
