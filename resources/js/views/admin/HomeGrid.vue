@@ -176,6 +176,15 @@
       </div>
     </el-form-item>
 
+          <el-form-item label="SEO описание изображения">
+        <el-input
+            v-model="mediaDescription"
+            placeholder="Введите описание для alt / SEO"
+            type="textarea"
+            rows="2"
+        />
+        </el-form-item>
+
     <el-form-item v-if="mediaType === 'video'" label="Видео">
       <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
       <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
@@ -292,6 +301,8 @@ const imgSizes = ref({})
 const videoSizes = ref({})
 const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
 
+const mediaDescription = ref('')
+
 const isEditingModal = ref(false)
 const editingTarget = ref({ rowIdx: null, colIdx: null })
 
@@ -302,6 +313,7 @@ const openEditModal = (rowIdx, colIdx) => {
   selectedPath.value = cell.media?.type === 'img'
     ? cell.media.link
     : cell.media?.poster || ''
+    mediaDescription.value = cell.media?.description || ''
 
   mediaType.value = cell.media?.type || 'img'
   modalMediaSize.value = { w: null, h: null }
@@ -628,6 +640,7 @@ const cancelMediaInsert = () => {
   modalMediaSize.value = { w: null, h: null }
   isEditingModal.value = false
   editingTarget.value = { rowIdx: null, colIdx: null }
+  mediaDescription.value = ''
 }
 
 const insertMedia = async () => {
@@ -640,7 +653,11 @@ const insertMedia = async () => {
 
   const media =
     mediaType.value === 'img'
-      ? { type: 'img', link: selectedPath.value }
+      ? {
+        type: 'img',
+        link: selectedPath.value,
+        description: mediaDescription.value.trim()
+        }
       : {
           type: 'video',
           poster: selectedPath.value,
