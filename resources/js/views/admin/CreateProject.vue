@@ -874,6 +874,19 @@ watch(() => route.params.id, loadProject)
   gap: 16px;
   min-height: 150px;
   width: 100%;
+  overflow-x: auto;           /* 🔥 Горизонтальный скролл */
+  padding-bottom: 8px;        /* 🔽 отступ снизу под скролл */
+  scrollbar-width: thin;      /* для Firefox */
+  scrollbar-color: #bbb transparent;
+}
+
+.grid-row::-webkit-scrollbar {
+  height: 8px;
+}
+
+.grid-row::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
 }
 .columns-draggable {
   display: flex;

@@ -723,7 +723,26 @@ onMounted(() => {
 .grid-rows { display: flex; flex-direction: column; gap: 25px; }
 .grid-row-wrap { margin-bottom: 18px; border: 2px dashed #e3e3e3; border-radius: 12px; background: #f9f9fb; padding: 15px 8px 8px; position: relative; }
 .row-header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
-.grid-row { display: flex; gap: 16px; min-height: 150px; }
+.grid-row {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  min-height: 150px;
+  width: 100%;
+  overflow-x: auto;           /* 🔥 Горизонтальный скролл */
+  padding-bottom: 8px;        /* 🔽 отступ снизу под скролл */
+  scrollbar-width: thin;      /* для Firefox */
+  scrollbar-color: #bbb transparent;
+}
+
+.grid-row::-webkit-scrollbar {
+  height: 8px;
+}
+
+.grid-row::-webkit-scrollbar-thumb {
+  background-color: #ccc;
+  border-radius: 4px;
+}
 .grid-item { border: 1px dashed #ccc; border-radius: 6px; min-width: 220px; max-width: 320px; padding: 10px; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; position: relative; }
 .drag-row, .drag-col { cursor: grab; font-size: 18px; margin-right: 8px; color: #999; }
 .preview-box { position: relative; width: 130px; height: 80px; border-radius: 8px; overflow: hidden; background: #eee; cursor: pointer; margin-bottom: 8px; }
