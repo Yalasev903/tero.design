@@ -172,7 +172,7 @@
         {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
         </div>
       <div v-if="selectedPath" class="preview-img">
-        <img :src="`/multimedia/${selectedPath}`" style="max-width: 100%; margin-top: 10px" />
+        <img :src="`/multimedia/${selectedPath}`" @load="onImageLoad" style="max-width: 100%; margin-top: 10px"  />
       </div>
     </el-form-item>
 
@@ -193,7 +193,7 @@
         {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
         </div>
       <div v-if="selectedPath" class="preview-img">
-        <video autoplay loop muted playsinline style="width: 100%; margin-top: 10px"
+        <video autoplay loop muted playsinline @loadedmetadata="onVideoLoad" style="width: 100%; margin-top: 10px"
           :src="`/multimedia/${selectedPath}`" />
       </div>
     </el-form-item>
@@ -327,6 +327,20 @@ const openEditModal = (rowIdx, colIdx) => {
   isEditingModal.value = true
   showMediaModal.value = true
   loadProjects()
+}
+
+const onImageLoad = (e) => {
+  modalMediaSize.value = {
+    w: e.target.naturalWidth,
+    h: e.target.naturalHeight
+  }
+}
+
+const onVideoLoad = (e) => {
+  modalMediaSize.value = {
+    w: e.target.videoWidth,
+    h: e.target.videoHeight
+  }
 }
 
 // --- Загрузка данных ---
@@ -541,27 +555,6 @@ const handleFileSelect = (items) => {
     title: 'Обновлено',
     message: isVideo ? `Видео заменено: ${path}` : `Изображение заменено: ${path}`,
     type: 'success'
-  })
-
-  // авторазмеры
-  nextTick(() => {
-    setTimeout(() => {
-      const el = document.querySelector('.el-dialog__body .preview-img img, .el-dialog__body .preview-img video')
-      if (!el) return
-      if (el.tagName === 'IMG') {
-        modalMediaSize.value = {
-          w: el.naturalWidth,
-          h: el.naturalHeight
-        }
-      } else if (el.tagName === 'VIDEO') {
-        el.addEventListener('loadedmetadata', () => {
-          modalMediaSize.value = {
-            w: el.videoWidth,
-            h: el.videoHeight
-          }
-        }, { once: true })
-      }
-    }, 150)
   })
 }
 
