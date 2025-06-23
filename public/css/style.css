@@ -2868,7 +2868,7 @@ body:not(.lg-from-hash) .lg-outer.lg-start-zoom .lg-item.lg-complete .lg-object 
 	display: none;
 }
 
-.grid-item.loading {
+/* .grid-item.loading {
 	opacity: 1;
 	-webkit-animation: glow linear 5s infinite;
 	animation: glow linear 3s infinite;
@@ -2885,7 +2885,7 @@ body:not(.lg-from-hash) .lg-outer.lg-start-zoom .lg-item.lg-complete .lg-object 
 }
 .grid-item.loading:before {
 	content: "";
-}
+} */
 
 #scroll-to-top {
 	/*z-index: 9999;*/

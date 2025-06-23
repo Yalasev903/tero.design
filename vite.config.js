@@ -11,7 +11,7 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js', 'resources/js/public-calc.js'],
+            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js', 'resources/js/public-calc.js', 'resources/css/overrides.css'],
             refresh: true,
         }),
         vue(),

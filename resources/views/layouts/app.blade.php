@@ -25,7 +25,7 @@
     <link rel="apple-touch-icon-precomposed" href="{{ asset('favicon.png') }}"/>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet">
     <meta name="msapplication-TileImage" content="{{ asset('favicon.png') }}"/>
-
+    @vite(['resources/css/overrides.css'])
     {{-- SEO OpenGraph --}}
     @yield('header_og_url_block')
 
@@ -59,6 +59,9 @@
     @show
      <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <script src="{{ asset('js/header.min.js?v=5.92') }}" type="application/javascript"></script>
+
+
+
     @stack('styles')
     <style>
         body {

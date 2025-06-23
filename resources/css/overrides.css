@@ -1,0 +1,9 @@
+
+.grid-item.loading {
+  opacity: 1 !important;
+  animation: none !important;
+  background-color: transparent !important;
+}
+.grid-item.loading:before {
+  content: none !important;
+}
