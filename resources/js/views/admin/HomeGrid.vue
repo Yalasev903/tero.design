@@ -1,4 +1,4 @@
-        <template>
+<template>
         <div>
             <div class="home-grid-panel">
                 <a href="/" target="_blank" class="inline-flex items-center text-blue-600 hover:underline text-lg font-medium mb-4">
@@ -79,6 +79,7 @@
                                 </div>
                                 <div v-else-if="col.media?.type === 'video' && col.media?.links?.length">
                                 <video
+                                    :key="col.media?.__v || col.id"
                                     ref="allGridVideos"
                                     muted
                                     loop
@@ -252,8 +253,9 @@
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
       </div>
-    </teleport>
-    </template>
+          </teleport>
+
+      </template>
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
@@ -463,28 +465,48 @@ const openFileManager = (rowIdx, colIdx) => {
 
 const handleFileSelect = (items) => {
   if (!items.length) return
+
   const file = items[0]
   const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
   selectedPath.value = path
-
-  // если это не модалка вставки, тогда это замена в существующей ячейке
-  if (!showMediaModal.value) {
-    const row = gridRows.value[selectedCell.value.rowIdx]
-    const col = row.items[selectedCell.value.colIdx]
-    const type = file.mime?.includes('video') ? 'video' : 'img'
-
-    col.media = type === 'img'
-      ? { type: 'img', link: path }
-      : {
-          type: 'video',
-          poster: path,
-          links: [{ link: path, mime: file.mime || 'video/mp4' }]
-        }
-  }
-
   showFileManager.value = false
 
-  // размер
+  const isVideo = file.mime?.includes('video') || path.match(/\.(mp4|webm|ogg)$/i)
+
+  // 🛠 если showMediaModal открыт → вставка в модалке "добавить медиа"
+  if (showMediaModal.value) return
+
+  // иначе — это просто замена в ячейке
+  const { rowIdx, colIdx } = selectedCell.value
+
+  if (typeof rowIdx === 'undefined' || typeof colIdx === 'undefined') {
+    console.warn('Не указаны индексы для замены')
+    return
+  }
+
+  const row = gridRows.value[rowIdx]
+  const col = row.items[colIdx]
+
+  col.media = isVideo
+    ? {
+        __v: Date.now(),
+        type: 'video',
+        poster: path,
+        links: [{ link: path, mime: file.mime || 'video/mp4' }]
+      }
+    : {
+        __v: Date.now(),
+        type: 'img',
+        link: path
+      }
+
+  ElNotification({
+    title: 'Обновлено',
+    message: isVideo ? `Видео заменено: ${path}` : `Изображение заменено: ${path}`,
+    type: 'success'
+  })
+
+  // авторазмеры
   nextTick(() => {
     setTimeout(() => {
       const el = document.querySelector('.el-dialog__body .preview-img img, .el-dialog__body .preview-img video')
@@ -600,16 +622,20 @@ const insertMedia = async () => {
     return
   }
 
+  const ext = selectedPath.value.split('.').pop()?.toLowerCase()
+  let mimeType = 'video/mp4'
+  if (ext === 'webm') mimeType = 'video/webm'
+  else if (ext === 'ogg') mimeType = 'video/ogg'
+
   const newMedia =
     mediaType.value === 'img'
       ? { type: 'img', link: selectedPath.value }
       : {
           type: 'video',
           poster: selectedPath.value,
-          links: [{ link: selectedPath.value, mime: 'video/mp4' }]
+          links: [{ link: selectedPath.value, mime: mimeType }]
         }
 
-  // Создание нового объекта, чтобы не дублировался по ссылке
   const newCol = {
     id: `cell_${targetRowIdx.value}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
     project_id: selectedProjectId.value || null,
@@ -622,7 +648,6 @@ const insertMedia = async () => {
 
   ElNotification({ title: 'Добавлено', message: 'Контент успешно добавлен', type: 'success' })
 
-  // Сброс
   cancelMediaInsert()
 }
 
@@ -658,7 +683,6 @@ const loadProjects = async () => {
   }
 }
 
-// --- Инициализация ---
 onMounted(() => {
   loadGrid()
   loadSeo()
