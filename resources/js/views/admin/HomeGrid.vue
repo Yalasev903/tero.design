@@ -176,7 +176,9 @@
       </div>
     </el-form-item>
 
-          <el-form-item label="SEO описание изображения">
+          <el-form-item
+          v-if="mediaType === 'img' && showMediaModal"
+          label="SEO описание изображения">
         <el-input
             v-model="mediaDescription"
             placeholder="Введите описание для alt / SEO"
