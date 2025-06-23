@@ -312,10 +312,13 @@ const openEditModal = (rowIdx, colIdx) => {
   const cell = gridRows.value[rowIdx].items[colIdx]
 
   selectedProjectId.value = cell.project_id
-  selectedPath.value = cell.media?.type === 'img'
-    ? cell.media.link
-    : cell.media?.poster || ''
-    mediaDescription.value = cell.media?.description || ''
+  if (cell.media?.type === 'img') {
+  selectedPath.value = cell.media.link
+  mediaDescription.value = cell.media?.description || ''
+} else if (cell.media?.type === 'video') {
+  selectedPath.value = cell.media.links?.[0]?.link || ''
+  mediaDescription.value = ''
+}
 
   mediaType.value = cell.media?.type || 'img'
   modalMediaSize.value = { w: null, h: null }
@@ -677,7 +680,10 @@ const insertMedia = async () => {
     const cell = gridRows.value[rowIdx].items[colIdx]
     cell.project_id = selectedProjectId.value
     cell.title = project?.title || 'Без названия'
-    cell.media = JSON.parse(JSON.stringify(media))
+    cell.media = {
+  ...JSON.parse(JSON.stringify(media)),
+  __v: Date.now()
+}
 
     ElNotification({ title: 'Обновлено', message: 'Контент обновлён', type: 'success' })
   } else {
