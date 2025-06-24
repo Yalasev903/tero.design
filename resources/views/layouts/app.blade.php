@@ -320,6 +320,46 @@
     });
     </script>
     <script>
+(function () {
+    const loader = document.querySelector('.loader');
+    const grid = document.getElementById('js-gallery');
+    const loadingVideo = document.getElementById('loading-video-banner');
+
+    const hideLoader = () => {
+        // Плавно скрываем .loader
+        loader.style.opacity = '0';
+        loader.style.pointerEvents = 'none';
+        setTimeout(() => loader.remove(), 600); // на всякий случай подождем fadeout
+
+        // Показываем сетку с fade-in
+        if (grid) {
+            grid.classList.add('grid-fade-in');
+            grid.style.display = '';
+        }
+
+        document.body.classList.remove('loading');
+    };
+
+    if (document.readyState === 'complete') {
+        if (loadingVideo && loadingVideo.readyState >= 3) {
+            loadingVideo.addEventListener('ended', hideLoader);
+        } else {
+            requestAnimationFrame(hideLoader);
+        }
+    } else {
+        window.addEventListener('load', () => {
+            if (loadingVideo) {
+                loadingVideo.addEventListener('ended', hideLoader);
+                // fallback через 4 секунды, если видео не проигралось до конца
+                setTimeout(hideLoader, 4000);
+            } else {
+                requestAnimationFrame(hideLoader);
+            }
+        });
+    }
+})();
+</script>
+    <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('js-showreel');
             const playBtn = document.querySelector('.js-video-play');
