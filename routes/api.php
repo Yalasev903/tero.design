@@ -20,6 +20,18 @@ Route::any('/vuefinder', VueFinderController::class);
 
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/me', fn (Request $request) => $request->user());
+
+        Route::post('/change-password', function (Request $request) {
+        $request->validate([
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user = $request->user();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json(['message' => 'Пароль обновлён']);
+    });
     Route::get('/showreel', [ShowreelController::class, 'show']);
     Route::post('/showreel', [ShowreelController::class, 'update']);
     Route::post('/upload', [UploadController::class, 'store']);

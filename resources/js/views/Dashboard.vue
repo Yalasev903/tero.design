@@ -74,11 +74,49 @@
         </main>
 
     <!-- Настройки -->
-    <el-dialog v-model="showSettings" title="Настройки" width="350px">
-      <el-switch v-model="tabsMode" active-text="Режим вкладок (окна)" inactive-text="Классический режим" />
-      <br />
-      <el-button type="primary" @click="showSettings = false" style="margin-top: 16px;">OK</el-button>
-    </el-dialog>
+<el-dialog v-model="showSettings" title="Настройки" width="400px">
+  <!-- Переключатель режима -->
+  <el-switch
+    v-model="tabsMode"
+    active-text="Режим вкладок (окна)"
+    inactive-text="Классический режим"
+  />
+  <br /><br />
+
+  <!-- Блок смены пароля -->
+  <el-divider>Смена пароля</el-divider>
+  <el-form :model="passwordForm" label-position="top" @submit.prevent="changePassword">
+    <el-form-item label="Новый пароль">
+      <el-input v-model="passwordForm.password" type="password" show-password />
+    </el-form-item>
+    <el-form-item label="Подтвердите пароль">
+      <el-input v-model="passwordForm.password_confirmation" type="password" show-password />
+    </el-form-item>
+    <el-button type="primary" @click="changePassword">Сменить пароль</el-button>
+  </el-form>
+
+  <!-- Сообщения -->
+  <el-alert
+    v-if="passwordSuccess"
+    type="success"
+    :closable="false"
+    class="mt-4"
+    title="Пароль успешно обновлён"
+  />
+  <el-alert
+    v-if="passwordError"
+    type="error"
+    :closable="false"
+    class="mt-4"
+    :title="passwordError"
+  />
+
+  <!-- Закрытие -->
+  <template #footer>
+    <el-button @click="showSettings = false">Закрыть</el-button>
+  </template>
+</el-dialog>
+
   </div>
 </template>
 
@@ -95,6 +133,7 @@ import {
   Document,
   Setting
 } from '@element-plus/icons-vue'
+import { ElDivider, ElAlert } from 'element-plus'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
 import Projects from './admin/Projects.vue'
@@ -226,6 +265,27 @@ provide('tabsMode', tabsMode)
 const logout = async () => {
   await axios.post('/api/admin/logout')
   router.push('/login')
+}
+
+const passwordForm = ref({
+  password: '',
+  password_confirmation: ''
+})
+
+const passwordSuccess = ref(false)
+const passwordError = ref('')
+
+const changePassword = async () => {
+  passwordSuccess.value = false
+  passwordError.value = ''
+  try {
+    await axios.post('/api/admin/change-password', passwordForm.value)
+    passwordSuccess.value = true
+    passwordForm.value.password = ''
+    passwordForm.value.password_confirmation = ''
+  } catch (err) {
+    passwordError.value = err.response?.data?.message || 'Ошибка смены пароля'
+  }
 }
 </script>
 
