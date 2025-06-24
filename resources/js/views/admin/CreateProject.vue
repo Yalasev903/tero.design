@@ -159,6 +159,37 @@
       </div>
     </el-form>
 
+    <!-- Модалка добавления и редактирования видео или изображения -->
+    <el-dialog v-model="showMediaModal" :title="isEditingMedia ? 'Редактирование медиа' : 'Добавление медиа'" width="600px" :append-to-body="true">
+    <el-form label-position="top">
+        <el-form-item v-if="mediaType === 'img'" label="Изображение">
+        <el-button @click="openFileManagerForModal">Выбрать изображение</el-button>
+        <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
+            {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
+        </div>
+        <img v-if="modalMediaPreview" :src="`/multimedia/${modalMediaPreview}`" class="preview-img" style="margin-top: 10px;" />
+        </el-form-item>
+
+        <el-form-item v-else-if="mediaType === 'video'" label="Видео">
+        <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
+        <div v-if="modalMediaPreview" style="margin-top: 10px;">
+            <video autoplay muted loop playsinline controls style="max-width: 100%;">
+            <source :src="`/multimedia/${modalMediaPreview}`" />
+            </video>
+        </div>
+        </el-form-item>
+
+        <el-form-item label="Название / alt">
+        <el-input v-model="modalMediaTitle" placeholder="Название медиа (необязательно)" />
+        </el-form-item>
+    </el-form>
+
+    <template #footer>
+        <el-button @click="cancelMediaInsert">Отмена</el-button>
+        <el-button type="primary" @click="confirmMediaInsert">Добавить</el-button>
+    </template>
+    </el-dialog>
+
     <!-- Модалка предпросмотра -->
     <el-dialog v-model="previewVisible" title="Предпросмотр" width="50%" :append-to-body="true">
     <div class="preview-modal-content">
@@ -332,6 +363,40 @@ const showFileManager = ref(false)
 const previewVisible = ref(false)
 const previewItem = ref({})
 
+
+const showMediaModal = ref(false)
+const mediaType = ref(null)
+const modalMediaTitle = ref('')
+const modalMediaPreview = ref('')
+const modalMediaSize = ref({ w: null, h: null })
+const isEditingMedia = ref(false)
+
+// вызвать модалку
+const openMediaModal = (type, isEdit = false) => {
+  mediaType.value = type
+  showMediaModal.value = true
+  isEditingMedia.value = isEdit
+  modalMediaTitle.value = ''
+  modalMediaPreview.value = ''
+  modalMediaSize.value = { w: null, h: null }
+}
+
+const openFileManagerForModal = () => {
+  if (!selectedCell.value?.rowIdx && typeof pendingCurtainRowIdx.value === 'number') {
+    selectedCell.value = { rowIdx: pendingCurtainRowIdx.value }
+  }
+
+  if (!selectedCell.value?.rowIdx && typeof pendingVrRowIdx.value === 'number') {
+    selectedCell.value = { rowIdx: pendingVrRowIdx.value }
+  }
+
+  if (!selectedCell.value?.rowIdx && typeof selectedCell.value !== 'object') {
+    console.warn('⚠ Нет строки для вставки, selectedCell не установлен корректно')
+  }
+
+  showFileManager.value = true
+}
+
 // VR
 const showVrModal = ref(false)
 const vrIframeCode = ref('')
@@ -410,15 +475,15 @@ const handleAddCol = (rowIdx, type = null) => {
     return
   }
 
-  // обычные типы
-  const media = { type }
-  const newCol = { media, title: '' }
-  gridRows.value[rowIdx].items.push(newCol)
+  // img / video → открываем модалку, но НЕ добавляем пока колонку
+  mediaType.value = type
+  isEditingMedia.value = false
+  showMediaModal.value = true
+  modalMediaTitle.value = ''
+  modalMediaPreview.value = ''
+  modalMediaSize.value = { w: null, h: null }
 
-  if (['img', 'video'].includes(type)) {
-    const newColIdx = gridRows.value[rowIdx].items.length - 1
-    nextTick(() => openFileManager(rowIdx, newColIdx))
-  }
+  selectedCell.value = { rowIdx, modal: true } // запоминаем строку
 }
 
 const removeCol = async (r, c) => {
@@ -451,52 +516,84 @@ const handleFileSelect = async (items) => {
   const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
   const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
 
-  // Выбор изображения для шторки
+  // Шторка
   if (selectingCurtainIndex.value) {
-    if (selectingCurtainIndex.value === 1) {
-      curtainImage1.value = path
-      await nextTick()
-      const img = new Image()
-      img.onload = () => curtainSize1.value = { w: img.naturalWidth, h: img.naturalHeight }
-      img.src = `/multimedia/${path}`
-    }
-    if (selectingCurtainIndex.value === 2) {
-      curtainImage2.value = path
-      await nextTick()
-      const img = new Image()
-      img.onload = () => curtainSize2.value = { w: img.naturalWidth, h: img.naturalHeight }
-      img.src = `/multimedia/${path}`
-    }
+    const target = selectingCurtainIndex.value === 1 ? curtainImage1 : curtainImage2
+    const size = selectingCurtainIndex.value === 1 ? curtainSize1 : curtainSize2
+
+    target.value = path
+    await nextTick()
+    const img = new Image()
+    img.onload = () => size.value = { w: img.naturalWidth, h: img.naturalHeight }
+    img.src = `/multimedia/${path}`
     selectingCurtainIndex.value = null
     showFileManager.value = false
     return
   }
+console.log('>> FILE SELECTED:', JSON.stringify({ selectedCell: selectedCell.value }))
 
+  // 🛠️ Модальное окно (если мы не редактируем существующую колонку напрямую)
+  if (selectedCell.value?.modal && 'rowIdx' in selectedCell.value) {
+    modalMediaPreview.value = path
 
-  // Остальные типы
-  const row = gridRows.value[selectedCell.value.rowIdx]
-  const col = row.items[selectedCell.value.colIdx]
-
-  if (isVideo) {
-    col.media = {
-      type: 'video',
-      poster: '',
-      links: [{ link: path, mime: file.mime || 'video/mp4' }]
+    if (isImage) {
+      const img = new Image()
+      img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+      img.src = `/multimedia/${path}`
     }
-  } else if (isImage) {
-    col.media = { type: 'img', link: path }
-  } else {
-    col.media = {}
+
+    showFileManager.value = false
+    return
   }
 
-  showFileManager.value = false
+  // Редактирование уже существующей ячейки (через иконку "карандаш")
+  if (
+    selectedCell.value?.rowIdx !== undefined &&
+    selectedCell.value?.colIdx !== undefined
+  ) {
+    const row = gridRows.value[selectedCell.value.rowIdx]
+    const col = row.items[selectedCell.value.colIdx]
+
+    if (isVideo) {
+      col.media = {
+        type: 'video',
+        poster: '',
+        links: [{ link: path, mime: file.mime || 'video/mp4' }]
+      }
+    } else if (isImage) {
+      col.media = { type: 'img', link: path }
+    } else {
+      col.media = {}
+    }
+
+    showFileManager.value = false
+    return
+  }
+
+  console.warn('⚠ Не удалось определить, куда вставлять файл')
 }
 
 const handleEditClick = (rowIdx, colIdx, type) => {
   selectedCell.value = { rowIdx, colIdx }
 
   if (type === 'img' || type === 'video') {
-    showFileManager.value = true
+    mediaType.value = type
+    isEditingMedia.value = true
+    showMediaModal.value = true
+
+    const col = gridRows.value[rowIdx].items[colIdx]
+    modalMediaTitle.value = col.title || ''
+
+    if (type === 'img') {
+      modalMediaPreview.value = col.media.link
+      const img = new Image()
+      img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+      img.src = `/multimedia/${modalMediaPreview.value}`
+    } else if (type === 'video') {
+      modalMediaPreview.value = col.media.links?.[0]?.link || ''
+    }
+
+    return
   }
 
   if (type === 'vr') {
@@ -508,7 +605,7 @@ const handleEditClick = (rowIdx, colIdx, type) => {
     showVrModal.value = true
   }
 
-    if (type === 'curtain') {
+  if (type === 'curtain') {
     const col = gridRows.value[rowIdx].items[colIdx]
     pendingCurtainRowIdx.value = rowIdx
     curtainImage1.value = col.media.images?.[0] || ''
@@ -518,17 +615,65 @@ const handleEditClick = (rowIdx, colIdx, type) => {
     showCurtainModal.value = true
 
     if (curtainImage1.value) {
-        const img1 = new Image()
-        img1.onload = () => (curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight })
-        img1.src = `/multimedia/${curtainImage1.value}`
+      const img1 = new Image()
+      img1.onload = () => (curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight })
+      img1.src = `/multimedia/${curtainImage1.value}`
     }
 
     if (curtainImage2.value) {
-        const img2 = new Image()
-        img2.onload = () => (curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight })
-        img2.src = `/multimedia/${curtainImage2.value}`
+      const img2 = new Image()
+      img2.onload = () => (curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight })
+      img2.src = `/multimedia/${curtainImage2.value}`
     }
+  }
+}
+
+const confirmMediaInsert = () => {
+  const rowIdx = selectedCell.value?.rowIdx ?? null
+  const colIdx = selectedCell.value?.colIdx ?? null
+
+  console.log('>> confirmMediaInsert:', { rowIdx, colIdx, selectedCell: selectedCell.value })
+
+  if (rowIdx === null || !gridRows.value[rowIdx]) {
+    ElNotification({ title: 'Ошибка', message: 'Не выбрана строка для вставки', type: 'warning' })
+    return
+  }
+
+  const col = {
+    title: modalMediaTitle.value || '',
+    media: {}
+  }
+
+  if (mediaType.value === 'img') {
+    col.media = {
+      type: 'img',
+      link: modalMediaPreview.value
     }
+  } else if (mediaType.value === 'video') {
+    col.media = {
+      type: 'video',
+      poster: '',
+      links: [{ link: modalMediaPreview.value, mime: 'video/mp4' }]
+    }
+  }
+
+  if (typeof colIdx === 'number') {
+    gridRows.value[rowIdx].items[colIdx] = col
+  } else {
+    gridRows.value[rowIdx].items.push(col)
+  }
+
+  showMediaModal.value = false
+  isEditingMedia.value = false
+  modalMediaPreview.value = ''
+  modalMediaTitle.value = ''
+}
+
+const cancelMediaInsert = () => {
+  showMediaModal.value = false
+  isEditingMedia.value = false
+  modalMediaPreview.value = ''
+  modalMediaTitle.value = ''
 }
 
 // =====================
