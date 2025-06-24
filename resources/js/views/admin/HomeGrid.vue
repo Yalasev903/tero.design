@@ -58,8 +58,8 @@
 
   <template #dropdown>
     <el-dropdown-menu>
-      <el-dropdown-item command="img">Изображение</el-dropdown-item>
-      <el-dropdown-item command="video">Видео</el-dropdown-item>
+      <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
+      <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
     </el-dropdown-menu>
   </template>
 </el-dropdown>
