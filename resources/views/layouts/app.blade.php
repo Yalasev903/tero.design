@@ -319,43 +319,54 @@
         }
     });
     </script>
-    <script>
+<script>
 (function () {
     const loader = document.querySelector('.loader');
     const grid = document.getElementById('js-gallery');
     const loadingVideo = document.getElementById('loading-video-banner');
 
+    const showItemsSequentially = (items, index = 0) => {
+        if (index >= items.length) return;
+        const item = items[index];
+        item.classList.add('visible');
+
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+                showItemsSequentially(items, index + 1);
+            });
+        }, 80);
+    };
+
+    const revealGrid = () => {
+        if (grid) {
+            grid.style.opacity = '1';
+            const items = grid.querySelectorAll('.grid-item');
+            showItemsSequentially(items);
+        }
+    };
+
     const hideLoader = () => {
-        // Плавно скрываем .loader
         loader.style.opacity = '0';
         loader.style.pointerEvents = 'none';
-        setTimeout(() => loader.remove(), 600); // на всякий случай подождем fadeout
-
-        // Показываем сетку с fade-in
-        if (grid) {
-            grid.classList.add('grid-fade-in');
-            grid.style.display = '';
-        }
-
+        setTimeout(() => loader.remove(), 600);
         document.body.classList.remove('loading');
     };
 
-    if (document.readyState === 'complete') {
+    const init = () => {
+        revealGrid(); // 👈 Показываем сетку СРАЗУ
+
         if (loadingVideo && loadingVideo.readyState >= 3) {
             loadingVideo.addEventListener('ended', hideLoader);
+            setTimeout(hideLoader, 3600); // запас на 1 сек
         } else {
-            requestAnimationFrame(hideLoader);
+            setTimeout(hideLoader, 1000);
         }
+    };
+
+    if (document.readyState === 'complete') {
+        init();
     } else {
-        window.addEventListener('load', () => {
-            if (loadingVideo) {
-                loadingVideo.addEventListener('ended', hideLoader);
-                // fallback через 4 секунды, если видео не проигралось до конца
-                setTimeout(hideLoader, 4000);
-            } else {
-                requestAnimationFrame(hideLoader);
-            }
-        });
+        window.addEventListener('load', init);
     }
 })();
 </script>
@@ -443,6 +454,14 @@
         @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
         <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
         @endif
+
+        <script>
+        document.addEventListener('error', function (e) {
+            if (e.target.tagName === 'IMG' && e.target.classList.contains('js-grid-item-media')) {
+                e.target.src = '/img/placeholder.png';
+            }
+        }, true);
+        </script>
     @stack('scripts')
 </body>
 </html>

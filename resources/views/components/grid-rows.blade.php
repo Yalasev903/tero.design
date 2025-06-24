@@ -25,7 +25,7 @@
 
                     @if(($media['type'] ?? '') === 'img')
                         <img
-                            src="/img/placeholder.png"
+                            src="{{ asset('logo/loader.16.gif') }}"
                             data-src="/multimedia/{{ $mediaLink }}"
                             alt="{{ $media['alt'] ?? '' }}"
                             class="js-grid-item-media lazyload"
