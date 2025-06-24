@@ -13,13 +13,19 @@
           {{ crumb }}
         </span>
       </nav>
-      <!-- Кнопка настроек -->
-      <button class="icon-btn" @click="showSettings = true" title="Настройки">
-        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M12 15.5A3.5 3.5 0 1 0 12 8.5a3.5 3.5 0 0 0 0 7Zm8.94-2.06-.82-.14a7.18 7.18 0 0 0-.46-1.12l.52-.64a1 1 0 0 0-.08-1.32l-1.42-1.42a1 1 0 0 0-1.32-.08l-.64.52a7.18 7.18 0 0 0-1.12-.46l-.14-.82a1 1 0 0 0-1-.82h-2a1 1 0 0 0-1 .82l-.14.82a7.18 7.18 0 0 0-1.12.46l-.64-.52a1 1 0 0 0-1.32.08l-1.42 1.42a1 1 0 0 0-.08 1.32l.52.64a7.18 7.18 0 0 0-.46 1.12l-.82.14a1 1 0 0 0-.82 1v2a1 1 0 0 0 .82 1l.82.14a7.18 7.18 0 0 0 .46 1.12l-.52.64a1 1 0 0 0 .08 1.32l1.42 1.42a1 1 0 0 0 1.32.08l.64-.52a7.18 7.18 0 0 0 1.12.46l.14.82a1 1 0 0 0 1 .82h2a1 1 0 0 0 1-.82l.14-.82a7.18 7.18 0 0 0 1.12-.46l.64.52a1 1 0 0 0 1.32-.08l1.42-1.42a1 1 0 0 0 .08-1.32l-.52-.64a7.18 7.18 0 0 0 .46-1.12l.82-.14a1 1 0 0 0 .82-1v-2a1 1 0 0 0-.82-1Z"></path></svg>
-      </button>
       <button class="logout-btn" @click="logout">Выйти</button>
     </header>
-
+      <!-- Кнопка настроек -->
+    <el-button
+    class="floating-settings-button"
+    type="primary"
+    size="large"
+    @click="showSettings = true"
+    circle
+    title="Настройки"
+    >
+    <el-icon class="icon-large"><Setting /></el-icon>
+    </el-button>
     <!-- Боковое меню -->
     <aside v-show="sidebarOpen" class="admin-sidebar">
       <nav>
@@ -86,7 +92,8 @@ import {
   Grid,
   Operation,
   View,
-  Document
+  Document,
+  Setting
 } from '@element-plus/icons-vue'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
@@ -386,4 +393,31 @@ const logout = async () => {
   margin-right: 8px;
   align-items: center;
 }
+.floating-settings-button {
+  position: fixed;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  z-index: 1000;
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: 14px !important;
+  background-color: #2563eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.floating-settings-button:hover {
+  background-color: #3b82f6;
+}
+.floating-settings-button .icon-large {
+  font-size: 26px;
+  color: white;
+}
+.floating-center-button:hover {
+  background: #3b82f6;
+}
+
 </style>
