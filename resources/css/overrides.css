@@ -88,4 +88,67 @@ body.loading {
     100% { transform: rotate(360deg); }
 }
 
+/* Светлая тема */
+/* Toggle switch */
+.theme-toggle-wrapper {
+    margin-left: 16px;
+    display: flex;
+    align-items: center;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 40px;
+    height: 22px;
+}
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #999;
+    transition: .4s;
+    border-radius: 34px;
+}
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 14px;
+    width: 14px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+input:checked + .slider {
+    background-color: #555;
+}
+input:checked + .slider:before {
+    transform: translateX(18px);
+}
+
+/* Светлая тема (опционально расширяй) */
+.light-theme body {
+    background-color: #fff;
+    color: #111;
+}
+.light-theme .header,
+.light-theme .footer {
+    background-color: #f4f4f4;
+    color: #000;
+}
+.light-theme .header-link,
+.light-theme .header a.header-link {
+    color: #000 !important;
+}
+
+.light-theme .header a.header-link:hover {
+    color: #222 !important;
+}
 

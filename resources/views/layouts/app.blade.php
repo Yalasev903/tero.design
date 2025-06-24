@@ -212,6 +212,13 @@
                             <a href="{{ $item['link'] }}" class="header-link">{{ $item['title'] }}</a>
                         @endforeach
                     </nav>
+
+                        <div class="theme-toggle-wrapper">
+                            <label class="switch">
+                                <input type="checkbox" id="theme-toggle-checkbox">
+                                <span class="slider round"></span>
+                            </label>
+                        </div>
                     <div class="header-share"></div>
                 </div>
                 <a href="#" class="header-menu-trigger" id="js-menu-trigger"><span></span></a>
@@ -319,6 +326,29 @@
         }
     });
     </script>
+        <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const checkbox = document.getElementById('theme-toggle-checkbox');
+            const html = document.documentElement;
+
+            // Сохраняем тему
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                html.classList.add('light-theme');
+                checkbox.checked = true;
+            }
+
+            checkbox.addEventListener('change', function () {
+                if (this.checked) {
+                    html.classList.add('light-theme');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    html.classList.remove('light-theme');
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+        });
+        </script>
 <script>
 (function () {
     const loader = document.querySelector('.loader');
