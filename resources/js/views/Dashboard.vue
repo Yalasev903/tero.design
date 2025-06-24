@@ -25,10 +25,10 @@
       <nav>
         <ul>
             <li v-for="item in menuItems" :key="item.path">
-            <template v-if="item.children">
-                <div class="submenu-label" @click="toggleSubmenu(item.path)">
-                {{ item.icon }} {{ item.label }}
-                </div>
+                <template v-if="item.children">
+                    <div class="submenu-label" @click="toggleSubmenu(item.path)">
+                        <span v-if="item.icon" class="menu-icon"><component :is="item.icon" /></span>{{ item.label }}
+                    </div>
                 <ul class="submenu" v-show="openSubmenus[item.path]">
                 <li v-for="child in item.children" :key="child.path">
                     <a href="#" :class="{active: activeTab.path === child.path}" @click.prevent="openTab(child)">
@@ -39,7 +39,7 @@
             </template>
             <template v-else>
                 <a href="#" :class="{active: activeTab.path === item.path}" @click.prevent="openTab(item)">
-                <span v-if="item.icon">{{ item.icon }}</span> {{ item.label }}
+               <span v-if="item.icon" class="menu-icon"><component :is="item.icon" /></span>{{ item.label }}
                 </a>
             </template>
             </li>
@@ -79,6 +79,15 @@
 <script setup>
 import { ref, computed, markRaw, provide } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { h } from 'vue'
+import { ElIcon } from 'element-plus'
+import {
+  Odometer,
+  Grid,
+  Operation,
+  View,
+  Document
+} from '@element-plus/icons-vue'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
 import Projects from './admin/Projects.vue'
@@ -98,19 +107,47 @@ const openSubmenus = ref({})
 
 // 👇 Обновлённое меню с вложенным блоком "Проекты"
 const menuItems = [
-  { path: '/dashboard', label: 'Панель управления', icon: '📊', component: markRaw(DashboardIndex) },
-  { path: '/home-grid', label: 'Home Grid', icon: '🏠', component: markRaw(HomeGrid) },
+  {
+    path: '/dashboard',
+    label: 'Панель управления',
+    icon: () => h(ElIcon, null, () => h(Odometer)),
+    component: markRaw(DashboardIndex)
+  },
+  {
+    path: '/home-grid',
+    label: 'Home Grid',
+    icon: () => h(ElIcon, null, () => h(Grid)),
+    component: markRaw(HomeGrid)
+  },
   {
     path: '/projects',
     label: 'Проекты',
-    icon: '📂',
+    icon: () => h(ElIcon, null, () => h(Document)),
     children: [
-      { path: '/projects/create', label: 'Создать проект', component: markRaw(CreateProject) },
-      { path: '/projects/list', label: 'Список проектов', component: markRaw(Projects) }
+      {
+        path: '/projects/create',
+        label: 'Создать проект',
+        component: markRaw(CreateProject)
+      },
+      {
+        path: '/projects/list',
+        label: 'Список проектов',
+        component: markRaw(Projects)
+      }
     ]
   },
-  { path: '/workflow', label: 'Workflow', icon: '🔁', component: markRaw(Workflow) },
-  { path: '/services', label: 'Услуги', icon: '🛠️', component: markRaw(Services) }
+  {
+    path: '/workflow',
+    label: 'Workflow',
+    icon: () => h(ElIcon, null, () => h(View)),
+    component: markRaw(Workflow)
+  },
+  {
+    path: '/services',
+    label: 'Услуги',
+    icon: () => h(ElIcon, null, () => h(Operation)),
+    component: markRaw(Services)
+  }
 ]
 
 const tabs = ref([
@@ -343,5 +380,10 @@ const logout = async () => {
   font-weight: bold;
   color: #aac9ff;
   margin-left: 28px;
+}
+.menu-icon {
+  display: inline-flex;
+  margin-right: 8px;
+  align-items: center;
 }
 </style>
