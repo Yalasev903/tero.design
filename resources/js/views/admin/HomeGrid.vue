@@ -44,6 +44,26 @@
                         >
                         <el-icon><Delete /></el-icon>
                         </el-button>
+<el-dropdown
+  class="add-col-dropdown"
+  trigger="click"
+  @command="type => openMediaModal(type, rowIdx)"
+  :teleported="true"
+>
+  <template #default>
+    <button class="add-col-btn" type="button">
+      <el-icon><Plus /></el-icon>
+    </button>
+  </template>
+
+  <template #dropdown>
+    <el-dropdown-menu>
+      <el-dropdown-item command="img">Изображение</el-dropdown-item>
+      <el-dropdown-item command="video">Видео</el-dropdown-item>
+    </el-dropdown-menu>
+  </template>
+</el-dropdown>
+
                     </div>
                     <div class="grid-row">
                         <draggable
@@ -137,17 +157,7 @@
                             </div>
                         </template>
                         </draggable>
-<el-dropdown trigger="click" @command="type => openMediaModal(type, rowIdx)">
-  <el-button type="primary">
-    <el-icon><Plus /></el-icon>
-  </el-button>
-  <template #dropdown>
-    <el-dropdown-menu>
-      <el-dropdown-item command="img">Изображение</el-dropdown-item>
-      <el-dropdown-item command="video">Видео</el-dropdown-item>
-    </el-dropdown-menu>
-  </template>
-</el-dropdown>
+
                     </div>
                     </div>
                 </template>
@@ -828,6 +838,14 @@ onMounted(() => {
   gap: 16px;
   width: 100%;
 }
+.add-col-btn .el-button {
+  min-width: 36px;
+  min-height: 36px;
+}
+.el-dropdown__popper {
+  z-index: 9999 !important;
+}
+
 
 /* Иконка редактировать в верхнем правом углу превью */
 .media-thumb {
@@ -898,12 +916,22 @@ onMounted(() => {
 }
 
 .add-col-btn {
-  margin-top: 4px;
   width: 36px;
   height: 36px;
+  padding: 0;
+  background-color: #409EFF;
+  border: none;
+  border-radius: 6px; /* квадрат с лёгкими углами */
+  color: #fff;
+  font-size: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.add-col-btn:hover {
+  background-color: #66b1ff;
 }
 
 /* drag-row area - иконка меню */

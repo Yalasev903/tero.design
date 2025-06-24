@@ -30,6 +30,31 @@
                 <el-button type="danger" size="small" circle @click="removeRow(rowIdx)">
                   <el-icon><Delete /></el-icon>
                 </el-button>
+                <!-- ✅ новый квадратный плюс -->
+<el-dropdown
+  class="add-col-dropdown"
+  trigger="click"
+  @command="type => handleAddCol(rowIdx, type)"
+  :teleported="true"
+>
+  <template #default>
+    <button class="add-col-btn" type="button">
+      <el-icon><Plus /></el-icon>
+    </button>
+  </template>
+
+  <template #dropdown>
+    <el-dropdown-menu>
+      <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
+      <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
+      <el-dropdown-item command="vr"><el-icon><View /></el-icon>VR</el-dropdown-item>
+      <el-dropdown-item command="curtain"><el-icon><Connection /></el-icon>Шторка</el-dropdown-item>
+    </el-dropdown-menu>
+  </template>
+</el-dropdown>
+
+
+
               </div>
 
               <div class="grid-row">
@@ -114,7 +139,7 @@
                 </draggable>
 
                 <!-- Меню выбора типа медиа -->
-                <el-dropdown trigger="click" @command="type => handleAddCol(rowIdx, type)">
+                <!-- <el-dropdown trigger="click" @command="type => handleAddCol(rowIdx, type)">
                   <el-button size="small" circle type="primary" class="add-col-btn">
                     <el-icon><Plus /></el-icon>
                   </el-button>
@@ -126,7 +151,7 @@
                       <el-dropdown-item command="curtain"><el-icon><Connection /></el-icon>Шторка</el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
-                </el-dropdown>
+                </el-dropdown> -->
               </div>
             </div>
           </template>
@@ -1159,4 +1184,29 @@ watch(() => route.params.id, loadProject)
   cursor: ew-resize;
   transform: translateX(-50%);
 }
+.add-col-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background-color: #409EFF;
+  border: none;
+  border-radius: 6px; /* ❗ квадрат с чуть скруглёнными углами */
+  color: #fff;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+.add-col-btn:hover {
+  background-color: #66b1ff;
+}
+
+@media (max-width: 768px) {
+  .row-header .add-col-dropdown {
+    margin-left: auto;
+  }
+}
+
 </style>
