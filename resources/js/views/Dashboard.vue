@@ -172,7 +172,7 @@ import axios from 'axios'
 const router = useRouter()
 const route = useRoute()
 
-const sidebarOpen = ref(true)
+const sidebarOpen = ref(localStorage.getItem('sidebarOpen') !== 'false')
 const showSettings = ref(false)
 const tabsMode = ref(true)
 const openSubmenus = ref({})
@@ -267,6 +267,7 @@ function closeTab(tab) {
 }
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
+  localStorage.setItem('sidebarOpen', sidebarOpen.value)
 }
 function toggleSubmenu(path) {
   openSubmenus.value[path] = !openSubmenus.value[path]
