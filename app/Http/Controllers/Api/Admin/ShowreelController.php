@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Showreel;
 use Illuminate\Http\Request;
-use App\Models\HomeProjectGrid;
 use Illuminate\Support\Facades\Log;
 
 class ShowreelController extends Controller
@@ -19,12 +19,12 @@ class ShowreelController extends Controller
                 return response()->json(['error' => 'Неверный формат media'], 422);
             }
 
-            HomeProjectGrid::updateOrCreate(
-                ['row_number' => 0, 'col_number' => 0],
+            Showreel::updateOrCreate(
+                ['id' => 1],
                 [
-                    'project_id' => 0,
+                    'poster' => $media['poster'] ?? null,
+                    'video' => $media['links'][0]['link'] ?? null,
                     'media' => json_encode($media, JSON_UNESCAPED_UNICODE),
-                    'is_mobile' => false,
                 ]
             );
 
@@ -45,9 +45,7 @@ class ShowreelController extends Controller
     public function show()
     {
         try {
-            $row = HomeProjectGrid::where('row_number', 0)
-                ->where('col_number', 0)
-                ->first();
+            $row = Showreel::first();
 
             $media = $row ? json_decode($row->media, true) : null;
 
@@ -61,3 +59,4 @@ class ShowreelController extends Controller
         }
     }
 }
+
