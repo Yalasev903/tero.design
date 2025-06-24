@@ -36,6 +36,8 @@ class SettingsController extends Controller
             'zoom'          => $map->col_zoom,
             'google_key'    => $map->col_key,
             'marker'        => $map->col_marker,
+            'footer_left'     => $settings->footer_left,
+            'footer_right'    => $settings->footer_right,
         ]);
     }
 
@@ -59,6 +61,8 @@ class SettingsController extends Controller
         // $settings->col_seo_keywords  = $request->seo_keywords;
         // $settings->col_showreel_poster = $request->poster;
         // $settings->col_showreel_video  = $request->video;
+        $settings->footer_left       = $request->footer_left;
+        $settings->footer_right      = $request->footer_right;
         $settings->save();
 
         $map = Map::first();

@@ -23,6 +23,8 @@ class ContactController extends Controller
                 'zoom' => $map->col_zoom ?? 10,
                 'marker' => ['link' => $map->col_marker ?? 'default-marker.svg'],
             ],
+                'footer_left' => $setting->footer_left ?? '',
+                'footer_right' => $setting->footer_right ?? '',
         ]);
     }
 }

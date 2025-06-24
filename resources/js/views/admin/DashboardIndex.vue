@@ -21,9 +21,9 @@
             <el-form-item label="Ссылка на LinkedIn">
               <el-input v-model="form.linkedin" placeholder="Ссылка на LinkedIn" />
             </el-form-item>
-            <el-form-item label="Ссылка на Pinterest">
+            <!-- <el-form-item label="Ссылка на Pinterest">
               <el-input v-model="form.pinterest" placeholder="Ссылка на Pinterest" />
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item label="Ссылка на YouTube">
               <el-input v-model="form.youtube" placeholder="Ссылка на YouTube" />
             </el-form-item>
@@ -47,9 +47,9 @@
             <el-form-item label="Email">
               <el-input v-model="form.email" placeholder="Email" />
             </el-form-item>
-            <el-form-item label="Телефон">
+            <!-- <el-form-item label="Телефон">
               <el-input v-model="form.tel" placeholder="Телефон" />
-            </el-form-item>
+            </el-form-item> -->
             <el-form-item label="Google Tag Manager">
               <el-input
                 v-model="form.google_tm"
@@ -58,6 +58,14 @@
                 placeholder="Google Tag Manager (gtag.js)"
               />
             </el-form-item>
+
+            <el-form-item label="Подпись слева (в футере) Контакты">
+            <el-input v-model="form.footer_left" placeholder="Пример: POLAND, Kraków" />
+            </el-form-item>
+            <el-form-item label="Подпись справа (в футере) Контакты">
+            <el-input v-model="form.footer_right" placeholder="Пример: SWITZERLAND, Geneve ..." />
+            </el-form-item>
+
             <div class="save-button">
               <el-button type="success" @click="saveSettings">Сохранить</el-button>
             </div>
@@ -147,7 +155,6 @@
                 </el-form-item>
               </el-col>
             </el-row>
-
             <div class="save-button">
               <el-button type="success" @click="saveMap">Сохранить</el-button>
               <el-button>Отмена</el-button>
@@ -184,7 +191,9 @@ const form = ref({
   lat: '',
   lng: '',
   zoom: '',
-  google_key: ''
+  google_key: '',
+  footer_left: '',
+  footer_right: ''
 })
 
 const load = async () => {
@@ -216,6 +225,8 @@ const load = async () => {
   form.value.zoom = data.zoom
   form.value.google_key = data.google_key
   form.value.google_tm = data.google_tm || ''
+  form.value.footer_left = data.footer_left || ''
+  form.value.footer_right = data.footer_right || ''
 }
 
 const saveSeo = async () => {
@@ -260,6 +271,8 @@ const saveSettings = async () => {
       zoom: form.value.zoom,
       google_key: form.value.google_key,
       google_tm: form.value.google_tm,
+      footer_left: form.value.footer_left,
+      footer_right: form.value.footer_right,
     })
 
     ElNotification({

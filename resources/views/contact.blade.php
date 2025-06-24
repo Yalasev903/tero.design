@@ -3,33 +3,40 @@
 @section('content')
     <div class="contact">
         <div class="contact-map" id="js-map"></div>
-        <div class="contact-left" style="display:inline-block">
-            <div class="contact-top">
-                <div class="contact-location">POLAND, Kraków</div>
-                <div class="contact-time">Current date:
-                    <span id="js-time" data-time="{{ now()->timestamp }}">
-                        {{ now()->format('F j, H:i:s') }}
-                    </span>
+
+        {{-- Города в одну линию --}}
+        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 40px; margin-top: 20px;">
+            {{-- Левая колонка --}}
+            <div class="contact-left" style="flex: 1;">
+                <div class="contact-top">
+                    <div class="contact-location">{{ $footer_left ?? 'POLAND, Kraków' }}</div>
+                    <div class="contact-time">Current date:
+                        <span id="js-time" data-time="{{ now()->timestamp }}">
+                            {{ now()->format('F j, H:i:s') }}
+                        </span>
+                    </div>
                 </div>
+                <ul class="contact-list">
+                    @if(!empty($contact_data['email']))
+                        <li><a href="mailto:{{ $contact_data['email'] }}">{{ $contact_data['email'] }}</a></li>
+                    @endif
+                    {{-- Если нужен телефон из админки — раскомментируй --}}
+                    {{-- @if(!empty($contact_data['phone']))
+                        <li><a href="tel:{{ preg_replace('/\s+/', '', $contact_data['phone']) }}">{{ $contact_data['phone'] }}</a></li>
+                    @endif --}}
+                </ul>
             </div>
-            <ul class="contact-list">
-                @if(!empty($contact_data['email']))
-                    <li><a href="mailto:{{ $contact_data['email'] }}">{{ $contact_data['email'] }}</a></li>
-                @endif
-                @if(!empty($contact_data['phone']))
-                    <li><a href="tel:{{ preg_replace('/\s+/', '', $contact_data['phone']) }}">{{ $contact_data['phone'] }}</a></li>
-                @endif
-            </ul>
-        </div>
-        <div class="contact-left" style="display:inline-block">
-            <div class="contact-top">
-                <div class="contact-location">SWITZERLAND, Geneve</div>
-                <div class="contact-time">OAKS GROUP SA, Associate Partner</div>
+
+            {{-- Правая колонка --}}
+            <div class="contact-left" style="flex: 1;">
+                <div class="contact-top">
+                    <div class="contact-location">{{ $footer_right ?? 'SWITZERLAND, Geneve' }}</div>
+                    <div class="contact-time">OAKS GROUP SA, Associate Partner</div>
+                </div>
+                <ul class="contact-list">
+                    {{-- <li><a href="tel:+41227003794">+41 22 700 37 94</a></li> --}}
+                </ul>
             </div>
-            <ul class="contact-list">
-                <li><a href="mailto:3d@ewm.swiss">3d@ewm.swiss</a></li>
-                <li><a href="tel:+41227003794">+41 22 700 37 94</a></li>
-            </ul>
         </div>
     </div>
 @endsection
