@@ -27,30 +27,56 @@
     <el-icon class="icon-large"><Setting /></el-icon>
     </el-button>
     <!-- Боковое меню -->
-    <aside v-show="sidebarOpen" class="admin-sidebar">
-      <nav>
+    <aside class="admin-sidebar" :class="{ collapsed: !sidebarOpen }" ref="sidebarRef">
+    <nav>
         <ul>
-            <li v-for="item in menuItems" :key="item.path">
-                <template v-if="item.children">
-                    <div class="submenu-label" @click="toggleSubmenu(item.path)">
-                        <span v-if="item.icon" class="menu-icon"><component :is="item.icon" /></span>{{ item.label }}
-                    </div>
-                <ul class="submenu" v-show="openSubmenus[item.path]">
-                <li v-for="child in item.children" :key="child.path">
-                    <a href="#" :class="{active: activeTab.path === child.path}" @click.prevent="openTab(child)">
-                    → {{ child.label }}
-                    </a>
-                </li>
-                </ul>
-            </template>
-            <template v-else>
-                <a href="#" :class="{active: activeTab.path === item.path}" @click.prevent="openTab(item)">
-               <span v-if="item.icon" class="menu-icon"><component :is="item.icon" /></span>{{ item.label }}
+        <li v-for="item in menuItems" :key="item.path">
+            <template v-if="item.children">
+                <div class="submenu-wrapper">
+                <a href="#"
+                    class="submenu-label"
+                    :data-submenu="item.path"
+                    :class="{ 'submenu-open': openSubmenus[item.path] }"
+                    @click.prevent="toggleSubmenu(item.path)">
+                    <span v-if="item.icon" class="menu-icon"><component :is="item.icon" /></span>
+                    <span class="menu-text">{{ item.label }}</span>
                 </a>
+
+                <!-- Обычное подменю -->
+                <ul class="submenu" v-show="openSubmenus[item.path] && sidebarOpen">
+                    <li v-for="child in item.children" :key="child.path">
+                    <a href="#" :class="{ active: activeTab.path === child.path }" @click.prevent="openTab(child)">
+                        <span class="menu-text">→ {{ child.label }}</span>
+                    </a>
+                    </li>
+                </ul>
+
+                <!-- Всплывающее подменю -->
+                <Teleport to="body">
+                    <ul
+                        class="submenu-popup"
+                        v-if="openSubmenus[item.path] && !sidebarOpen"
+                        :style="getPopupStyle(null, item.path)"
+                        >
+                        <li v-for="child in item.children" :key="child.path">
+                            <a href="#" :class="{ active: activeTab.path === child.path }" @click.prevent="selectChild(item.path, child)">
+                            {{ child.label }}
+                            </a>
+                        </li>
+                        </ul>
+                </Teleport>
+                </div>
             </template>
-            </li>
+
+            <template v-else>
+            <a href="#" :class="{ active: activeTab.path === item.path }" @click.prevent="openTab(item)">
+                <span v-if="item.icon" class="menu-icon"><component :is="item.icon" /></span>
+                <span class="menu-text">{{ item.label }}</span>
+            </a>
+            </template>
+        </li>
         </ul>
-      </nav>
+    </nav>
     </aside>
 
     <!-- Окна-вкладки -->
@@ -121,7 +147,7 @@
 </template>
 
 <script setup>
-import { ref, computed, markRaw, provide } from 'vue'
+import { ref, computed, markRaw, provide, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { h } from 'vue'
 import { ElIcon } from 'element-plus'
@@ -150,6 +176,8 @@ const sidebarOpen = ref(true)
 const showSettings = ref(false)
 const tabsMode = ref(true)
 const openSubmenus = ref({})
+
+const sidebarRef = ref(null)
 
 // 👇 Обновлённое меню с вложенным блоком "Проекты"
 const menuItems = [
@@ -287,6 +315,38 @@ const changePassword = async () => {
     passwordError.value = err.response?.data?.message || 'Ошибка смены пароля'
   }
 }
+
+function selectChild(parentPath, item) {
+  openTab(item)
+  openSubmenus.value[parentPath] = false
+}
+
+const popupPositions = ref({})
+
+function getPopupStyle(event, path) {
+  const rect = sidebarRef.value?.querySelector(`[data-submenu="${path}"]`)?.getBoundingClientRect()
+  if (!rect) return {}
+  return {
+    position: 'fixed',
+    top: `${rect.top}px`,
+    left: `${rect.right}px`,
+    zIndex: 9999,
+    background: 'rgb(48, 65, 86)',
+    borderRadius: '6px',
+    padding: '8px 0',
+    minWidth: '160px',
+    boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
+  }
+}
+
+// Закрытие всплывающих меню при клике вне
+function handleClickOutside(event) {
+  if (!sidebarRef.value?.contains(event.target)) {
+    Object.keys(openSubmenus.value).forEach(key => {
+      openSubmenus.value[key] = false
+    })
+  }
+}
 </script>
 
 <style scoped>
@@ -380,6 +440,94 @@ const changePassword = async () => {
   margin-left: 60px;
   width: calc(100% - 60px);
 }
+.admin-sidebar.collapsed {
+  width: 60px !important;
+  min-width: 60px !important;
+  overflow: hidden;
+  padding-left: 6px;
+}
+
+/* Скрыть подписи в любом пункте меню */
+.admin-sidebar.collapsed .menu-text {
+  display: none;
+}
+
+/* Центровать всё, что осталось (иконки) */
+.admin-sidebar.collapsed a,
+.admin-sidebar.collapsed .submenu-label {
+  justify-content: center;
+  padding: 12px;
+}
+
+/* Скрыть подменю (вложенные пункты) */
+.admin-sidebar.collapsed .submenu {
+  display: none;
+}
+
+
+/* Центрируем и убираем отступ при сворачивании */
+.admin-sidebar.collapsed .submenu-label {
+  justify-content: center;
+  padding: 12px;
+  margin-left: 0 !important;
+}
+.submenu-label {
+  font-weight: bold;
+  color: #aac9ff;
+  display: flex;
+  align-items: center;
+  padding: 12px 28px;
+  border-radius: 6px;
+  transition: background .13s;
+  margin-left: 0;
+}
+
+
+
+/* Центрируем и убираем отступ при сворачивании */
+.admin-sidebar.collapsed .submenu-popup {
+  left: 60px; /* отступ от иконки */
+}
+
+.submenu-wrapper {
+  position: relative;
+}
+
+.submenu-popup {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  background: rgb(48, 65, 86);
+  border-radius: 6px;
+  padding: 8px 0;
+  z-index: 9999;
+  min-width: 160px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.submenu-popup li a {
+  color: rgb(154, 184, 248);
+  padding: 10px 20px;
+  display: block;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+
+.submenu-popup li a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+.submenu-popup::before {
+  content: "";
+  position: absolute;
+  top: 12px;
+  left: -6px;
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 6px solid rgb(48, 65, 86);
+}
 .tabs-container {
   background: #dbf5e4;
   border-radius: 14px;
@@ -442,11 +590,6 @@ const changePassword = async () => {
 .submenu a {
   font-size: 15px;
   padding: 8px 36px;
-}
-.submenu-label {
-  font-weight: bold;
-  color: #aac9ff;
-  margin-left: 28px;
 }
 .menu-icon {
   display: inline-flex;
