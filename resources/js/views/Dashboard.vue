@@ -239,8 +239,7 @@ const menuItems = [
 ]
 
 function onTabsReorder(event) {
-  // например, можно сохранить tabs.value в localStorage
-  localStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
+  sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
 }
 
 const tabs = ref([
@@ -280,12 +279,18 @@ function closeTab(tab) {
   const idx = tabs.value.indexOf(tab)
   if (idx !== -1) {
     tabs.value.splice(idx, 1)
+
+    // Обновляем сохранённые вкладки
+    sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
+
     if (activeTab.value === tab) {
       activeTab.value = tabs.value[idx] || tabs.value[idx - 1] || tabs.value[0]
+      sessionStorage.setItem('active-tab-path', activeTab.value.path)
       router.push(activeTab.value.path)
     }
   }
 }
+
 function toggleSidebar() {
   sidebarOpen.value = !sidebarOpen.value
   localStorage.setItem('sidebarOpen', sidebarOpen.value)
@@ -362,6 +367,31 @@ function getPopupStyle(event, path) {
 }
 
 onMounted(() => {
+  // 1. Восстановление порядка вкладок
+  const savedTabs = sessionStorage.getItem('admin-tabs')
+  if (savedTabs) {
+    try {
+      const parsedTabs = JSON.parse(savedTabs)
+
+      // Восстанавливаем компонент в каждой вкладке вручную
+      const flatItems = menuItems.flatMap(item => item.children ?? [item])
+
+      tabs.value = parsedTabs.map(savedTab => {
+        const original = flatItems.find(m => m.path === savedTab.path)
+        if (original) {
+          return {
+            ...savedTab,
+            component: original.component // Восстанавливаем ссылку на компонент
+          }
+        }
+        return savedTab
+      })
+    } catch (e) {
+      console.error('Ошибка парсинга сохранённых вкладок:', e)
+    }
+  }
+
+  // 2. Восстановление активной вкладки
   const savedPath = sessionStorage.getItem('active-tab-path')
   if (savedPath) {
     const flatItems = menuItems.flatMap(item => item.children ?? [item])
@@ -371,11 +401,9 @@ onMounted(() => {
       router.push(savedPath)
     }
   }
-  document.addEventListener('click', handleClickOutside)
-})
 
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
+  // 3. Закрытие всплывающих меню при клике вне
+  document.addEventListener('click', handleClickOutside)
 })
 
 // Закрытие всплывающих меню при клике вне
