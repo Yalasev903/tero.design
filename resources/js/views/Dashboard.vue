@@ -82,12 +82,25 @@
     <!-- Окна-вкладки -->
     <main class="admin-content">
         <div v-if="tabsMode" class="tabs-container">
-            <div class="tab-list">
-            <div v-for="tab in tabs" :key="tab.path" :class="['tab', {active: tab.path === activeTab.path}]" @click="switchTab(tab)">
-                <span>{{ tab.label }}</span>
-                <button v-if="tabs.length > 1" class="close-tab" @click.stop="closeTab(tab)">×</button>
-            </div>
-            </div>
+<draggable
+  v-model="tabs"
+  item-key="path"
+  class="tab-list"
+  :animation="200"
+  :ghost-class="'dragging-tab'"
+  @end="onTabsReorder"
+>
+  <template #item="{ element: tab }">
+    <div :class="['tab', { active: tab.path === activeTab.path }]" @click="switchTab(tab)">
+      <span>{{ tab.label }}</span>
+      <button
+        v-if="tabs.length > 1"
+        class="close-tab"
+        @click.stop="closeTab(tab)"
+      >×</button>
+    </div>
+  </template>
+</draggable>
             <div class="tab-content">
             <component :is="activeTab.component" />
             </div>
@@ -160,6 +173,7 @@ import {
   Setting
 } from '@element-plus/icons-vue'
 import { ElDivider, ElAlert } from 'element-plus'
+import draggable from 'vuedraggable'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
 import Projects from './admin/Projects.vue'
@@ -223,6 +237,11 @@ const menuItems = [
     component: markRaw(Services)
   }
 ]
+
+function onTabsReorder(event) {
+  // например, можно сохранить tabs.value в localStorage
+  localStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
+}
 
 const tabs = ref([
   { ...menuItems[0] }
@@ -540,6 +559,9 @@ function handleClickOutside(event) {
   gap: 6px;
   padding: 10px 10px 0 10px;
   min-height: 40px;
+}
+.dragging-tab {
+  opacity: 0.6;
 }
 .tab {
   background: rgb(95, 111, 131);
