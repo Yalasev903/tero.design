@@ -13,6 +13,15 @@
           {{ crumb }}
         </span>
       </nav>
+      <!-- Кнопка: на весь экран -->
+        <button class="icon-btn" @click="toggleFullScreen" v-if="!isFullScreen" title="Развернуть на весь экран">
+        <svg viewBox="0 0 128 128" width="20" height="20"><path d="M38.5 52L52 38.5 28.4 14.8 43.2 0H0v43.1l14.8-14.8L38.5 52zm74.7 47.7L89.5 76 76 89.5l23.6 23.7L84.8 128H128V84.9l-14.8 14.8zM89.5 52l23.7-23.6L128 43.2V0H84.9l14.8 14.8L76 38.5 89.5 52zm-51 24L14.8 99.7 0 84.7V128h43.1l-14.8-14.8L52 89.5 38.5 76z"></path></svg>
+        </button>
+
+        <!-- Кнопка: выйти из полного экрана -->
+        <button class="icon-btn" @click="toggleFullScreen" v-else title="Выйти из полноэкранного режима">
+        <svg viewBox="0 0 128 128" width="20" height="20"><path d="M49.2 41.3l-.1-35.2c0-2.7-2.3-4.4-5-4.4h-3.7a4.8 4.8 0 0 0-4.8 5l.2 19.2L11.6 2a6.7 6.7 0 0 0-9.5 0 6.8 6.8 0 0 0 0 9.5l24 23.7H7.6A5.5 5.5 0 0 0 2 40.5V44c0 2.7 2.3 5 5 5l35-.2h2.6a4.6 4.6 0 0 0 3.4-1.3c1-.9 1.2-2.1 1.2-3.5l-.3-2.4.2-.2zm52.5 51.2h18.4c2.7 0 5.2-1.6 5.6-4.8v-3.5c0-2.7-2.3-5-5-5l-34.6.2H86l-2.5-.1a4.6 4.6 0 0 0-3.4 1.4c-1 .8-1.2 2-1.2 3.4l.3 2.5-.2.1.1 34.7c0 2.7 2.3 4.4 5 4.4h3.5c2.7 0 4.9-2.3 4.8-5l-.2-18.8 24.2 24a6.7 6.7 0 0 0 9.5 0 6.7 6.7 0 0 0 0-9.5l-24.2-24z"></path></svg>
+        </button>
       <button class="logout-btn" @click="logout">Выйти</button>
     </header>
       <!-- Кнопка настроек -->
@@ -191,6 +200,8 @@ const showSettings = ref(false)
 const tabsMode = ref(true)
 const openSubmenus = ref({})
 
+const isFullScreen = ref(false)
+
 const sidebarRef = ref(null)
 
 // 👇 Обновлённое меню с вложенным блоком "Проекты"
@@ -265,6 +276,7 @@ function openTab(item) {
   if (!tab) {
     tab = { ...item }
     tabs.value.push(tab)
+    sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value)) // 💾
   } else if (item.label) {
     tab.label = item.label
   }
@@ -366,6 +378,28 @@ function getPopupStyle(event, path) {
   }
 }
 
+function toggleFullScreen() {
+  const el = document.documentElement
+
+  if (!document.fullscreenElement) {
+    el.requestFullscreen?.()
+      .then(() => {
+        isFullScreen.value = true
+      })
+      .catch((err) => {
+        console.error('Не удалось войти в полноэкранный режим:', err)
+      })
+  } else {
+    document.exitFullscreen?.()
+      .then(() => {
+        isFullScreen.value = false
+      })
+      .catch((err) => {
+        console.error('Не удалось выйти из полноэкранного режима:', err)
+      })
+  }
+}
+
 onMounted(() => {
   // 1. Восстановление порядка вкладок
   const savedTabs = sessionStorage.getItem('admin-tabs')
@@ -404,6 +438,11 @@ onMounted(() => {
 
   // 3. Закрытие всплывающих меню при клике вне
   document.addEventListener('click', handleClickOutside)
+
+  // 4. Слежение за полноэкранным режимом
+  document.addEventListener('fullscreenchange', () => {
+    isFullScreen.value = !!document.fullscreenElement
+  })
 })
 
 // Закрытие всплывающих меню при клике вне
