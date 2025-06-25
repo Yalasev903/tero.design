@@ -255,25 +255,27 @@ const breadcrumbs = computed(() => {
   return ['Админка', tab.label]
 })
 
+function switchTab(tab) {
+  activeTab.value = tab
+  sessionStorage.setItem('active-tab-path', tab.path)
+  router.push(tab.path)
+}
+
 function openTab(item) {
   let tab = tabs.value.find(t => t.path === item.path)
   if (!tab) {
     tab = { ...item }
     tabs.value.push(tab)
   } else if (item.label) {
-    // Обновляем label если нужно
     tab.label = item.label
   }
   activeTab.value = tab
+  sessionStorage.setItem('active-tab-path', tab.path)
   if (!tabsMode.value) {
     router.push(item.path)
   }
 }
 
-function switchTab(tab) {
-  activeTab.value = tab
-  router.push(tab.path)
-}
 function closeTab(tab) {
   const idx = tabs.value.indexOf(tab)
   if (idx !== -1) {
@@ -358,6 +360,23 @@ function getPopupStyle(event, path) {
     boxShadow: '0 2px 10px rgba(0,0,0,0.2)'
   }
 }
+
+onMounted(() => {
+  const savedPath = sessionStorage.getItem('active-tab-path')
+  if (savedPath) {
+    const flatItems = menuItems.flatMap(item => item.children ?? [item])
+    const savedTab = flatItems.find(m => m.path === savedPath)
+    if (savedTab) {
+      openTab(savedTab)
+      router.push(savedPath)
+    }
+  }
+  document.addEventListener('click', handleClickOutside)
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 // Закрытие всплывающих меню при клике вне
 function handleClickOutside(event) {
