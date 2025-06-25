@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, inject } from 'vue'
 import axios from 'axios'
 import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
@@ -14,6 +14,8 @@ const model = ref({
   col_video: '',
   col_description: ''
 })
+
+const inputSize = inject('inputSize')
 
 const posterDimensions = ref('')
 const videoDimensions = ref('')
@@ -217,7 +219,7 @@ onMounted(() => {
         <img :src="posterSrc" :alt="model.col_poster_alt || 'Постер'" />
         <div class="overlay"><span class="upload-icon" @click.stop="openManager('col_poster')">📤 Заменить</span></div>
       </div>
-      <el-input v-model="model.col_poster_alt" placeholder="Alt постера" style="margin-top: 10px" />
+      <el-input v-model="model.col_poster_alt" placeholder="Alt постера" style="margin-top: 10px" :size="inputSize" />
       <p class="filename">{{ model.col_poster }}</p>
 
       <div class="media-box" :class="{ expanded: expanded === 'video' }" @click="toggleExpand('video')">
@@ -261,7 +263,7 @@ onMounted(() => {
     >
     <el-form :model="faqForm" label-position="top">
         <el-form-item label="Вопрос">
-        <el-input v-model="faqForm.col_question" type="textarea" placeholder="Введите вопрос" />
+        <el-input v-model="faqForm.col_question" type="textarea" placeholder="Введите вопрос" :size="inputSize"/>
         </el-form-item>
         <el-form-item label="Ответ">
         <TinyEditor v-model="faqForm.col_answer" />

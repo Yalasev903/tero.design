@@ -73,7 +73,7 @@
     >
       <el-form :model="newService" label-position="top" ref="addForm">
         <el-form-item label="Название услуги" required>
-          <el-input v-model="newService.col_title" placeholder="Введите название услуги" />
+          <el-input v-model="newService.col_title" placeholder="Введите название услуги" :size="inputSize" />
         </el-form-item>
 
         <el-form-item label="Описание услуги" required>
@@ -191,7 +191,7 @@
 <script setup>
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import SeoServices from '@/components/admin/SeoServices.vue'
-import { ref, nextTick, onMounted } from 'vue'
+import { ref, nextTick, onMounted, inject } from 'vue'
 import draggable from 'vuedraggable'
 import axios from 'axios'
 import { ElNotification, ElMessageBox } from 'element-plus'
@@ -219,6 +219,8 @@ const loadSeo = async () => {
     })
   }
 }
+
+const inputSize = inject('inputSize')
 
 const services = ref([])
 const saving = ref(false)

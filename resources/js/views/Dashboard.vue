@@ -22,6 +22,23 @@
         <button class="icon-btn" @click="toggleFullScreen" v-else title="Выйти из полноэкранного режима">
         <svg viewBox="0 0 128 128" width="20" height="20"><path d="M49.2 41.3l-.1-35.2c0-2.7-2.3-4.4-5-4.4h-3.7a4.8 4.8 0 0 0-4.8 5l.2 19.2L11.6 2a6.7 6.7 0 0 0-9.5 0 6.8 6.8 0 0 0 0 9.5l24 23.7H7.6A5.5 5.5 0 0 0 2 40.5V44c0 2.7 2.3 5 5 5l35-.2h2.6a4.6 4.6 0 0 0 3.4-1.3c1-.9 1.2-2.1 1.2-3.5l-.3-2.4.2-.2zm52.5 51.2h18.4c2.7 0 5.2-1.6 5.6-4.8v-3.5c0-2.7-2.3-5-5-5l-34.6.2H86l-2.5-.1a4.6 4.6 0 0 0-3.4 1.4c-1 .8-1.2 2-1.2 3.4l.3 2.5-.2.1.1 34.7c0 2.7 2.3 4.4 5 4.4h3.5c2.7 0 4.9-2.3 4.8-5l-.2-18.8 24.2 24a6.7 6.7 0 0 0 9.5 0 6.7 6.7 0 0 0 0-9.5l-24.2-24z"></path></svg>
         </button>
+        <!-- Кнопка выбора размера текста -->
+    <el-dropdown @command="setInputSize" trigger="click">
+    <el-button class="icon-btn" title="Размер текста">
+        <svg version="1.1" viewBox="0 0 128 128" width="20" height="20">
+        <path d="M0 54.9h54.8V73H36.5v55H18.3V73.1H0V55zm127.9-36.6h-36V128H72.5V18.3h-36V0H128v18.3z" />
+        </svg>
+    </el-button>
+    <template #dropdown>
+        <el-dropdown-menu>
+        <el-dropdown-item command="default">Default</el-dropdown-item>
+        <el-dropdown-item command="medium">Medium</el-dropdown-item>
+        <el-dropdown-item command="small">Small</el-dropdown-item>
+        <el-dropdown-item command="mini">Mini</el-dropdown-item>
+        </el-dropdown-menu>
+    </template>
+    </el-dropdown>
+
       <button class="logout-btn" @click="logout">Выйти</button>
     </header>
       <!-- Кнопка настроек -->
@@ -133,12 +150,12 @@
 
   <!-- Блок смены пароля -->
   <el-divider>Смена пароля</el-divider>
-  <el-form :model="passwordForm" label-position="top" @submit.prevent="changePassword">
+  <el-form :model="passwordForm" label-position="top" @submit.prevent="changePassword" :size="inputSize" >
     <el-form-item label="Новый пароль">
-      <el-input v-model="passwordForm.password" type="password" show-password />
+      <el-input v-model="passwordForm.password" type="password" show-password  :size="inputSize" />
     </el-form-item>
     <el-form-item label="Подтвердите пароль">
-      <el-input v-model="passwordForm.password_confirmation" type="password" show-password />
+      <el-input v-model="passwordForm.password_confirmation" type="password" show-password  :size="inputSize" />
     </el-form-item>
     <el-button type="primary" @click="changePassword">Сменить пароль</el-button>
   </el-form>
@@ -169,7 +186,7 @@
 </template>
 
 <script setup>
-import { ref, computed, markRaw, provide, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, markRaw, provide, onMounted, onBeforeUnmount, inject } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { h } from 'vue'
 import { ElIcon } from 'element-plus'
@@ -326,8 +343,17 @@ router.afterEach((to) => {
   }
 })
 
+const inputSize = ref('default') // по умолчанию
+function setInputSize(size) {
+  inputSize.value = size
+  localStorage.setItem('input-size', size)
+}
+
+
 provide('openTab', openTab)
 provide('tabsMode', tabsMode)
+provide('inputSize', inputSize)
+
 
 const logout = async () => {
   await axios.post('/api/admin/logout')
@@ -401,6 +427,9 @@ function toggleFullScreen() {
 }
 
 onMounted(() => {
+    const savedSize = localStorage.getItem('input-size')
+  if (savedSize) inputSize.value = savedSize
+
   // 1. Восстановление порядка вкладок
   const savedTabs = sessionStorage.getItem('admin-tabs')
   if (savedTabs) {

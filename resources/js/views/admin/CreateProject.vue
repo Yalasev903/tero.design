@@ -4,7 +4,7 @@
     <SeoProject :title="'SEO для проекта'" :model="form" />
     <el-form :model="form" label-position="top" @submit.prevent="submit">
       <el-form-item label="Название проекта">
-        <el-input v-model="form.title" />
+        <el-input v-model="form.title" :size="inputSize" />
       </el-form-item>
 
       <div class="editor-row">
@@ -180,7 +180,7 @@
         </el-form-item>
 
         <el-form-item label="Название / alt">
-        <el-input v-model="modalMediaTitle" placeholder="Название медиа (необязательно)" />
+        <el-input v-model="modalMediaTitle" placeholder="Название медиа (необязательно)" :size="inputSize" />
         </el-form-item>
     </el-form>
 
@@ -230,6 +230,7 @@
         v-if="previewItem?.type === 'img'"
         v-model="previewItem.title"
         placeholder="Название / alt"
+        :size="inputSize"
         style="margin-top: 16px; width: 100%; text-align: center;"
         />
     </div>
@@ -243,6 +244,7 @@
             type="textarea"
             v-model="vrIframeCode"
             rows="4"
+             :size="inputSize"
             placeholder='<iframe src="..." width="..." height="..." ...></iframe>'
           />
         </el-form-item>
@@ -250,12 +252,12 @@
         <el-row :gutter="10">
           <el-col :span="12">
             <el-form-item label="Ширина">
-              <el-input-number v-model="vrWidth" :min="100" :step="100" />
+              <el-input-number v-model="vrWidth" :min="100" :step="100"  :size="inputSize" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="Высота">
-              <el-input-number v-model="vrHeight" :min="100" :step="100" />
+              <el-input-number v-model="vrHeight" :min="100" :step="100" :size="inputSize" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -283,6 +285,7 @@
         <el-input
             v-model="curtainTitle1"
             placeholder="alt для первого изображения"
+             :size="inputSize"
             style="margin-top: 10px"
             />
         </div>
@@ -299,6 +302,7 @@
         <el-input
             v-model="curtainTitle2"
             placeholder="alt для второго изображения"
+             :size="inputSize"
             style="margin-top: 10px"
             />
         </div>
@@ -337,6 +341,7 @@ import { ElNotification } from 'element-plus'
 import { Plus, Check, Delete, Edit, Picture, Menu, VideoCamera, View, Connection } from '@element-plus/icons-vue'
 import { ElMessageBox } from 'element-plus'
 
+const inputSize = inject('inputSize')
 
 const curtainTitle1 = ref('')
 const curtainTitle2 = ref('')

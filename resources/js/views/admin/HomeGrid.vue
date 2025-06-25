@@ -192,6 +192,7 @@
         <el-input
             v-model="mediaDescription"
             placeholder="Введите описание для alt / SEO"
+            :size="inputSize"
             type="textarea"
             rows="2"
         />
@@ -279,7 +280,7 @@
       </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, inject } from 'vue'
 import draggable from 'vuedraggable'
 import SeoIndex from '@/components/admin/SeoIndex.vue'
 import axios from 'axios'
@@ -298,6 +299,8 @@ import {
 import { ElMessageBox } from 'element-plus'
 
 // --- Переменные ---
+const inputSize = inject('inputSize')
+
 const gridRows = ref([])
 const saving = ref(false)
 const form = ref({ seo_title: '', seo_description: '', seo_keywords: [] })

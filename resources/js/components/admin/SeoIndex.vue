@@ -3,17 +3,18 @@
     <h3>{{ title }}</h3>
     <el-form label-position="top">
       <el-form-item label="Заголовок (title)">
-        <el-input v-model="model.seo_title" placeholder="Title" />
+        <el-input v-model="model.seo_title" placeholder="Title" :size="inputSize" />
       </el-form-item>
       <el-form-item label="Описание (description)">
         <el-input
           type="textarea"
           v-model="model.seo_description"
           placeholder="Description"
+          :size="inputSize"
           :rows="2"
         />
       </el-form-item>
-      <el-form-item label="Ключевые слова (keywords)">
+      <el-form-item label="Ключевые слова (keywords)" :size="inputSize">
         <el-select
           v-model="model.seo_keywords"
           multiple
@@ -32,7 +33,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, inject } from 'vue'
 import { ElNotification } from 'element-plus'
 import axios from 'axios'
 
@@ -85,6 +86,8 @@ const saveSeo = async () => {
     })
   }
 }
+
+const inputSize = inject('inputSize')
 
 onMounted(loadSeo)
 </script>

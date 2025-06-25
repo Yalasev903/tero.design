@@ -3,7 +3,7 @@
     <h3>{{ title }}</h3>
     <el-form label-position="top">
       <el-form-item label="Заголовок (title)">
-        <el-input v-model="model.meta_title" placeholder="Title" />
+        <el-input v-model="model.meta_title" placeholder="Title" :size="inputSize" />
       </el-form-item>
 
       <el-form-item label="Описание (description)">
@@ -11,11 +11,12 @@
           type="textarea"
           v-model="model.meta_description"
           placeholder="Description"
+          :size="inputSize"
           :rows="2"
         />
       </el-form-item>
 
-      <el-form-item label="Ключевые слова (keywords)">
+      <el-form-item label="Ключевые слова (keywords)" :size="inputSize">
         <el-select
           v-model="keywords"
           multiple
@@ -35,8 +36,10 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, inject } from 'vue'
 import { ElNotification } from 'element-plus'
+
+const inputSize = inject('inputSize')
 
 const props = defineProps({
   title: { type: String, default: 'SEO для проекта' },

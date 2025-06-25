@@ -10,22 +10,22 @@
           <h2>Соцсети</h2>
           <el-form label-position="top">
             <el-form-item label="Ссылка на Behance">
-              <el-input v-model="form.behance" placeholder="Ссылка на Behance" />
+              <el-input v-model="form.behance" placeholder="Ссылка на Behance" :size="inputSize" />
             </el-form-item>
             <el-form-item label="Ссылка на Facebook">
-              <el-input v-model="form.facebook" placeholder="Ссылка на Facebook" />
+              <el-input v-model="form.facebook" placeholder="Ссылка на Facebook" :size="inputSize" />
             </el-form-item>
             <el-form-item label="Ссылка на Instagram">
-              <el-input v-model="form.instagram" placeholder="Ссылка на Instagram" />
+              <el-input v-model="form.instagram" placeholder="Ссылка на Instagram" :size="inputSize" />
             </el-form-item>
             <el-form-item label="Ссылка на LinkedIn">
-              <el-input v-model="form.linkedin" placeholder="Ссылка на LinkedIn" />
+              <el-input v-model="form.linkedin" placeholder="Ссылка на LinkedIn" :size="inputSize" />
             </el-form-item>
             <!-- <el-form-item label="Ссылка на Pinterest">
-              <el-input v-model="form.pinterest" placeholder="Ссылка на Pinterest" />
+              <el-input v-model="form.pinterest" placeholder="Ссылка на Pinterest" :size="inputSize" />
             </el-form-item> -->
             <el-form-item label="Ссылка на YouTube">
-              <el-input v-model="form.youtube" placeholder="Ссылка на YouTube" />
+              <el-input v-model="form.youtube" placeholder="Ссылка на YouTube" :size="inputSize" />
             </el-form-item>
           </el-form>
         </el-card>
@@ -42,28 +42,29 @@
               />
             </el-form-item>
             <el-form-item label="JivoChat ID">
-              <el-input v-model="form.jivochat_id" placeholder="JivoChat ID" />
+              <el-input v-model="form.jivochat_id" placeholder="JivoChat ID" :size="inputSize" />
             </el-form-item>
             <el-form-item label="Email">
-              <el-input v-model="form.email" placeholder="Email" />
+              <el-input v-model="form.email" placeholder="Email" :size="inputSize" />
             </el-form-item>
             <!-- <el-form-item label="Телефон">
-              <el-input v-model="form.tel" placeholder="Телефон" />
+              <el-input v-model="form.tel" placeholder="Телефон" :size="inputSize" />
             </el-form-item> -->
             <el-form-item label="Google Tag Manager">
               <el-input
                 v-model="form.google_tm"
                 type="textarea"
                 :rows="3"
+                :size="inputSize"
                 placeholder="Google Tag Manager (gtag.js)"
               />
             </el-form-item>
 
             <el-form-item label="Подпись слева (в футере) Контакты">
-            <el-input v-model="form.footer_left" placeholder="Пример: POLAND, Kraków" />
+            <el-input v-model="form.footer_left" placeholder="Пример: POLAND, Kraków" :size="inputSize" />
             </el-form-item>
             <el-form-item label="Подпись справа (в футере) Контакты">
-            <el-input v-model="form.footer_right" placeholder="Пример: SWITZERLAND, Geneve ..." />
+            <el-input v-model="form.footer_right" placeholder="Пример: SWITZERLAND, Geneve ..." :size="inputSize" />
             </el-form-item>
 
             <div class="save-button">
@@ -85,17 +86,18 @@
           <h3>SEO home.index</h3>
           <el-form label-position="top">
             <el-form-item label="Заголовок (title)">
-              <el-input v-model="form.seo_title" placeholder="Title" />
+              <el-input v-model="form.seo_title" placeholder="Title" :size="inputSize"/>
             </el-form-item>
             <el-form-item label="Описание (description)">
               <el-input
                 type="textarea"
                 v-model="form.seo_description"
+                :size="inputSize"
                 placeholder="Description"
                 :rows="2"
               />
             </el-form-item>
-            <el-form-item label="Ключевые слова (keywords)">
+            <el-form-item label="Ключевые слова (keywords)" :size="inputSize">
               <el-select
                 v-model="form.seo_keywords"
                 multiple
@@ -117,12 +119,12 @@
           <h3>Карта</h3>
           <el-form label-position="top" class="map-form">
             <el-form-item label="Координаты Lat">
-              <el-input v-model="form.lat" placeholder="Широта" />
+              <el-input v-model="form.lat" placeholder="Широта" :size="inputSize"/>
             </el-form-item>
             <el-form-item label="Координаты Lng">
-              <el-input v-model="form.lng" placeholder="Долгота" />
+              <el-input v-model="form.lng" placeholder="Долгота" :size="inputSize"/>
             </el-form-item>
-            <el-form-item label="Приближение (Zoom)">
+            <el-form-item label="Приближение (Zoom)" :size="inputSize">
               <el-input-number
                 v-model="form.zoom"
                 :min="1"
@@ -134,7 +136,7 @@
             <el-row :gutter="10">
               <el-col :span="12">
                 <el-form-item label="Ключ google">
-                  <el-input v-model="form.google_key" placeholder="Google API Key" />
+                  <el-input v-model="form.google_key" placeholder="Google API Key" :size="inputSize"/>
                 </el-form-item>
               </el-col>
               <el-col :span="12">
@@ -143,6 +145,7 @@
                     <el-input
                       v-model="form.marker"
                       placeholder="Путь до иконки"
+                      :size="inputSize"
                       style="flex: 1;"
                     />
                     <img
@@ -167,10 +170,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, inject } from 'vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'
 import ShowreelPreview from '@/components/admin/ShowreelPreview.vue'
+
 
 const form = ref({
   jivochat: false,
@@ -228,6 +232,8 @@ const load = async () => {
   form.value.footer_left = data.footer_left || ''
   form.value.footer_right = data.footer_right || ''
 }
+
+const inputSize = inject('inputSize')
 
 const saveSeo = async () => {
   try {
