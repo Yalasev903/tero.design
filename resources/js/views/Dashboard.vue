@@ -39,6 +39,8 @@
     </template>
     </el-dropdown>
 
+    <el-button class="logout-btn" type="danger" @click="cleanupFiles">Очистить неиспользуемые файлы</el-button>
+
       <button class="logout-btn" @click="logout">Выйти</button>
     </header>
       <!-- Кнопка настроек -->
@@ -198,7 +200,7 @@ import {
   Document,
   Setting
 } from '@element-plus/icons-vue'
-import { ElDivider, ElAlert } from 'element-plus'
+import { ElDivider, ElAlert, ElMessageBox } from 'element-plus'
 import draggable from 'vuedraggable'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
@@ -220,6 +222,27 @@ const openSubmenus = ref({})
 const isFullScreen = ref(false)
 
 const sidebarRef = ref(null)
+
+const cleanupFiles = async () => {
+  try {
+    await ElMessageBox.confirm(
+      'Вы уверены, что хотите удалить все неиспользуемые файлы и папки? Это действие необратимо.',
+      'Подтверждение удаления',
+      {
+        confirmButtonText: 'Удалить',
+        cancelButtonText: 'Отмена',
+        type: 'warning',
+      }
+    )
+
+    const { data } = await axios.delete('/api/admin/cleanup')
+    ElMessage.success(`Удалено файлов: ${data.deleted_files}, папок: ${data.deleted_dirs}`)
+  } catch (err) {
+    if (err !== 'cancel') {
+      ElMessage.error('Ошибка при очистке')
+    }
+  }
+}
 
 // 👇 Обновлённое меню с вложенным блоком "Проекты"
 const menuItems = [

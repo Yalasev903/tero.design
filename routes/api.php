@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\Admin\TblServiceController;
 use App\Http\Controllers\Api\Admin\WorkflowController;
 use App\Http\Controllers\Api\Admin\FaqController;
 use App\Http\Controllers\Api\Admin\ProjectController;
+use App\Http\Controllers\Admin\CleanupController;
 
 Route::post('/admin/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy']);
@@ -70,6 +71,8 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/projects/{id}', [ProjectController::class, 'show']);
     Route::put('/projects/{id}', [ProjectController::class, 'update']);
     Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+
+    Route::delete('/admin/cleanup', [CleanupController::class, 'cleanup']);
 });
 
 Route::get('/user', function (Request $request) {
