@@ -1,6 +1,6 @@
 <script setup>
 import { computed, inject } from 'vue'
-import  Editor  from '@tinymce/tinymce-vue'
+import Editor from '@tinymce/tinymce-vue'
 
 defineProps({
   modelValue: {
@@ -21,13 +21,16 @@ const fontSize = computed(() => {
     default: return '14px'
   }
 })
+
+// доступ к переменной окружения
+const tinyKey = import.meta.env.VITE_TINYMCE_API_KEY
 </script>
 
 <template>
   <Editor
     :model-value="modelValue"
     @update:modelValue="$emit('update:modelValue', $event)"
-    api-key="zz5yzfkvutel7xxsey78ithzogwrudzczlqmwlyft73cupew"
+    :api-key="tinyKey"
     :init="{
       height: 320,
       menubar: true,
