@@ -200,7 +200,7 @@ import {
   Document,
   Setting
 } from '@element-plus/icons-vue'
-import { ElDivider, ElAlert, ElMessageBox } from 'element-plus'
+import { ElDivider, ElAlert, ElMessageBox, ElMessage } from 'element-plus'
 import draggable from 'vuedraggable'
 import DashboardIndex from './admin/DashboardIndex.vue'
 import HomeGrid from './admin/HomeGrid.vue'
@@ -224,19 +224,42 @@ const isFullScreen = ref(false)
 const sidebarRef = ref(null)
 
 const cleanupFiles = async () => {
+  console.log('НАЖАЛИ НА КНОПКУ')
   try {
-    await ElMessageBox.confirm(
-      'Вы уверены, что хотите удалить все неиспользуемые файлы и папки? Это действие необратимо.',
-      'Подтверждение удаления',
+    // Шаг 1: Предпросмотр
+    const preview = await axios.post('/api/admin/cleanup', { preview: true })
+
+    const totalFiles = preview.data.total_files
+    const unusedFiles = preview.data.unused_files_count
+    const totalDirs = preview.data.total_dirs
+    const emptyDirs = preview.data.empty_dirs_count
+
+    if (unusedFiles === 0 && emptyDirs === 0) {
+      ElMessage.success('Нет неиспользуемых файлов и пустых папок')
+      return
+    }
+
+    const confirm = await ElMessageBox.confirm(
+      `Всего файлов: ${totalFiles}\n` +
+      `Неиспользуемых файлов: ${unusedFiles}\n\n` +
+      `Всего папок: ${totalDirs}\n` +
+      `Пустых папок: ${emptyDirs}\n\n` +
+      `Удалить ${unusedFiles} файлов и ${emptyDirs} папок?`,
+      'Подтверждение очистки',
       {
         confirmButtonText: 'Удалить',
         cancelButtonText: 'Отмена',
         type: 'warning',
+        dangerouslyUseHTMLString: false
       }
     )
 
-    const { data } = await axios.delete('/api/admin/cleanup')
-    ElMessage.success(`Удалено файлов: ${data.deleted_files}, папок: ${data.deleted_dirs}`)
+    // Шаг 2: Удаление после подтверждения
+    const { data } = await axios.post('/api/admin/cleanup', { preview: false })
+
+    ElMessage.success(
+      `Удалено файлов: ${data.deleted_files}, папок: ${data.deleted_dirs}`
+    )
   } catch (err) {
     if (err !== 'cancel') {
       ElMessage.error('Ошибка при очистке')
@@ -505,6 +528,7 @@ function handleClickOutside(event) {
     })
   }
 }
+
 </script>
 
 <style scoped>

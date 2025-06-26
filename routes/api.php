@@ -72,7 +72,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::put('/projects/{id}', [ProjectController::class, 'update']);
     Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 
-    Route::delete('/admin/cleanup', [CleanupController::class, 'cleanup']);
+    Route::post('/cleanup', [CleanupController::class, 'cleanup']);
 });
 
 Route::get('/user', function (Request $request) {
