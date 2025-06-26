@@ -17,12 +17,15 @@ class VueFinderController extends Controller
             'local' => $adapter,
         ]);
 
-        // ⚠️ ВАЖНО: adapter должен быть 'local', иначе frontend не откроет папку
-        return response()->json($finder->init([
+        // ⚠️ VueFinder сам вызывает ->send(), нам не нужно ничего возвращать
+        $finder->init([
             'adapter' => 'local',
             'publicLinks' => [
                 'local://' => asset('multimedia') . '/',
             ],
-        ]));
+        ]);
+
+        // Прекращаем выполнение, чтобы Laravel не начал второй ответ
+        exit;
     }
 }

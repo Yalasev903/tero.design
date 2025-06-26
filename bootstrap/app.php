@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
             ValidateCsrfToken::class,
             SubstituteBindings::class,
         ]);
+
+            $middleware->validateCsrfTokens(except: [
+                'api/vuefinder',
+            ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
