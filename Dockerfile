@@ -26,10 +26,13 @@ RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
 # Composer install
 RUN composer install --no-interaction --prefer-dist
 
-# Ключ
+# Создать временный .env (Railway всё равно заменит переменными окружения)
+RUN cp .env.example .env
+
+# Генерация ключа
 RUN php artisan key:generate
 
-# Удалить .env, Railway сам задаёт переменные окружения
+# Удалить .env — Railway сам подставит переменные
 RUN rm -f .env
 
 # Выполнить сидеры (если надо)
