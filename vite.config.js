@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
 import vue from '@vitejs/plugin-vue'
-import path from 'path' // 🔧 добавлено
+import path from 'path'
 
 export default defineConfig({
     resolve: {
@@ -11,16 +11,29 @@ export default defineConfig({
     },
     plugins: [
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/main.js', 'resources/js/public-calc.js', 'resources/css/overrides.css'],
+            input: [
+                'resources/css/app.css',
+                'resources/js/app.js',
+                'resources/js/main.js',
+                'resources/js/public-calc.js',
+                'resources/css/overrides.css',
+            ],
             refresh: true,
         }),
         vue(),
     ],
-    server: {
-        host: 'localhost',
-        port: 5173,
-        hmr: {
-            host: 'localhost',
+    build: {
+        outDir: 'public/build',
+        emptyOutDir: true,
+        manifest: true,
+        rollupOptions: {
+            input: {
+                app: 'resources/js/app.js',
+                main: 'resources/js/main.js',
+                publicCalc: 'resources/js/public-calc.js',
+                style: 'resources/css/app.css',
+                overrides: 'resources/css/overrides.css',
+            },
         },
     },
 })
