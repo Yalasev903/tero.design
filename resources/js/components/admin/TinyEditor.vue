@@ -23,14 +23,14 @@ const fontSize = computed(() => {
 })
 
 // доступ к переменной окружения
-const tinyKey = import.meta.env.VITE_TINYMCE_API_KEY
+const tinyKey = 'zz5yzfkvutel7xxsey78ithzogwrudzczlqmwlyft73cupew'
 </script>
 
 <template>
   <Editor
     :model-value="modelValue"
     @update:modelValue="$emit('update:modelValue', $event)"
-    :api-key="zz5yzfkvutel7xxsey78ithzogwrudzczlqmwlyft73cupew"
+    :api-key="tinyKey"
     :init="{
       height: 320,
       menubar: true,
