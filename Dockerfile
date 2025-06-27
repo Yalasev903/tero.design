@@ -16,6 +16,7 @@ COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 
 RUN mkdir -p /etc/nginx/sites-enabled && \
+    rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
