@@ -1,11 +1,5 @@
 #!/bin/bash
 
-echo "📦 Выполняем миграции..."
-php artisan migrate --force || echo "⚠️ Ошибка миграции"
-
-echo "🌱 Выполняем сиды..."
-php artisan db:seed || echo "⚠️ Ошибка сидеров"
-
 echo "🔗 Создание симлинков..."
 php artisan storage:link || true
 
