@@ -6,40 +6,39 @@ RUN apt-get update && apt-get install -y \
     libonig-dev libxml2-dev libzip-dev \
     && docker-php-ext-install pdo_mysql mbstring gd zip
 
+# Установка composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www
 COPY . .
 
+# Конфигурация nginx и supervisord
 COPY ./docker/nginx/default.conf /etc/nginx/sites-available/default
 COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 
+# Включение сайта
 RUN mkdir -p /etc/nginx/sites-enabled && \
     rm -f /etc/nginx/sites-enabled/default && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
+# Права и автолоад
 RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
-
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Копируем .env только если его нет
+# Копируем .env только если он отсутствует
 RUN test -f .env || cp .env.example .env
 
+# Генерация ключа
 RUN php artisan key:generate --ansi
 
-# Миграции с сохранением данных
-RUN php artisan migrate --force
+# Копируем entrypoint
+COPY ./docker/entrypoint.sh /var/www/docker/entrypoint.sh
+RUN chmod +x /var/www/docker/entrypoint.sh
 
-# Сиды — если есть, не критично если упадут
-RUN php artisan db:seed || echo "⚠️ Ошибка в сидерах — проверь seed-классы"
-
-# Ссылки и кеш
-RUN php artisan storage:link || true
-RUN php artisan config:cache
-RUN php artisan route:cache
-
+# Открываем порт
 ENV PORT=8080
 EXPOSE 8080
 
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+# Финальный запуск
+CMD ["sh", "/var/www/docker/entrypoint.sh"]
