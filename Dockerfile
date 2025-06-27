@@ -32,6 +32,9 @@ RUN php artisan key:generate
 # Удалить .env, Railway сам задаёт переменные окружения
 RUN rm -f .env
 
+# Выполнить сидеры (если надо)
+RUN php artisan db:seed || echo "⚠️ Ошибка в сидерах — проверь seed-классы"
+
 # Порт для Railway
 ENV PORT=8080
 
