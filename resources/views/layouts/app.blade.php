@@ -20,7 +20,7 @@
         <meta name="keywords" content="@yield('header_keywords')">
     @endif
 
-    <link rel="shortlink" href="https://tero.design/"/>
+    <link rel="shortlink" href="{{ url('/') }}"/>
     <link rel="icon" href="{{ asset('favicon.png') }}?v={{ filemtime(public_path('favicon.png')) }}" sizes="32x32"/>
     <link rel="icon" href="{{ asset('favicon.png') }}" sizes="192x192"/>
     <link rel="apple-touch-icon-precomposed" href="{{ asset('favicon.png') }}"/>
