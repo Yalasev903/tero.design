@@ -20,13 +20,24 @@ RUN mkdir -p /etc/nginx/sites-enabled && \
     ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
 RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
-RUN composer install --no-interaction --prefer-dist
 
-RUN cp .env.example .env
-RUN php artisan key:generate
-RUN rm -f .env
+RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
+# Копируем .env только если его нет
+RUN test -f .env || cp .env.example .env
+
+RUN php artisan key:generate --ansi
+
+# Миграции с сохранением данных
+RUN php artisan migrate --force
+
+# Сиды — если есть, не критично если упадут
 RUN php artisan db:seed || echo "⚠️ Ошибка в сидерах — проверь seed-классы"
+
+# Ссылки и кеш
+RUN php artisan storage:link || true
+RUN php artisan config:cache
+RUN php artisan route:cache
 
 ENV PORT=8080
 EXPOSE 8080
