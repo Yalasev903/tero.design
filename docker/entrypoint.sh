@@ -3,11 +3,11 @@
 echo "🔗 Создание симлинков..."
 php artisan storage:link || true
 
-echo "⚙️ Кешируем конфигурации..."
-php artisan config:cache
-php artisan route:cache
+echo "📦 Кеширование конфигурации и маршрутов..."
+php artisan config:cache || true
+php artisan route:cache || true
 
-echo "📜 Laravel лог ошибок:"
+echo "📜 Последние строки из лога Laravel:"
 tail -n 50 storage/logs/laravel.log || echo "❗️ Лог пока не создан"
 
 echo "🚀 Запуск supervisord (nginx + php-fpm)..."
