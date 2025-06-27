@@ -16,3 +16,5 @@ php artisan route:cache
 # Запускаем supervisor (nginx + php-fpm)
 exec /usr/bin/supervisord -c /etc/supervisord.conf
 
+echo "📜 Laravel лог ошибок:"
+tail -n 50 storage/logs/laravel.log || echo "❗️ Лог пока не создан"
