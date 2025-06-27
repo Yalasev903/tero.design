@@ -1,46 +1,33 @@
 FROM php:8.4-fpm
 
-# Установка зависимостей
 RUN apt-get update && apt-get install -y \
     nginx supervisor unzip curl git zip \
     libpng-dev libjpeg-dev libfreetype6-dev \
     libonig-dev libxml2-dev libzip-dev \
     && docker-php-ext-install pdo_mysql mbstring gd zip
 
-# Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Рабочая директория
 WORKDIR /var/www
-
-# Копируем проект
 COPY . .
 
-# Конфиг nginx и supervisor
 COPY ./docker/nginx/default.conf /etc/nginx/sites-available/default
+COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 
-# Даем права
-RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
+RUN mkdir -p /etc/nginx/sites-enabled && \
+    ln -s /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
 
-# Composer install
+RUN chmod -R 755 /var/www && chown -R www-data:www-data /var/www
 RUN composer install --no-interaction --prefer-dist
 
-# Создать временный .env (Railway всё равно заменит переменными окружения)
 RUN cp .env.example .env
-
-# Генерация ключа
 RUN php artisan key:generate
-
-# Удалить .env — Railway сам подставит переменные
 RUN rm -f .env
 
-# Выполнить сидеры (если надо)
 RUN php artisan db:seed || echo "⚠️ Ошибка в сидерах — проверь seed-классы"
 
-# Порт для Railway
 ENV PORT=8080
-
 EXPOSE 8080
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
