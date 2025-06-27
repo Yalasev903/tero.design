@@ -30,7 +30,7 @@ const tinyKey = import.meta.env.VITE_TINYMCE_API_KEY
   <Editor
     :model-value="modelValue"
     @update:modelValue="$emit('update:modelValue', $event)"
-    :api-key="tinyKey"
+    :api-key="zz5yzfkvutel7xxsey78ithzogwrudzczlqmwlyft73cupew"
     :init="{
       height: 320,
       menubar: true,
