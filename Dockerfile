@@ -27,7 +27,8 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Vite build
 ENV NODE_ENV=production
-RUN npm run build
+RUN npm run build && \
+    cp public/build/.vite/manifest.json public/build/manifest.json
 
 # Laravel .env и ключ
 RUN test -f .env || cp .env.example .env
