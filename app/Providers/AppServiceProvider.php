@@ -26,7 +26,7 @@ class AppServiceProvider extends ServiceProvider
 
             $base_config = [
                 'googleTm'     => $setting->col_google_tm ?? '',
-                'jivochat'     => (bool) $setting->col_jivochat ?? false,
+                'jivochat'     => $setting ? (bool) $setting->col_jivochat : false,
                 'jivochat_id'  => $setting->col_jivochat_id ?? '',
             ];
 

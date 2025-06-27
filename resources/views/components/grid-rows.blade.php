@@ -25,7 +25,7 @@
 
                     @if(($media['type'] ?? '') === 'img')
                         <img
-                            src="{{ asset('logo/loader.16.gif') }}"
+                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
                             data-src="/multimedia/{{ $mediaLink }}"
                             alt="{{ $media['alt'] ?? '' }}"
                             class="js-grid-item-media lazyload"
@@ -35,14 +35,14 @@
                             muted
                             loop
                             playsinline
-                            preload="none"
+                            preload="auto"
                             class="js-grid-item-media lazyload"
                             data-autoplay
                             data-poster="/multimedia/{{ $poster }}"
                             style="background-color: #000; display: block;"
                         >
                             @foreach($media['links'] ?? [] as $link)
-                                <source data-src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? 'video/mp4' }}">
+                                <source src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? 'video/mp4' }}">
                             @endforeach
                         </video>
                     @endif
@@ -53,3 +53,24 @@
         @endforeach
     </div>
 @endforeach
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const video = entry.target;
+    if (entry.isIntersecting) {
+      if (video.readyState >= 2) {
+        video.play().catch(() => {});
+      }
+    } else {
+      video.pause();
+    }
+  });
+}, {
+  threshold: 0.5
+});
+
+document.querySelectorAll('video.js-grid-item-media').forEach(video => {
+  observer.observe(video);
+});
+</script>
+

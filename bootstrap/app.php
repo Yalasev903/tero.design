@@ -8,6 +8,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
+use Illuminate\Http\Middleware\HandleCors;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -23,10 +24,12 @@ return Application::configure(basePath: dirname(__DIR__))
             ShareErrorsFromSession::class,
             ValidateCsrfToken::class,
             SubstituteBindings::class,
+            HandleCors::class,
         ]);
 
             $middleware->validateCsrfTokens(except: [
                 'api/vuefinder',
+                'api/admin/login',
             ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -21,7 +21,7 @@
           <input
             v-model="password"
             type="password"
-            placeholder="••••••••"
+            placeholder=""
             class="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             autocomplete="current-password"
             required

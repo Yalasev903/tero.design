@@ -233,38 +233,37 @@
         @endphp
 
 
-        <footer class="footer">
-            <div class="footer-social row">
-                @if($setting->col_behance)
-                <a href="{{ $setting->col_behance }}" class="footer-social-link" target="_blank">
-                    @include('components.svg.behance')
-                </a>
-                @endif
+<footer class="footer">
+    <div class="footer-social row">
+        @if(!empty($setting?->col_behance))
+            <a href="{{ $setting->col_behance }}" class="footer-social-link" target="_blank">
+                @include('components.svg.behance')
+            </a>
+        @endif
 
-                @if($setting->col_facebook)
-                <a href="{{ $setting->col_facebook }}" class="footer-social-link" target="_blank">
-                    @include('components.svg.facebook')
-                </a>
-                @endif
+        @if(!empty($setting?->col_facebook))
+            <a href="{{ $setting->col_facebook }}" class="footer-social-link" target="_blank">
+                @include('components.svg.facebook')
+            </a>
+        @endif
 
-                @if($setting->col_instagram)
-                <a href="{{ $setting->col_instagram }}" class="footer-social-link" target="_blank">
-                    @include('components.svg.instagram')
-                </a>
-                @endif
+        @if(!empty($setting?->col_instagram))
+            <a href="{{ $setting->col_instagram }}" class="footer-social-link" target="_blank">
+                @include('components.svg.instagram')
+            </a>
+        @endif
 
-                @if($setting->col_linkedin)
-                <a href="{{ $setting->col_linkedin }}" class="footer-social-link" target="_blank">
-                    @include('components.svg.linkedin')
-                </a>
-                @endif
+        @if(!empty($setting?->col_linkedin))
+            <a href="{{ $setting->col_linkedin }}" class="footer-social-link" target="_blank">
+                @include('components.svg.linkedin')
+            </a>
+        @endif
+    </div>
 
-            </div>
-
-            <div class="footer-copyright">
-                All rights reserved © {{ now()->year }} TERODESIGN
-            </div>
-        </footer>
+    <div class="footer-copyright">
+        All rights reserved © {{ now()->year }} TERODESIGN
+    </div>
+</footer>
 
         {{-- SHOWREEL MODAL --}}
     @include('components.showreel', ['showreel' => $showreel])

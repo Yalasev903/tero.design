@@ -37,6 +37,9 @@ import { ref, watch, onMounted, inject } from 'vue'
 import { ElNotification } from 'element-plus'
 import axios from 'axios'
 
+const xsrf = decodeURIComponent(document.cookie.split('; ').find(row => row.startsWith('XSRF-TOKEN=')).split('=')[1])
+axios.defaults.headers.common['X-XSRF-TOKEN'] = xsrf
+
 const props = defineProps({
   title: { type: String, default: 'SEO главной страницы' }
 })
@@ -66,6 +69,7 @@ const loadSeo = async () => {
 
 const saveSeo = async () => {
   try {
+    await axios.get('/sanctum/csrf-cookie')
     await axios.post('/api/admin/pages/home-seo', {
       seo_title: model.value.seo_title,
       seo_description: model.value.seo_description,
