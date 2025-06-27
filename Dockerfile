@@ -35,6 +35,8 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 # Копируем .env только если он отсутствует
 RUN test -f .env || cp .env.example .env
 
+RUN npm install && npm run build
+
 # Генерация ключа
 RUN php artisan key:generate --ansi
 

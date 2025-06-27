@@ -1,11 +1,5 @@
 #!/bin/bash
 
-echo "🌐 Установка npm-зависимостей..."
-npm install || echo "⚠️ Ошибка npm install"
-
-echo "🛠 Сборка фронтенда (npm run build)..."
-npm run build || echo "⚠️ Ошибка сборки frontend"
-
 echo "🔗 Создание симлинков..."
 php artisan storage:link || true
 
