@@ -22,7 +22,13 @@ class ProjectController extends Controller
 
         $project = Project::create($data);
 
-        return response()->json($project);
+        $safeName = str()->slug($project->title) . '-' . $project->id;
+        Storage::disk('public')->makeDirectory("multimedia/$safeName");
+
+        return response()->json([
+            'project' => $project,
+            'folder' => "multimedia/$safeName"
+        ]);
     }
 
     public function show($id)

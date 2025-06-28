@@ -910,11 +910,14 @@ const submit = async () => {
     )
 
     if (isEditing.value) {
-      await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
-      ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
+    await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
+    ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
-      await axios.post('/api/admin/projects', form.value)
-      ElNotification({ title: 'Успешно', message: 'Проект создан', type: 'success' })
+    const res = await axios.post('/api/admin/projects', form.value)
+    const folderPath = res.data.folder
+    sessionStorage.setItem('project-folder', folderPath)
+
+    ElNotification({ title: 'Успешно', message: 'Проект создан', type: 'success' })
     }
 
     if (tabsMode?.value && openTab) {

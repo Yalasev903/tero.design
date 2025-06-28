@@ -265,6 +265,7 @@
         <div class="finder-homegrid">
             <vue-finder
             id="vuefinder"
+            :path="defaultFolder"
             :request="{
                 baseUrl: '/api/vuefinder',
                 adapter: 'local',
@@ -320,6 +321,14 @@ const videoSizes = ref({})
 const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
 
 const mediaDescription = ref('')
+
+const defaultFolder = ref('')
+
+watch(showFileManager, (val) => {
+  if (val) {
+    defaultFolder.value = sessionStorage.getItem('project-folder') || ''
+  }
+})
 
 const isEditingModal = ref(false)
 const editingTarget = ref({ rowIdx: null, colIdx: null })
@@ -623,26 +632,75 @@ const selectedPath = ref('')
 const targetRowIdx = ref(0) // по умолчанию 0 строка
 const projects = ref([])
 
-const openMediaModal = (type, rowIdx) => {
+const openMediaModal = async (type, rowIdx) => {
   mediaType.value = type
 
-if (typeof rowIdx === 'undefined') {
-  ElNotification({
-    title: 'Ошибка',
-    message: 'Сначала добавьте строку',
-    type: 'warning'
-  })
-  return
-}
-targetRowIdx.value = rowIdx
+  if (typeof rowIdx === 'undefined') {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Сначала добавьте строку',
+      type: 'warning'
+    })
+    return
+  }
 
-
+  targetRowIdx.value = rowIdx
   showMediaModal.value = true
-  loadProjects()
+
+  // Загружаем проекты и подставляем выбранный, если ранее использовался
+  await loadProjects()
+
+  // 🟢 Назначаем проект по-умолчанию (если в sessionStorage ранее что-то сохраняли)
+  const lastFolder = sessionStorage.getItem('project-folder')
+  if (lastFolder) {
+    const matched = projects.value.find(p => {
+      const sanitized = p.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
+      return sanitized === lastFolder
+    })
+    if (matched) {
+      selectedProjectId.value = matched.id
+    }
+  }
+
+  // 🟢 Назначаем текущий путь
+  if (selectedProjectId.value) {
+    const currentProject = projects.value.find(p => p.id === selectedProjectId.value)
+    if (currentProject && currentProject.title) {
+      const sanitized = currentProject.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
+      const folderPath = `projects/${sanitized}`
+      defaultFolder.value = folderPath
+      sessionStorage.setItem('project-folder', sanitized)
+    }
+  }
 }
 
+watch(showFileManager, (opened) => {
+  if (opened && defaultFolder.value) {
+    // ⏳ чуть подождать, пока vuefinder смонтируется
+    setTimeout(() => {
+      const el = document.querySelector('#vuefinder')
+      if (el) {
+        el.dispatchEvent(new CustomEvent('vf-navigate', {
+          detail: { path: defaultFolder.value }
+        }))
+      }
+    }, 300)
+  }
+})
 
 const openFileManagerForModal = () => {
+  if (!selectedProjectId.value) {
+    ElNotification({ title: 'Ошибка', message: 'Сначала выберите проект', type: 'warning' })
+    return
+  }
+
+  const project = projects.value.find(p => p.id === selectedProjectId.value)
+  if (project && project.title) {
+    const sanitized = project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
+    defaultFolder.value = `projects/${sanitized}`
+    sessionStorage.setItem('project-folder', sanitized)
+  }
+
   showFileManager.value = true
 }
 
