@@ -8,6 +8,8 @@ use App\Models\Project;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ProjectController extends Controller
 {
@@ -23,54 +25,52 @@ class ProjectController extends Controller
             'multimedia_grid' => 'nullable|array',
         ]);
 
-        $project = Project::create($data);
-        $safeName = Str::slug($project->title) . '-' . $project->id;
-        $folderPath = "multimedia/$safeName";
+        try {
+            DB::beginTransaction();
 
-        // 🟡 Создание папки и проверка
-        $created = Storage::disk('multimedia')->makeDirectory($safeName);
-        if (!$created) {
-            $project->delete();
-            return response()->json([
-                'message' => "Не удалось создать папку '$folderPath'"
-            ], 500);
-        }
+            // 1. Создаём проект в БД
+            $project = Project::create($data);
 
-        // 🟡 Перемещение медиа с проверкой
-        $movedAll = true;
-        $errors = [];
+            // 2. Генерируем имя папки
+            $safeName = Str::slug($project->title) . '-' . $project->id;
+            $folderPath = "multimedia/$safeName";
 
-        if (!empty($data['multimedia_grid'])) {
-            foreach ($data['multimedia_grid'] as $rowIndex => $row) {
-                foreach ($row as $colIndex => $col) {
-                    try {
-                        $data['multimedia_grid'][$rowIndex][$colIndex] = $this->moveMediaToFolder($col, $folderPath);
-                    } catch (\Throwable $e) {
-                        $movedAll = false;
-                        $errors[] = "Ошибка перемещения файла в строке $rowIndex колонке $colIndex: " . $e->getMessage();
-                    }
-                }
+            // 3. Создаём папку
+            $created = Storage::disk('multimedia')->makeDirectory($safeName);
+            if (!$created) {
+                throw new \Exception("Ошибка при создании папки '$folderPath'");
             }
 
-            $project->update([
-                'multimedia_grid' => $data['multimedia_grid'],
-            ]);
-        }
+            // 4. Перемещаем все медиа
+            if (!empty($data['multimedia_grid'])) {
+                foreach ($data['multimedia_grid'] as $rowIndex => $row) {
+                    foreach ($row as $colIndex => $col) {
+                        $data['multimedia_grid'][$rowIndex][$colIndex] = $this->moveMediaToFolder($col, $folderPath);
+                    }
+                }
 
-        if (!$movedAll) {
+                // 5. Обновляем JSON в проекте
+                $project->update([
+                    'multimedia_grid' => $data['multimedia_grid'],
+                ]);
+            }
+
+            DB::commit();
+
             return response()->json([
-                'message' => 'Проект создан, но возникли ошибки при перемещении файлов.',
+                'message' => "Проект '{$project->title}' успешно создан",
                 'project' => $project,
                 'folder' => $folderPath,
-                'errors' => $errors
-            ], 207); // 207 Multi-Status (частично выполнено)
-        }
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Ошибка создания проекта: ' . $e->getMessage());
 
-        return response()->json([
-            'message' => "Проект '{$project->title}' успешно создан",
-            'project' => $project,
-            'folder' => $folderPath
-        ]);
+            return response()->json([
+                'message' => 'Ошибка создания проекта',
+                'errors' => [$e->getMessage()],
+            ], 500);
+        }
     }
 
     private function moveMediaToFolder(array $col, string $folderPath): array
@@ -86,7 +86,7 @@ class ProjectController extends Controller
             }
 
             if (!File::move($oldPath, $newFullPath)) {
-                throw new \Exception("Не удалось переместить $oldPath → $newFullPath");
+                throw new \Exception("Ошибка при перемещении: $oldPath → $newFullPath");
             }
 
             return $newPath;
