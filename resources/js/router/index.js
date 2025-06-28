@@ -22,6 +22,7 @@ const routes = [
       { path: 'dashboard', component: DashboardIndex },
       { path: 'home-grid', component: HomeGrid },
       { path: 'projects', component: ProjectsList },
+      { path: 'projects/list', component: ProjectsList },
       { path: 'projects/create', component: CreateProject },
       {
         path: 'projects/edit/:id',
