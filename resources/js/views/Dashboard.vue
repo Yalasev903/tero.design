@@ -339,6 +339,14 @@ function switchTab(tab) {
   router.push(tab.path)
 }
 
+watch(activeTab, async () => {
+  await nextTick()
+
+  document.querySelectorAll('video[autoplay]').forEach(video => {
+    video.play().catch(() => {})
+  })
+})
+
 function openTab(item) {
   let tab = tabs.value.find(t => t.path === item.path)
   if (!tab) {
