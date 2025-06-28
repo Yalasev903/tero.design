@@ -25,6 +25,7 @@ class ContactController extends Controller
             ],
                 'footer_left' => $setting->footer_left ?? '',
                 'footer_right' => $setting->footer_right ?? '',
+                'footer_right_note' => $setting->footer_right_note ?? '',
         ]);
     }
 }

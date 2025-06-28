@@ -31,7 +31,9 @@
             <div class="contact-left" style="flex: 1;">
                 <div class="contact-top">
                     <div class="contact-location">{{ $footer_right ?? 'SWITZERLAND, Geneve' }}</div>
-                    <div class="contact-time">OAKS GROUP SA, Associate Partner</div>
+                        @if(!empty($footer_right_note))
+                        <div class="contact-time">{{ $footer_right_note }}</div>
+                    @endif
                 </div>
                 <ul class="contact-list">
                     {{-- <li><a href="tel:+41227003794">+41 22 700 37 94</a></li> --}}

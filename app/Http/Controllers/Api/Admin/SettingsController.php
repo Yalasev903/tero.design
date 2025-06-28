@@ -38,6 +38,7 @@ class SettingsController extends Controller
             'marker'        => $map->col_marker,
             'footer_left'     => $settings->footer_left,
             'footer_right'    => $settings->footer_right,
+            'footer_right_note' => $settings->footer_right_note,
         ]);
     }
 
@@ -63,6 +64,7 @@ class SettingsController extends Controller
         // $settings->col_showreel_video  = $request->video;
         $settings->footer_left       = $request->footer_left;
         $settings->footer_right      = $request->footer_right;
+        $settings->footer_right_note = $request->footer_right_note;
         $settings->save();
 
         $map = Map::first();

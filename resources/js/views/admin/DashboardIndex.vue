@@ -66,6 +66,9 @@
             <el-form-item label="Подпись справа (в футере) Контакты">
             <el-input v-model="form.footer_right" placeholder="Пример: SWITZERLAND, Geneve ..." :size="inputSize" />
             </el-form-item>
+            <el-form-item label="Подпись справа (второй ряд) Контакты">
+            <el-input v-model="form.footer_right_note" placeholder="Пример: OAKS GROUP SA, Associate Partner" :size="inputSize" />
+            </el-form-item>
 
             <div class="save-button">
               <el-button type="success" @click="saveSettings">Сохранить</el-button>
@@ -197,7 +200,8 @@ const form = ref({
   zoom: '',
   google_key: '',
   footer_left: '',
-  footer_right: ''
+  footer_right: '',
+  footer_right_note: ''
 })
 
 const load = async () => {
@@ -231,6 +235,7 @@ const load = async () => {
   form.value.google_tm = data.google_tm || ''
   form.value.footer_left = data.footer_left || ''
   form.value.footer_right = data.footer_right || ''
+  form.value.footer_right_note = data.footer_right_note || ''
 }
 
 const inputSize = inject('inputSize')
@@ -279,6 +284,7 @@ const saveSettings = async () => {
       google_tm: form.value.google_tm,
       footer_left: form.value.footer_left,
       footer_right: form.value.footer_right,
+      footer_right_note: form.value.footer_right_note,
     })
 
     ElNotification({
