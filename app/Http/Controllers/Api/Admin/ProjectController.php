@@ -32,14 +32,13 @@ class ProjectController extends Controller
             $project = Project::create($data);
 
             // 2. Генерируем имя папки
-            $safeName = Str::slug($project->title) . '-' . $project->id;
-            $folderPath = "multimedia/$safeName";
+            $folderName = Str::slug($project->title) . '-' . $project->id;
+            $folderPath = "multimedia/$folderName";
 
-            // 3. Создаём папку
-            $created = Storage::disk('multimedia')->makeDirectory($safeName);
+            $created = Storage::disk('multimedia')->makeDirectory($folderName);
             if (!$created) {
                 throw new \Exception("Ошибка при создании папки '$folderPath'");
-            }
+}
 
             // 4. Перемещаем все медиа
             if (!empty($data['multimedia_grid'])) {
@@ -76,10 +75,10 @@ class ProjectController extends Controller
     private function moveMediaToFolder(array $col, string $folderPath): array
     {
         $move = function ($path) use ($folderPath) {
-            $oldPath = public_path("multimedia/$path");
+            $oldPath = public_path("multimedia/" . ltrim($path, '/'));
             $filename = basename($path);
             $newPath = "$folderPath/$filename";
-            $newFullPath = public_path("multimedia/$newPath");
+            $newFullPath = public_path($newPath);
 
             if (!file_exists($oldPath)) {
                 throw new \Exception("Файл не найден: $oldPath");
