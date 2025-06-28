@@ -655,35 +655,31 @@ const confirmMediaInsert = () => {
   const rowIdx = selectedCell.value?.rowIdx ?? null
   const colIdx = selectedCell.value?.colIdx ?? null
 
-  console.log('>> confirmMediaInsert:', { rowIdx, colIdx, selectedCell: selectedCell.value })
-
   if (rowIdx === null || !gridRows.value[rowIdx]) {
     ElNotification({ title: 'Ошибка', message: 'Не выбрана строка для вставки', type: 'warning' })
     return
   }
 
-  const col = {
-    title: modalMediaTitle.value || '',
-    media: {}
-  }
+  const newMedia =
+    mediaType.value === 'img'
+      ? { type: 'img', link: modalMediaPreview.value }
+      : mediaType.value === 'video'
+      ? {
+          type: 'video',
+          poster: '',
+          links: [{ link: modalMediaPreview.value, mime: 'video/mp4' }]
+        }
+      : {}
 
-  if (mediaType.value === 'img') {
-    col.media = {
-      type: 'img',
-      link: modalMediaPreview.value
-    }
-  } else if (mediaType.value === 'video') {
-    col.media = {
-      type: 'video',
-      poster: '',
-      links: [{ link: modalMediaPreview.value, mime: 'video/mp4' }]
-    }
-  }
-
-  if (typeof colIdx === 'number') {
-    gridRows.value[rowIdx].items[colIdx] = col
+  if (isEditingMedia.value && typeof colIdx === 'number') {
+    const col = gridRows.value[rowIdx].items[colIdx]
+    col.media = newMedia
+    col.title = modalMediaTitle.value || ''
   } else {
-    gridRows.value[rowIdx].items.push(col)
+    gridRows.value[rowIdx].items.push({
+      title: modalMediaTitle.value || '',
+      media: newMedia
+    })
   }
 
   showMediaModal.value = false
