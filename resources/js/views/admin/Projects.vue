@@ -54,7 +54,7 @@
 defineOptions({
   name: 'Projects'
 })
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onActivated } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
 import { ElNotification, ElMessageBox } from 'element-plus'
@@ -121,6 +121,7 @@ const stripHtml = (html) => {
 }
 
 onMounted(fetchProjects)
+onActivated(fetchProjects)
 </script>
 
 <style scoped>

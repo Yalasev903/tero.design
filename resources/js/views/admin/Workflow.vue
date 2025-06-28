@@ -2,7 +2,7 @@
 defineOptions({
   name: 'Workflow'
 })
-import { ref, computed, onMounted, nextTick, inject } from 'vue'
+import { ref, computed, onMounted, nextTick, inject, onActivated } from 'vue'
 import axios from 'axios'
 import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
@@ -164,6 +164,10 @@ const toggleExpand = (type) => {
 
 onMounted(() => {
   axios.get('/sanctum/csrf-cookie')
+  loadWorkflow()
+  loadFaq()
+})
+onActivated(() => {
   loadWorkflow()
   loadFaq()
 })

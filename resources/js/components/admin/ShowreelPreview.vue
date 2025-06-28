@@ -55,7 +55,7 @@
 defineOptions({
   name: 'ShowreelPreview'
 })
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onActivated  } from 'vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'
 import {
@@ -155,6 +155,7 @@ onMounted(() => {
   axios.get('/sanctum/csrf-cookie')
   loadShowreel()
 })
+onActivated(loadShowreel)
 </script>
 
 <style scoped>

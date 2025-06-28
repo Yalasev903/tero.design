@@ -1,4 +1,7 @@
 <script setup>
+defineOptions({
+  name: 'TinyEditor'
+})
 import { computed, inject } from 'vue'
 import Editor from '@tinymce/tinymce-vue'
 

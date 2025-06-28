@@ -36,7 +36,7 @@
 defineOptions({
   name: 'SeoIndex'
 })
-import { ref, watch, onMounted, inject } from 'vue'
+import { ref, watch, onMounted, inject, onActivated } from 'vue'
 import { ElNotification } from 'element-plus'
 import axios from 'axios'
 
@@ -97,6 +97,7 @@ const saveSeo = async () => {
 const inputSize = inject('inputSize')
 
 onMounted(loadSeo)
+onActivated(loadSeo)
 </script>
 
 <style scoped>

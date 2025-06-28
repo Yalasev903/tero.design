@@ -194,7 +194,7 @@ defineOptions({
 })
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import SeoServices from '@/components/admin/SeoServices.vue'
-import { ref, nextTick, onMounted, inject } from 'vue'
+import { ref, nextTick, onMounted, inject, onActivated } from 'vue'
 import draggable from 'vuedraggable'
 import axios from 'axios'
 import { ElNotification, ElMessageBox } from 'element-plus'
@@ -602,6 +602,8 @@ onMounted(() => {
     fetchServices()
 
     })
+
+    onActivated(fetchServices)
 </script>
 
 <style scoped>
