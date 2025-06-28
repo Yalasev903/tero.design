@@ -525,6 +525,14 @@ onMounted(() => {
   })
 })
 
+function refreshCurrentTab() {
+  const current = activeTab.value
+  if (current && current.path === '/projects/create') {
+    sessionStorage.removeItem('create-project-form') // или любой ключ, если используешь сохранение формы
+    router.replace({ path: current.path + '?refresh=' + Date.now() })
+  }
+}
+
 // Закрытие всплывающих меню при клике вне
 function handleClickOutside(event) {
   if (!sidebarRef.value?.contains(event.target)) {

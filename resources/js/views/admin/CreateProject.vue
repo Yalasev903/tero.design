@@ -333,7 +333,7 @@
 defineOptions({
   name: 'CreateProject'
 })
-import { ref, onMounted, watch, nextTick, inject } from 'vue'
+import { ref, onMounted, watch, nextTick, inject, onActivated } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'
 import draggable from 'vuedraggable'
@@ -364,6 +364,21 @@ const form = ref({
   meta_keywords: '',
   multimedia_grid: []
 })
+
+const resetForm = () => {
+  form.value = {
+    title: '',
+    text1: '',
+    text2: '',
+    meta_title: '',
+    meta_description: '',
+    meta_keywords: '',
+    multimedia_grid: []
+  }
+  gridRows.value = []
+  isEditing.value = false
+  projectId.value = null
+}
 
 const gridRows = ref([])
 const selectedCell = ref(null)
@@ -911,6 +926,10 @@ const submit = async () => {
   } catch (e) {
     ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить проект', type: 'error' })
   }
+
+    watch(form, (newVal) => {
+    sessionStorage.setItem('create-project-form', JSON.stringify(newVal))
+    }, { deep: true })
 }
 
 const loadProject = async () => {
@@ -987,8 +1006,28 @@ const loadProject = async () => {
   }
 }
 
-onMounted(loadProject)
-watch(() => route.params.id, loadProject)
+onMounted(() => {
+  const isEdit = route.name === 'EditProject' || !!route.params.id || !!route.query.id
+  if (isEdit) {
+    loadProject()
+  } else {
+    resetForm()
+  }
+})
+
+
+// При возврате кэшированной вкладки
+onActivated(() => {
+  const isCreate = route.path === '/projects/create'
+  const id = route.params.id ?? route.query.id
+
+  if (isCreate) {
+    resetForm()
+  } else if (id) {
+    loadProject(id)
+  }
+})
+
 </script>
 
 <style scoped>
