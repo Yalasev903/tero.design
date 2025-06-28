@@ -36,6 +36,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'SeoProject'
+})
 import { ref, watch, inject } from 'vue'
 import { ElNotification } from 'element-plus'
 

@@ -52,6 +52,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'ShowreelPreview'
+})
 import { ref, reactive, computed, onMounted } from 'vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'

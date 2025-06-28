@@ -280,6 +280,9 @@
       </template>
 
 <script setup>
+defineOptions({
+  name: 'HomeGrid'
+})
 import { ref, onMounted, nextTick, inject } from 'vue'
 import draggable from 'vuedraggable'
 import SeoIndex from '@/components/admin/SeoIndex.vue'

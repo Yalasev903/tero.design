@@ -130,7 +130,10 @@
   </template>
 </draggable>
             <div class="tab-content">
-            <component :is="activeTab.component" />
+            <!-- <component :is="activeTab.component" /> -->
+                <keep-alive :include="cachedComponentNames">
+                    <component :is="activeTab.component" :key="activeTab.path" />
+                </keep-alive>
             </div>
         </div>
 
@@ -218,6 +221,8 @@ const sidebarOpen = ref(localStorage.getItem('sidebarOpen') !== 'false')
 const showSettings = ref(false)
 const tabsMode = ref(true)
 const openSubmenus = ref({})
+
+const cachedComponentNames = ['Projects', 'HomeGrid', 'SeoIndex', 'SeoProject', 'SeoServices', 'ShowreelPreview', 'DashboardIndex', 'Workflow', 'Services']
 
 const isFullScreen = ref(false)
 

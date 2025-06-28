@@ -189,6 +189,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'Services'
+})
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import SeoServices from '@/components/admin/SeoServices.vue'
 import { ref, nextTick, onMounted, inject } from 'vue'

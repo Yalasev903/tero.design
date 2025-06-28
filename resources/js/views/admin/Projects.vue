@@ -51,6 +51,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'Projects'
+})
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
@@ -109,6 +112,7 @@ const deleteProject = async (id) => {
     // отменено или ошибка
   }
 }
+
 
 const stripHtml = (html) => {
   const div = document.createElement('div')

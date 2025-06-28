@@ -1,4 +1,7 @@
 <script setup>
+defineOptions({
+  name: 'Workflow'
+})
 import { ref, computed, onMounted, nextTick, inject } from 'vue'
 import axios from 'axios'
 import draggable from 'vuedraggable'

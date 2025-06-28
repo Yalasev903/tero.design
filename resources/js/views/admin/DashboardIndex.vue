@@ -173,6 +173,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'DashboardIndex'
+})
 import { ref, onMounted, inject } from 'vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'

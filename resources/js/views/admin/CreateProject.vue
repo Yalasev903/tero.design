@@ -330,6 +330,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'CreateProject'
+})
 import { ref, onMounted, watch, nextTick, inject } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from 'axios'

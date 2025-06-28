@@ -33,6 +33,9 @@
 </template>
 
 <script setup>
+defineOptions({
+  name: 'SeoIndex'
+})
 import { ref, watch, onMounted, inject } from 'vue'
 import { ElNotification } from 'element-plus'
 import axios from 'axios'
