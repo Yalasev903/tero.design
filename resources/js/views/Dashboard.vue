@@ -337,23 +337,16 @@ function switchTab(tab) {
   activeTab.value = tab
   sessionStorage.setItem('active-tab-path', tab.path)
   router.push(tab.path)
+
+  setTimeout(() => {
+    const videos = document.querySelectorAll('video[autoplay]')
+    videos.forEach((video) => {
+      if (video.paused) {
+        video.play().catch(() => {})
+      }
+    })
+  }, 300)
 }
-
-watchEffect(async () => {
-  await nextTick()
-
-  // Только если вкладки активны и DOM доступен
-  if (tabsMode.value && typeof window !== 'undefined') {
-    setTimeout(() => {
-      const videos = document.querySelectorAll('video[autoplay]')
-      videos.forEach((video) => {
-        if (video.paused) {
-          video.play().catch(() => {})
-        }
-      })
-    }, 200) // небольшая задержка после рендера
-  }
-})
 
 function openTab(item) {
   let tab = tabs.value.find(t => t.path === item.path)
