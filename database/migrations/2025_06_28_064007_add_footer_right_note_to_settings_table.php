@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
+        Schema::table('tbl_settings', function (Blueprint $table) {
             $table->string('footer_right_note')->nullable();
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('settings', function (Blueprint $table) {
+        Schema::table('tbl_settings', function (Blueprint $table) {
             $table->string('footer_right_note')->nullable();
         });
     }
