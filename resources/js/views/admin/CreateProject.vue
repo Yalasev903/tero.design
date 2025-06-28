@@ -908,31 +908,47 @@ const submit = async () => {
         if (col.media?.type === 'video') return { ...base, poster: col.media.poster || '', links: col.media.links || [] }
         if (col.media?.type === 'vr') return { ...base, link: col.media.link, width: col.media.width, height: col.media.height }
         if (col.media?.type === 'curtain') return {
-        ...base,
-        images: col.media.images,
-        titles: col.media.titles || []
+          ...base,
+          images: col.media.images,
+          titles: col.media.titles || []
         }
 
         return base
       })
     )
 
+    let res
     if (isEditing.value) {
-    await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
-    ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
+      await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
+      ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
-    const res = await axios.post('/api/admin/projects', form.value)
-    const folderPath = res.data.folder
-    sessionStorage.setItem('project-folder', folderPath)
+      res = await axios.post('/api/admin/projects', form.value)
 
-    ElNotification({
-        title: 'Проект создан',
-        message: `Создана папка: ${folderPath}`,
+      const folderPath = res.data.folder
+      sessionStorage.setItem('project-folder', folderPath)
+
+      // Уведомление о папке
+      ElNotification({
+        title: `Проект создан: ${res.data.project.title}`,
+        message: `Папка создана: ${folderPath}`,
         type: 'success',
         duration: 8000
+      })
+
+      // Если есть ошибки перемещения
+      if (res.data.errors && res.data.errors.length) {
+        res.data.errors.forEach(msg => {
+          ElNotification({
+            title: 'Ошибка перемещения файла',
+            message: msg,
+            type: 'warning',
+            duration: 8000
+          })
         })
+      }
     }
 
+    // Переход на список
     if (tabsMode?.value && openTab) {
       openTab({ path: '/projects/list', label: 'Список проектов', component: Projects })
     } else {
@@ -940,7 +956,22 @@ const submit = async () => {
     }
 
   } catch (e) {
-    ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить проект', type: 'error' })
+    const message = e?.response?.data?.message || 'Не удалось сохранить проект'
+    const errors = e?.response?.data?.errors || []
+
+    ElNotification({ title: 'Ошибка', message, type: 'error' })
+
+    // Показать список ошибок (если есть)
+    if (Array.isArray(errors)) {
+      errors.forEach(err => {
+        ElNotification({
+          title: 'Деталь',
+          message: err,
+          type: 'error',
+          duration: 8000
+        })
+      })
+    }
   }
 }
 

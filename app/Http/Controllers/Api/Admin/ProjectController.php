@@ -24,17 +24,31 @@ class ProjectController extends Controller
         ]);
 
         $project = Project::create($data);
-
         $safeName = Str::slug($project->title) . '-' . $project->id;
         $folderPath = "multimedia/$safeName";
 
-        Storage::disk('multimedia')->makeDirectory($safeName);
+        // 🟡 Создание папки и проверка
+        $created = Storage::disk('multimedia')->makeDirectory($safeName);
+        if (!$created) {
+            $project->delete();
+            return response()->json([
+                'message' => "Не удалось создать папку '$folderPath'"
+            ], 500);
+        }
 
-        // Перемещаем медиа
+        // 🟡 Перемещение медиа с проверкой
+        $movedAll = true;
+        $errors = [];
+
         if (!empty($data['multimedia_grid'])) {
             foreach ($data['multimedia_grid'] as $rowIndex => $row) {
                 foreach ($row as $colIndex => $col) {
-                    $data['multimedia_grid'][$rowIndex][$colIndex] = $this->moveMediaToFolder($col, $folderPath);
+                    try {
+                        $data['multimedia_grid'][$rowIndex][$colIndex] = $this->moveMediaToFolder($col, $folderPath);
+                    } catch (\Throwable $e) {
+                        $movedAll = false;
+                        $errors[] = "Ошибка перемещения файла в строке $rowIndex колонке $colIndex: " . $e->getMessage();
+                    }
                 }
             }
 
@@ -43,7 +57,17 @@ class ProjectController extends Controller
             ]);
         }
 
+        if (!$movedAll) {
+            return response()->json([
+                'message' => 'Проект создан, но возникли ошибки при перемещении файлов.',
+                'project' => $project,
+                'folder' => $folderPath,
+                'errors' => $errors
+            ], 207); // 207 Multi-Status (частично выполнено)
+        }
+
         return response()->json([
+            'message' => "Проект '{$project->title}' успешно создан",
             'project' => $project,
             'folder' => $folderPath
         ]);
@@ -55,9 +79,14 @@ class ProjectController extends Controller
             $oldPath = public_path("multimedia/$path");
             $filename = basename($path);
             $newPath = "$folderPath/$filename";
+            $newFullPath = public_path("multimedia/$newPath");
 
-            if (file_exists($oldPath)) {
-                File::move($oldPath, public_path("multimedia/$newPath"));
+            if (!file_exists($oldPath)) {
+                throw new \Exception("Файл не найден: $oldPath");
+            }
+
+            if (!File::move($oldPath, $newFullPath)) {
+                throw new \Exception("Не удалось переместить $oldPath → $newFullPath");
             }
 
             return $newPath;
@@ -88,8 +117,6 @@ class ProjectController extends Controller
 
         return $col;
     }
-
-    // Остальные методы без изменений
 
     public function show($id)
     {
