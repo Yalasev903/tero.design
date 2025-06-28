@@ -199,9 +199,21 @@
 
         <img v-if="previewItem?.type === 'img'" :src="`/multimedia/${previewItem.link}`" class="preview-img" />
 
-        <video v-else-if="previewItem?.type === 'video'" class="preview-video" controls autoplay loop muted playsinline
+        <video
+        v-else-if="previewItem?.type === 'video'"
+        :key="previewItem.links?.[0]?.link || Date.now()"
+        class="preview-video"
+        controls
+        autoplay
+        loop
+        muted
+        playsinline
         :poster="`/multimedia/${previewItem.poster || previewItem.link}`">
-        <source v-for="(link, i) in previewItem.links" :key="i" :src="`/multimedia/${link.link}`" />
+        <source
+            v-for="(link, i) in previewItem.links"
+            :key="i"
+            :src="`/multimedia/${link.link}?v=${Date.now()}`"
+            :type="link.mime || 'video/mp4'" />
         </video>
 
         <iframe v-else-if="previewItem?.type === 'vr'"
@@ -930,10 +942,6 @@ const submit = async () => {
   } catch (e) {
     ElNotification({ title: 'Ошибка', message: 'Не удалось сохранить проект', type: 'error' })
   }
-
-    watch(form, (newVal) => {
-    sessionStorage.setItem('create-project-form', JSON.stringify(newVal))
-    }, { deep: true })
 }
 
 const loadProject = async () => {
@@ -1009,6 +1017,10 @@ const loadProject = async () => {
     gridRows.value = []
   }
 }
+
+watch(form, (newVal) => {
+  sessionStorage.setItem('create-project-form', JSON.stringify(newVal))
+}, { deep: true })
 
 onMounted(() => {
   const isEdit = route.name === 'EditProject' || !!route.params.id || !!route.query.id
