@@ -10,7 +10,7 @@
             <div class="services-item">
                 <div class="{{ $loop->index % 2 == 0 ? 'services-item-left' : 'services-item-right' }}">
                     <h2 class="services-item-title">{{ $service->col_title }}</h2>
-                    <p class="services-item-description">{{ $service->col_description }}</p>
+                    <div class="services-item-description">{!! $service->col_description !!}</div>
                 </div>
                 <video playsinline muted loop autoplay class="services-item-video"
                        data-media-width="" data-media-height="">
