@@ -285,7 +285,7 @@
 defineOptions({
   name: 'HomeGrid'
 })
-import { ref, onMounted, nextTick, inject } from 'vue'
+import { ref, onMounted, nextTick, inject, watch } from 'vue'
 import draggable from 'vuedraggable'
 import SeoIndex from '@/components/admin/SeoIndex.vue'
 import axios from 'axios'
