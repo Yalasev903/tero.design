@@ -222,7 +222,7 @@ const showSettings = ref(false)
 const tabsMode = ref(true)
 const openSubmenus = ref({})
 
-const cachedComponentNames = ['Projects', 'HomeGrid', 'SeoIndex', 'SeoProject', 'SeoServices', 'ShowreelPreview', 'DashboardIndex', 'Workflow', 'Services']
+const cachedComponentNames = ['Projects', 'HomeGrid', 'SeoIndex', 'SeoProject', 'SeoServices', 'ShowreelPreview', 'DashboardIndex', 'Workflow', 'Services', 'CreateProject']
 
 const isFullScreen = ref(false)
 
