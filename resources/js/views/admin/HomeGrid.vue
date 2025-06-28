@@ -264,6 +264,7 @@
       <div v-if="showFileManager" class="finder-modal">
         <div class="finder-homegrid">
             <vue-finder
+            v-if="showFileManager"
             id="vuefinder"
             :path="defaultFolder"
             :request="{
@@ -684,7 +685,7 @@ watch(showFileManager, (opened) => {
           detail: { path: defaultFolder.value }
         }))
       }
-    }, 300)
+    }, 500)
   }
 })
 
