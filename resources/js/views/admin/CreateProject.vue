@@ -917,7 +917,12 @@ const submit = async () => {
     const folderPath = res.data.folder
     sessionStorage.setItem('project-folder', folderPath)
 
-    ElNotification({ title: 'Успешно', message: 'Проект создан', type: 'success' })
+    ElNotification({
+        title: 'Проект создан',
+        message: `Создана папка: ${folderPath}`,
+        type: 'success',
+        duration: 8000
+        })
     }
 
     if (tabsMode?.value && openTab) {

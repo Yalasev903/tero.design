@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Project;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProjectController extends Controller
 {
@@ -22,8 +24,9 @@ class ProjectController extends Controller
 
         $project = Project::create($data);
 
-        $safeName = str()->slug($project->title) . '-' . $project->id;
-        Storage::disk('public')->makeDirectory("multimedia/$safeName");
+        $safeName = Str::slug($project->title) . '-' . $project->id;
+
+        Storage::disk('multimedia')->makeDirectory($safeName);
 
         return response()->json([
             'project' => $project,
