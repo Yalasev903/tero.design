@@ -191,7 +191,7 @@
 </template>
 
 <script setup>
-import { ref, computed, markRaw, provide, onMounted, onBeforeUnmount, inject } from 'vue'
+import { ref, computed, markRaw, provide, onMounted, onBeforeUnmount, inject, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { h } from 'vue'
 import { ElIcon } from 'element-plus'
@@ -339,12 +339,20 @@ function switchTab(tab) {
   router.push(tab.path)
 }
 
-watch(activeTab, async () => {
+watchEffect(async () => {
   await nextTick()
 
-  document.querySelectorAll('video[autoplay]').forEach(video => {
-    video.play().catch(() => {})
-  })
+  // Только если вкладки активны и DOM доступен
+  if (tabsMode.value && typeof window !== 'undefined') {
+    setTimeout(() => {
+      const videos = document.querySelectorAll('video[autoplay]')
+      videos.forEach((video) => {
+        if (video.paused) {
+          video.play().catch(() => {})
+        }
+      })
+    }, 200) // небольшая задержка после рендера
+  }
 })
 
 function openTab(item) {
