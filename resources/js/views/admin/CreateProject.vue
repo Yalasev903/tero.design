@@ -197,7 +197,11 @@
         {{ previewSize.w }} × {{ previewSize.h }} px
         </div>
 
-        <img v-if="previewItem?.type === 'img'" :src="`/multimedia/${previewItem.link}?v=${Date.now()}`" class="preview-img" />
+        <img
+            v-if="previewItem?.type === 'img' && previewItem.link"
+            :src="`/multimedia/${previewItem.link}?v=${Date.now()}`"
+            class="preview-img"
+            />
 
         <video
         v-else-if="previewItem?.type === 'video'"
@@ -208,7 +212,7 @@
         loop
         muted
         playsinline
-        :poster="`/multimedia/${previewItem.poster || previewItem.link}`">
+        :poster="previewItem.poster || previewItem.link ? `/multimedia/${previewItem.poster || previewItem.link}?v=${Date.now()}` : undefined">
         <source
             v-for="(link, i) in previewItem.links"
             :key="i"
