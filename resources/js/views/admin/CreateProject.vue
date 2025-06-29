@@ -1074,6 +1074,7 @@ const loadProject = async () => {
     isEditing.value = true
     projectId.value = route.params.id
     const { data } = await axios.get(`/api/admin/projects/${projectId.value}`)
+
     form.value = {
       ...data,
       multimedia_grid: data.multimedia_grid || []
@@ -1083,27 +1084,24 @@ const loadProject = async () => {
       id: Date.now() + Math.random(),
       items: items.map(item => {
         const alt = item.title || item.description || item.link?.split('/').pop() || ''
-
         let link = item.link || ''
         let type = item.type
 
+        if (type === 'curtain') {
+          const first = item.first?.link || item.images?.[0]
+          const last = item.last?.link || item.images?.[1]
 
-        if (item.type === 'curtain') {
-        const first = item.first?.link || item.images?.[0]
-        const last = item.last?.link || item.images?.[1]
-
-        return {
+          return {
             title: alt,
             media: {
-                type: 'curtain',
-                images: [first, last].filter(Boolean),
-                titles: item.titles || []
-                }
+              type: 'curtain',
+              images: [first, last].filter(Boolean),
+              titles: item.titles || []
             }
+          }
         }
 
-        // 🔧 если iframe — значит VR
-        if (item.type === 'iframe') {
+        if (type === 'iframe') {
           type = 'vr'
           if (typeof link === 'string' && link.includes('<iframe')) {
             const match = link.match(/src=["']([^"']+)["']/)
@@ -1126,6 +1124,38 @@ const loadProject = async () => {
         }
       })
     }))
+
+    // 🔧 ДОБАВЛЕНИЕ ПУТИ ПАПКИ
+    const folderPath = `multimedia/${form.value.title.replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
+
+    gridRows.value.forEach(row => {
+      row.items.forEach(col => {
+        if (!col?.media) return
+
+        if (col.media.type === 'img' && col.media.link) {
+          col.media.link = `${folderPath}/${col.media.link.split('/').pop()}`
+        }
+
+        if (col.media.type === 'video') {
+          if (col.media.poster) {
+            col.media.poster = `${folderPath}/${col.media.poster.split('/').pop()}`
+          }
+          if (Array.isArray(col.media.links)) {
+            col.media.links = col.media.links.map(link => ({
+              ...link,
+              link: `${folderPath}/${link.link.split('/').pop()}`
+            }))
+          }
+        }
+
+        if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
+          col.media.images = col.media.images.map(img =>
+            `${folderPath}/${img.split('/').pop()}`
+          )
+        }
+      })
+    })
+
   } else {
     // при создании
     isEditing.value = false
