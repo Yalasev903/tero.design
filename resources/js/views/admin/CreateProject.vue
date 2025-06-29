@@ -1190,12 +1190,10 @@ onMounted(() => {
 // При возврате кэшированной вкладки
 onActivated(() => {
   const isCreate = route.path === '/projects/create'
-  const id = route.params.id ?? route.query.id
-
   if (isCreate) {
     resetForm()
-  } else if (id) {
-    loadProject(id)
+  } else {
+    loadProject()
   }
 })
 
