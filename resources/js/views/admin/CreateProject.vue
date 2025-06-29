@@ -197,7 +197,7 @@
         {{ previewSize.w }} × {{ previewSize.h }} px
         </div>
 
-        <img v-if="previewItem?.type === 'img'" :src="`/multimedia/${previewItem.link}`" class="preview-img" />
+        <img v-if="previewItem?.type === 'img'" :src="`/multimedia/${previewItem.link}?v=${Date.now()}`" class="preview-img" />
 
         <video
         v-else-if="previewItem?.type === 'video'"
@@ -923,6 +923,65 @@ const submit = async () => {
       ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
       res = await axios.post('/api/admin/projects', form.value)
+if (res?.data?.project?.multimedia_grid) {
+  form.value.multimedia_grid = res.data.project.multimedia_grid
+
+  // Преобразуем multimedia_grid → gridRows
+  gridRows.value = form.value.multimedia_grid.map(items => ({
+    id: Date.now() + Math.random(),
+    items: items.map(item => {
+      const alt = item.title || item.description || item.link?.split('/').pop() || ''
+      const type = item.type
+      let link = item.link || ''
+
+      if (type === 'curtain') {
+        return {
+          title: alt,
+          media: {
+            type: 'curtain',
+            images: item.images || [],
+            titles: item.titles || []
+          }
+        }
+      }
+
+      if (type === 'vr') {
+        return {
+          title: alt,
+          media: {
+            type: 'vr',
+            link: link,
+            width: item.width,
+            height: item.height
+          }
+        }
+      }
+
+      if (type === 'video') {
+        return {
+          title: alt,
+          media: {
+            type: 'video',
+            poster: item.poster || '',
+            links: item.links || []
+          }
+        }
+      }
+
+      if (type === 'img') {
+        return {
+          title: alt,
+          media: {
+            type: 'img',
+            link: link
+          }
+        }
+      }
+
+      return { title: alt, media: {} }
+    })
+  }))
+}
 
       const folderPath = res.data.folder
       sessionStorage.setItem('project-folder', folderPath)
