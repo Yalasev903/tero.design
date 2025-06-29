@@ -1124,7 +1124,7 @@ const loadProject = async () => {
       })
     }))
 
-    // 🛠 защита: если title нет, не вычисляем путь
+    // ✅ исправление путей с проверкой на дублирование multimedia/
     if (form.value.title) {
       const slug = form.value.title.trim().replace(/\s+/g, '-').toLowerCase()
       const folderPath = `multimedia/${slug}-${projectId.value}`
@@ -1133,31 +1133,39 @@ const loadProject = async () => {
         row.items.forEach(col => {
           if (!col?.media) return
 
-          if (col.media.type === 'img' && col.media.link) {
+          // IMG
+          if (col.media.type === 'img' && col.media.link && !col.media.link.includes(folderPath)) {
             col.media.link = `${folderPath}/${col.media.link.split('/').pop()}`
           }
 
+          // VIDEO
           if (col.media.type === 'video') {
-            if (col.media.poster) {
+            if (col.media.poster && !col.media.poster.includes(folderPath)) {
               col.media.poster = `${folderPath}/${col.media.poster.split('/').pop()}`
             }
             if (Array.isArray(col.media.links)) {
               col.media.links = col.media.links.map(link => ({
                 ...link,
-                link: `${folderPath}/${link.link.split('/').pop()}`
+                link: link.link.includes(folderPath)
+                  ? link.link
+                  : `${folderPath}/${link.link.split('/').pop()}`
               }))
             }
           }
 
+          // CURTAIN
           if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
             col.media.images = col.media.images.map(img =>
-              `${folderPath}/${img.split('/').pop()}`
+              img.includes(folderPath)
+                ? img
+                : `${folderPath}/${img.split('/').pop()}`
             )
           }
         })
       })
     }
   } else {
+    // Создание нового проекта
     isEditing.value = false
     projectId.value = null
     form.value = {
