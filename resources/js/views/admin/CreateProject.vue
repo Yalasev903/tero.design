@@ -1090,7 +1090,6 @@ const loadProject = async () => {
         if (type === 'curtain') {
           const first = item.first?.link || item.images?.[0]
           const last = item.last?.link || item.images?.[1]
-
           return {
             title: alt,
             media: {
@@ -1125,39 +1124,40 @@ const loadProject = async () => {
       })
     }))
 
-    // 🔧 ДОБАВЛЕНИЕ ПУТИ ПАПКИ
-    const folderPath = `multimedia/${form.value.title.replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
+    // 🛠 защита: если title нет, не вычисляем путь
+    if (form.value.title) {
+      const slug = form.value.title.trim().replace(/\s+/g, '-').toLowerCase()
+      const folderPath = `multimedia/${slug}-${projectId.value}`
 
-    gridRows.value.forEach(row => {
-      row.items.forEach(col => {
-        if (!col?.media) return
+      gridRows.value.forEach(row => {
+        row.items.forEach(col => {
+          if (!col?.media) return
 
-        if (col.media.type === 'img' && col.media.link) {
-          col.media.link = `${folderPath}/${col.media.link.split('/').pop()}`
-        }
-
-        if (col.media.type === 'video') {
-          if (col.media.poster) {
-            col.media.poster = `${folderPath}/${col.media.poster.split('/').pop()}`
+          if (col.media.type === 'img' && col.media.link) {
+            col.media.link = `${folderPath}/${col.media.link.split('/').pop()}`
           }
-          if (Array.isArray(col.media.links)) {
-            col.media.links = col.media.links.map(link => ({
-              ...link,
-              link: `${folderPath}/${link.link.split('/').pop()}`
-            }))
-          }
-        }
 
-        if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
-          col.media.images = col.media.images.map(img =>
-            `${folderPath}/${img.split('/').pop()}`
-          )
-        }
+          if (col.media.type === 'video') {
+            if (col.media.poster) {
+              col.media.poster = `${folderPath}/${col.media.poster.split('/').pop()}`
+            }
+            if (Array.isArray(col.media.links)) {
+              col.media.links = col.media.links.map(link => ({
+                ...link,
+                link: `${folderPath}/${link.link.split('/').pop()}`
+              }))
+            }
+          }
+
+          if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
+            col.media.images = col.media.images.map(img =>
+              `${folderPath}/${img.split('/').pop()}`
+            )
+          }
+        })
       })
-    })
-
+    }
   } else {
-    // при создании
     isEditing.value = false
     projectId.value = null
     form.value = {
