@@ -70,16 +70,16 @@
                     <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
                         <div class="media-thumb" @click="openPreview(col)">
                         <template v-if="col.media?.type === 'img'">
-                            <img :src="'/multimedia/' + col.media.link" class="grid-img" />
+                            <img :src="buildMediaUrl(col.media.link)" class="grid-img" />
                         </template>
 
                         <template v-else-if="col.media?.type === 'video'">
                             <video class="grid-video" autoplay muted loop playsinline preload="metadata"
-                            :poster="col.media.poster ? '/multimedia/' + col.media.poster : undefined">
+                            :poster="col.media.poster ? buildMediaUrl(col.media.poster) : undefined">
                             <source
                                 v-for="(link, i) in col.media.links || []"
                                 :key="i"
-                                :src="'/multimedia/' + link.link"
+                                :src="buildMediaUrl(link.link)"
                                 :type="link.mime || 'video/mp4'" />
                             </video>
                         </template>
@@ -101,12 +101,12 @@
                             <div class="curtain-wrapper with-animation">
                             <img
                                 class="curtain-img curtain-front"
-                                :src="'/multimedia/' + col.media.images[0]"
+                                :src="buildMediaUrl(col.media.images[0])"
                                 alt="Curtain image 1"
                             />
                             <img
                                 class="curtain-img curtain-back"
-                                :src="'/multimedia/' + col.media.images[1]"
+                                :src="buildMediaUrl(col.media.images[1])"
                                 alt="Curtain image 2"
                             />
                             </div>
@@ -167,14 +167,14 @@
         <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
             {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
         </div>
-        <img v-if="modalMediaPreview" :src="`/multimedia/${modalMediaPreview}`" class="preview-img" style="margin-top: 10px;" />
+        <img v-if="modalMediaPreview" :src="buildMediaUrl(modalMediaPreview)" class="preview-img" style="margin-top: 10px;" />
         </el-form-item>
 
         <el-form-item v-else-if="mediaType === 'video'" label="Видео">
         <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
         <div v-if="modalMediaPreview" style="margin-top: 10px;">
             <video autoplay muted loop playsinline controls style="max-width: 100%;">
-            <source :src="`/multimedia/${modalMediaPreview}`" />
+            <source  :src="buildMediaUrl(modalMediaPreview)" />
             </video>
         </div>
         </el-form-item>
@@ -199,7 +199,7 @@
 
         <img
             v-if="previewItem?.type === 'img' && previewItem.link"
-            :src="`/multimedia/${previewItem.link}?v=${Date.now()}`"
+            :src="buildMediaUrl(previewItem.link) + '?v=' + Date.now()"
             class="preview-img"
             />
 
@@ -212,11 +212,11 @@
         loop
         muted
         playsinline
-        :poster="previewItem.poster || previewItem.link ? `/multimedia/${previewItem.poster || previewItem.link}?v=${Date.now()}` : undefined">
+        :poster="previewItem.poster || previewItem.link ? buildMediaUrl(previewItem.poster || previewItem.link) + '?v=' + Date.now() : undefined">
         <source
             v-for="(link, i) in previewItem.links"
             :key="i"
-            :src="`/multimedia/${link.link}?v=${Date.now()}`"
+            :src="buildMediaUrl(link.link) + '?v=' + Date.now()"
             :type="link.mime || 'video/mp4'" />
         </video>
 
@@ -234,8 +234,8 @@
             <!-- Curtain-->
             <div v-else-if="previewItem?.type === 'curtain'" class="curtain-preview-container">
             <div class="curtain-preview">
-                <img class="curtain-img curtain-front" :src="`/multimedia/${previewItem.images[0]}`" />
-                <img class="curtain-img curtain-back" :src="`/multimedia/${previewItem.images[1]}`" />
+                <img class="curtain-img curtain-front"  :src="buildMediaUrl(previewItem.images[0])" />
+                <img class="curtain-img curtain-back" :src="buildMediaUrl(previewItem.images[1])" />
                 <div class="curtain-slider" ref="curtainSlider" @mousedown="startCurtainDrag" />
             </div>
             </div>
@@ -409,6 +409,10 @@ const modalMediaTitle = ref('')
 const modalMediaPreview = ref('')
 const modalMediaSize = ref({ w: null, h: null })
 const isEditingMedia = ref(false)
+
+const buildMediaUrl = (link) => {
+  return link.startsWith('multimedia/') ? `/${link}` : `/multimedia/${link}`
+}
 
 // вызвать модалку
 const openMediaModal = (type, isEdit = false) => {
@@ -1124,31 +1128,31 @@ const loadProject = async () => {
       })
     }))
 
-    // ✅ исправление путей с проверкой на дублирование multimedia/
+    // ✅ Исправление: добавляем multimedia/ только если путь ещё не содержит подпапку
     if (form.value.title) {
-      const slug = form.value.title.trim().replace(/\s+/g, '-').toLowerCase()
-      const folderPath = `multimedia/${slug}-${projectId.value}`
+      const folder = `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
 
       gridRows.value.forEach(row => {
         row.items.forEach(col => {
           if (!col?.media) return
 
           // IMG
-          if (col.media.type === 'img' && col.media.link && !col.media.link.includes(folderPath)) {
-            col.media.link = `${folderPath}/${col.media.link.split('/').pop()}`
+          if (col.media.type === 'img' && col.media.link && !col.media.link.includes(folder)) {
+            col.media.link = `multimedia/${folder}/${col.media.link.split('/').pop()}`
           }
 
           // VIDEO
           if (col.media.type === 'video') {
-            if (col.media.poster && !col.media.poster.includes(folderPath)) {
-              col.media.poster = `${folderPath}/${col.media.poster.split('/').pop()}`
+            if (col.media.poster && !col.media.poster.includes(folder)) {
+              col.media.poster = `multimedia/${folder}/${col.media.poster.split('/').pop()}`
             }
+
             if (Array.isArray(col.media.links)) {
               col.media.links = col.media.links.map(link => ({
                 ...link,
-                link: link.link.includes(folderPath)
+                link: link.link.includes(folder)
                   ? link.link
-                  : `${folderPath}/${link.link.split('/').pop()}`
+                  : `multimedia/${folder}/${link.link.split('/').pop()}`
               }))
             }
           }
@@ -1156,14 +1160,15 @@ const loadProject = async () => {
           // CURTAIN
           if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
             col.media.images = col.media.images.map(img =>
-              img.includes(folderPath)
+              img.includes(folder)
                 ? img
-                : `${folderPath}/${img.split('/').pop()}`
+                : `multimedia/${folder}/${img.split('/').pop()}`
             )
           }
         })
       })
     }
+
   } else {
     // Создание нового проекта
     isEditing.value = false
