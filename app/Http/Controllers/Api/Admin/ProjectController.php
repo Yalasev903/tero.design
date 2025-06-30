@@ -72,10 +72,13 @@ class ProjectController extends Controller
         }
     }
 
-    private function moveMediaToFolder(array $col, string $folderPath): array
+    private function moveMediaToFolder(array $col, string $folderPath, array &$movedFiles = []): array
     {
-        $move = function ($path) use ($folderPath) {
-            $oldPath = public_path("multimedia/" . ltrim($path, '/'));
+        $move = function ($path) use ($folderPath, &$movedFiles) {
+            $path = ltrim($path, '/');
+            if (Str::startsWith($path, $folderPath)) return $path;
+
+            $oldPath = public_path("multimedia/$path");
             $filename = basename($path);
             $newPath = "$folderPath/$filename";
             $newFullPath = public_path($newPath);
@@ -84,10 +87,16 @@ class ProjectController extends Controller
                 throw new \Exception("Файл не найден: $oldPath");
             }
 
+            // Проверка: если уже перемещён
+            if ($oldPath === $newFullPath || file_exists($newFullPath)) {
+                return $newPath;
+            }
+
             if (!File::move($oldPath, $newFullPath)) {
                 throw new \Exception("Ошибка при перемещении: $oldPath → $newFullPath");
             }
 
+            $movedFiles[] = "$oldPath → $newPath";
             return $newPath;
         };
 
@@ -95,6 +104,7 @@ class ProjectController extends Controller
             case 'img':
                 $col['link'] = $move($col['link']);
                 break;
+
             case 'video':
                 if (!empty($col['poster'])) {
                     $col['poster'] = $move($col['poster']);
@@ -105,6 +115,7 @@ class ProjectController extends Controller
                     }
                 }
                 break;
+
             case 'curtain':
                 if (!empty($col['images']) && is_array($col['images'])) {
                     foreach ($col['images'] as &$img) {
@@ -143,9 +154,58 @@ class ProjectController extends Controller
             'multimedia_grid' => 'nullable|array',
         ]);
 
-        $project->update($data);
+        try {
+            DB::beginTransaction();
 
-        return response()->json($project);
+            // Обновляем поля проекта
+            $project->update($data);
+
+            $folderName = Str::slug($project->title) . '-' . $project->id;
+            $folderPath = "multimedia/$folderName";
+
+            // Создаём папку, если её ещё нет
+            if (!Storage::disk('multimedia')->exists($folderName)) {
+                $created = Storage::disk('multimedia')->makeDirectory($folderName);
+                if (!$created) throw new \Exception("Ошибка при создании папки '$folderPath'");
+            }
+
+            $movedFiles = [];
+
+            // Перемещаем медиафайлы если нужно
+            if (!empty($data['multimedia_grid'])) {
+                foreach ($data['multimedia_grid'] as $rowIndex => $row) {
+                    foreach ($row as $colIndex => $col) {
+                        try {
+                            $data['multimedia_grid'][$rowIndex][$colIndex] = $this->moveMediaToFolder($col, $folderPath, $movedFiles);
+                        } catch (\Throwable $e) {
+                            Log::warning('Ошибка перемещения файла: ' . $e->getMessage());
+                        }
+                    }
+                }
+
+                // Обновляем мультимедиа
+                $project->update([
+                    'multimedia_grid' => $data['multimedia_grid'],
+                ]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message' => "Проект '{$project->title}' успешно обновлён",
+                'project' => $project,
+                'folder' => $folderPath,
+                'moved_files' => $movedFiles
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('Ошибка обновления проекта: ' . $e->getMessage());
+
+            return response()->json([
+                'message' => 'Ошибка обновления проекта',
+                'errors' => [$e->getMessage()],
+            ], 500);
+        }
     }
 
     public function destroy($id)

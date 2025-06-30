@@ -926,8 +926,10 @@ const submit = async () => {
     )
 
     let res
-    if (isEditing.value) {
-      await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
+    const isEdit = isEditing.value
+
+    if (isEdit) {
+      res = await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
       ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
       res = await axios.post('/api/admin/projects', form.value)
@@ -1026,25 +1028,34 @@ const submit = async () => {
         })
       }
 
-      // Уведомление о создании проекта
       ElNotification({
         title: `Проект создан: ${res.data.project.title}`,
         message: `Папка создана: ${folderPath}`,
         type: 'success',
         duration: 8000
       })
+    }
 
-      // Если есть ошибки перемещения
-      if (res.data.errors && res.data.errors.length) {
-        res.data.errors.forEach(msg => {
-          ElNotification({
-            title: 'Ошибка перемещения файла',
-            message: msg,
-            type: 'warning',
-            duration: 8000
-          })
+    // ✅ Если были перемещённые файлы — уведомим
+    if (res?.data?.moved_files?.length) {
+      ElNotification({
+        title: 'Файлы перемещены',
+        message: `Перемещено файлов: ${res.data.moved_files.length}`,
+        type: 'success',
+        duration: 8000
+      })
+    }
+
+    // 🟡 Если были ошибки перемещения
+    if (res?.data?.errors?.length) {
+      res.data.errors.forEach(msg => {
+        ElNotification({
+          title: 'Ошибка перемещения файла',
+          message: msg,
+          type: 'warning',
+          duration: 8000
         })
-      }
+      })
     }
 
     // Переход на список
