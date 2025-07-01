@@ -70,19 +70,22 @@
                     <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
                         <div class="media-thumb" @click="openPreview(col)">
                         <template v-if="col.media?.type === 'img'">
-                            <img :src="buildMediaUrl(col.media.link)" class="grid-img" />
+                            <img :src="buildMediaUrl(col.media.link)" :key="col.media?.__v || colIdx" class="grid-img" />
                         </template>
 
                         <template v-else-if="col.media?.type === 'video'">
-                            <video class="grid-video" autoplay muted loop playsinline preload="metadata"
-                            :poster="col.media.poster ? buildMediaUrl(col.media.poster) : undefined">
-                            <source
+                            <video
+                                class="grid-video"
+                                :key="col.media?.__v || colIdx"
+                                autoplay muted loop playsinline preload="metadata"
+                                :poster="col.media.poster ? buildMediaUrl(col.media.poster) : undefined">
+                                <source
                                 v-for="(link, i) in col.media.links || []"
                                 :key="i"
                                 :src="buildMediaUrl(link.link)"
                                 :type="link.mime || 'video/mp4'" />
                             </video>
-                        </template>
+                            </template>
 
                         <template v-else-if="col.media?.type === 'vr'">
                             <iframe
@@ -597,14 +600,19 @@ console.log('>> FILE SELECTED:', JSON.stringify({ selectedCell: selectedCell.val
     const row = gridRows.value[selectedCell.value.rowIdx]
     const col = row.items[selectedCell.value.colIdx]
 
-    if (isVideo) {
-      col.media = {
+     if (isVideo) {
+    col.media = {
         type: 'video',
         poster: '',
-        links: [{ link: path, mime: file.mime || 'video/mp4' }]
-      }
+        links: [{ link: path, mime: file.mime || 'video/mp4' }],
+        __v: Date.now()
+    }
     } else if (isImage) {
-      col.media = { type: 'img', link: path }
+    col.media = {
+        type: 'img',
+        link: path,
+        __v: Date.now()
+    }
     } else {
       col.media = {}
     }
@@ -680,25 +688,34 @@ const confirmMediaInsert = () => {
     return
   }
 
-  const newMedia =
+  const media =
     mediaType.value === 'img'
-      ? { type: 'img', link: modalMediaPreview.value }
+      ? {
+          type: 'img',
+          link: modalMediaPreview.value,
+          __v: Date.now()
+        }
       : mediaType.value === 'video'
       ? {
           type: 'video',
           poster: '',
-          links: [{ link: modalMediaPreview.value, mime: 'video/mp4' }]
+          links: [{
+            link: modalMediaPreview.value,
+            mime: 'video/mp4'
+          }],
+          __v: Date.now()
         }
       : {}
 
   if (isEditingMedia.value && typeof colIdx === 'number') {
     const col = gridRows.value[rowIdx].items[colIdx]
-    col.media = newMedia
+    col.media = media
     col.title = modalMediaTitle.value || ''
   } else {
     gridRows.value[rowIdx].items.push({
       title: modalMediaTitle.value || '',
-      media: newMedia
+      media,
+      __v: Date.now()
     })
   }
 
