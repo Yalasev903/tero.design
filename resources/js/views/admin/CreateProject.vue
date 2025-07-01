@@ -427,10 +427,8 @@ const isEditingMedia = ref(false)
 
 const buildMediaUrl = (link) => {
   if (!link) return ''
-  if (link.startsWith('http')) return link
-  if (link.startsWith('/')) return link
-  if (link.startsWith('multimedia/')) return `/${link}`
-  return `/multimedia/${link}`
+  if (link.startsWith('http') || link.startsWith('/')) return link
+  return link.includes('multimedia/') ? `/${link}` : `/multimedia/${link}`
 }
 
 // вызвать модалку
@@ -1182,46 +1180,55 @@ const loadProject = async () => {
       })
     }))
 
-    // ✅ Исправление: добавляем multimedia/ только если путь ещё не содержит подпапку
-    if (form.value.title) {
-      const folder = `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
+    const folder = form.value.title
+      ? `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
+      : null
 
-      gridRows.value.forEach(row => {
-        row.items.forEach(col => {
-          if (!col?.media) return
+    gridRows.value.forEach(row => {
+      row.items.forEach(col => {
+        if (!col?.media) return
 
-          // IMG
-          if (col.media.type === 'img' && col.media.link && !col.media.link.includes(folder)) {
+        // IMG
+        if (col.media.type === 'img' && col.media.link) {
+          if (!col.media.link.includes('/')) {
+            col.media.link = `multimedia/${col.media.link}`
+          } else if (folder && !col.media.link.includes(folder)) {
             col.media.link = `multimedia/${folder}/${col.media.link.split('/').pop()}`
           }
+        }
 
-          // VIDEO
-          if (col.media.type === 'video') {
-            if (col.media.poster && !col.media.poster.includes(folder)) {
+        // VIDEO
+        if (col.media.type === 'video') {
+          if (col.media.poster) {
+            if (!col.media.poster.includes('/')) {
+              col.media.poster = `multimedia/${col.media.poster}`
+            } else if (folder && !col.media.poster.includes(folder)) {
               col.media.poster = `multimedia/${folder}/${col.media.poster.split('/').pop()}`
             }
+          }
 
-            if (Array.isArray(col.media.links)) {
-              col.media.links = col.media.links.map(link => ({
-                ...link,
-                link: link.link.includes(folder)
-                  ? link.link
-                  : `multimedia/${folder}/${link.link.split('/').pop()}`
-              }))
+          if (Array.isArray(col.media.links)) {
+            col.media.links = col.media.links.map(link => ({
+              ...link,
+              link: link.link.includes('/')
+                ? link.link
+                : `multimedia/${link.link}`
+            }))
+          }
+        }
+
+        // CURTAIN
+        if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
+          col.media.images = col.media.images.map(img => {
+            if (!img.includes('/')) return `multimedia/${img}`
+            if (folder && !img.includes(folder)) {
+              return `multimedia/${folder}/${img.split('/').pop()}`
             }
-          }
-
-          // CURTAIN
-          if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
-            col.media.images = col.media.images.map(img =>
-              img.includes(folder)
-                ? img
-                : `multimedia/${folder}/${img.split('/').pop()}`
-            )
-          }
-        })
+            return img
+          })
+        }
       })
-    }
+    })
 
   } else {
     // Создание нового проекта
