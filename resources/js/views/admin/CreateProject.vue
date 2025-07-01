@@ -1,6 +1,17 @@
 <template>
   <div class="project-create-page">
     <h2 class="page-title">{{ isEditing ? 'Редактирование проекта' : 'Создание проекта' }}</h2>
+
+<template v-if="projectLink">
+  <div style="margin-bottom: 12px;">
+    <el-alert type="success" show-icon>
+      <template #title>
+        Проект создан. <a :href="projectLink" target="_blank" style="text-decoration: underline">Открыть проект</a>
+      </template>
+    </el-alert>
+  </div>
+</template>
+
     <SeoProject :title="'SEO для проекта'" :model="form" />
     <el-form :model="form" label-position="top" @submit.prevent="submit">
       <el-form-item label="Название проекта">
@@ -379,6 +390,8 @@ const inputSize = inject('inputSize')
 
 const curtainTitle1 = ref('')
 const curtainTitle2 = ref('')
+
+const projectLink = ref('')
 
 const route = useRoute(), router = useRouter()
 const openTab = inject('openTab'), tabsMode = inject('tabsMode')
@@ -946,6 +959,7 @@ const extractIframeSrc = (html) => {
 // =====================
 const submit = async () => {
   try {
+    // Подготовка структуры мультимедиа
     form.value.multimedia_grid = gridRows.value.map(row =>
       row.items.map(col => {
         const base = {
@@ -973,20 +987,20 @@ const submit = async () => {
       res = await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
       ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
-      // Создание нового проекта
+      // 🆕 Создание проекта
       res = await axios.post('/api/admin/projects', form.value)
 
       const folderPath = res.data.folder
       const newProjectId = res.data.project.id
 
-      // Сохраняем в sessionStorage
       sessionStorage.setItem('project-folder', folderPath)
 
-      // Обновляем локальные переменные
       projectId.value = newProjectId
       isEditing.value = true
 
-      // Заново загружаем проект для корректных ссылок на изображения и видео
+      // Устанавливаем ссылку на проект
+      projectLink.value = `${window.location.origin}/projects/${newProjectId}`
+
       await loadProject()
 
       ElNotification({
@@ -997,7 +1011,7 @@ const submit = async () => {
       })
     }
 
-    // ✅ Если были перемещённые файлы — уведомим
+    // 📦 Перемещённые файлы
     if (res?.data?.moved_files?.length) {
       ElNotification({
         title: 'Файлы перемещены',
@@ -1007,7 +1021,7 @@ const submit = async () => {
       })
     }
 
-    // 🟡 Если были ошибки перемещения
+    // ⚠️ Ошибки перемещения
     if (res?.data?.errors?.length) {
       res.data.errors.forEach(msg => {
         ElNotification({
@@ -1019,7 +1033,7 @@ const submit = async () => {
       })
     }
 
-    // Переход на список
+    // ✅ Переход на список (если tabsMode выключен — можно остаться)
     if (tabsMode?.value && openTab) {
       openTab({ path: '/projects/list', label: 'Список проектов', component: Projects })
     } else {
