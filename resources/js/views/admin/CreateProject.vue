@@ -170,10 +170,18 @@
         <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
             {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
         </div>
-        <img v-if="modalMediaPreview" :src="buildMediaUrl(modalMediaPreview)" class="preview-img" style="margin-top: 10px;" />
+        <img
+            v-if="modalMediaPreview"
+            :key="modalMediaPreview"
+            :src="buildMediaUrl(modalMediaPreview)"
+            class="preview-img"
+            style="margin-top: 10px;" />
         </el-form-item>
 
         <el-form-item v-else-if="mediaType === 'video'" label="Видео">
+                    <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
+            {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
+        </div>
         <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
         <div v-if="modalMediaPreview" style="margin-top: 10px;">
             <video
