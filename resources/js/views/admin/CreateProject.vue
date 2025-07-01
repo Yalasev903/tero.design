@@ -1125,6 +1125,15 @@ const submit = async () => {
   }
 }
 
+const fileExists = async (path) => {
+  try {
+    await axios.head(path)
+    return true
+  } catch {
+    return false
+  }
+}
+
 const loadProject = async () => {
   if (route.name === 'EditProject') {
     isEditing.value = true
@@ -1136,21 +1145,29 @@ const loadProject = async () => {
       multimedia_grid: data.multimedia_grid || []
     }
 
-    gridRows.value = form.value.multimedia_grid.map(items => ({
-      id: Date.now() + Math.random(),
-      items: items.map(item => {
+    const rawFolder = form.value.title
+      ? form.value.title.trim().replace(/\s+/g, '-').toLowerCase()
+      : ''
+    const folderWithId = `${rawFolder}-${projectId.value}`
+
+    gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
+      const rowItems = await Promise.all(items.map(async item => {
         const alt = item.title || item.description || item.link?.split('/').pop() || ''
-        let link = item.link || ''
         let type = item.type
+        let link = item.link || ''
 
         if (type === 'curtain') {
-          const first = item.first?.link || item.images?.[0]
-          const last = item.last?.link || item.images?.[1]
+          const images = item.images || []
+          const resolvedImages = await Promise.all(images.map(async img => {
+            const base = img.includes('/') ? img : `multimedia/${img}`
+            const withFolder = `multimedia/${folderWithId}/${img.split('/').pop()}`
+            return await fileExists(`/${withFolder}`) ? withFolder : base
+          }))
           return {
             title: alt,
             media: {
               type: 'curtain',
-              images: [first, last].filter(Boolean),
+              images: resolvedImages,
               titles: item.titles || []
             }
           }
@@ -1164,74 +1181,68 @@ const loadProject = async () => {
           }
         }
 
+        if (type === 'img') {
+          const base = link.includes('/') ? link : `multimedia/${link}`
+          const withFolder = `multimedia/${folderWithId}/${link.split('/').pop()}`
+          link = await fileExists(`/${withFolder}`) ? withFolder : base
+        }
+
+        if (type === 'video') {
+          // poster
+          let poster = item.poster || ''
+          if (poster) {
+            const base = poster.includes('/') ? poster : `multimedia/${poster}`
+            const withFolder = `multimedia/${folderWithId}/${poster.split('/').pop()}`
+            poster = await fileExists(`/${withFolder}`) ? withFolder : base
+          }
+
+          // links
+          const links = await Promise.all(
+            (item.links || []).map(async video => {
+              const base = video.link.includes('/') ? video.link : `multimedia/${video.link}`
+              const withFolder = `multimedia/${folderWithId}/${video.link.split('/').pop()}`
+              const resolved = await fileExists(`/${withFolder}`) ? withFolder : base
+              return { ...video, link: resolved }
+            })
+          )
+
+          return {
+            title: alt,
+            media: {
+              type: 'video',
+              poster,
+              links
+            }
+          }
+        }
+
+        if (type === 'vr') {
+          return {
+            title: alt,
+            media: {
+              type: 'vr',
+              link,
+              width: item.width || null,
+              height: item.height || null
+            }
+          }
+        }
+
         return {
           title: alt,
           media: {
             type,
-            link,
-            poster: item.poster || '',
-            links: item.links || [],
-            description: item.description || '',
-            width: item.width || null,
-            height: item.height || null,
-            images: item.images || []
+            link
           }
         }
-      })
+      }))
+      return {
+        id: Date.now() + Math.random(),
+        items: rowItems
+      }
     }))
-
-    const folder = form.value.title
-      ? `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
-      : null
-
-    gridRows.value.forEach(row => {
-      row.items.forEach(col => {
-        if (!col?.media) return
-
-        // IMG
-        if (col.media.type === 'img' && col.media.link) {
-          if (!col.media.link.includes('/')) {
-            col.media.link = `multimedia/${col.media.link}`
-          } else if (folder && !col.media.link.includes(folder)) {
-            col.media.link = `multimedia/${folder}/${col.media.link.split('/').pop()}`
-          }
-        }
-
-        // VIDEO
-        if (col.media.type === 'video') {
-          if (col.media.poster) {
-            if (!col.media.poster.includes('/')) {
-              col.media.poster = `multimedia/${col.media.poster}`
-            } else if (folder && !col.media.poster.includes(folder)) {
-              col.media.poster = `multimedia/${folder}/${col.media.poster.split('/').pop()}`
-            }
-          }
-
-          if (Array.isArray(col.media.links)) {
-            col.media.links = col.media.links.map(link => ({
-              ...link,
-              link: link.link.includes('/')
-                ? link.link
-                : `multimedia/${link.link}`
-            }))
-          }
-        }
-
-        // CURTAIN
-        if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
-          col.media.images = col.media.images.map(img => {
-            if (!img.includes('/')) return `multimedia/${img}`
-            if (folder && !img.includes(folder)) {
-              return `multimedia/${folder}/${img.split('/').pop()}`
-            }
-            return img
-          })
-        }
-      })
-    })
-
   } else {
-    // Создание нового проекта
+    // Новый проект
     isEditing.value = false
     projectId.value = null
     form.value = {
