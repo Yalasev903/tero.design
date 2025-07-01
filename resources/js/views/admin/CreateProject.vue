@@ -176,8 +176,12 @@
         <el-form-item v-else-if="mediaType === 'video'" label="Видео">
         <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
         <div v-if="modalMediaPreview" style="margin-top: 10px;">
-            <video autoplay muted loop playsinline controls style="max-width: 100%;">
-            <source  :src="buildMediaUrl(modalMediaPreview)" />
+            <video
+                :key="modalMediaPreview"
+                autoplay muted loop playsinline controls
+                style="max-width: 100%;"
+                >
+                <source :src="buildMediaUrl(modalMediaPreview)" />
             </video>
         </div>
         </el-form-item>
