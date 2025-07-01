@@ -1135,6 +1135,8 @@ const fileExists = async (path) => {
 }
 
 const loadProject = async () => {
+  let folderWithId = null
+
   if (route.name === 'EditProject') {
     isEditing.value = true
     projectId.value = route.params.id
@@ -1148,99 +1150,7 @@ const loadProject = async () => {
     const rawFolder = form.value.title
       ? form.value.title.trim().replace(/\s+/g, '-').toLowerCase()
       : ''
-    const folderWithId = `${rawFolder}-${projectId.value}`
-
-    gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
-      const rowItems = await Promise.all(items.map(async item => {
-        const alt = item.title || item.description || item.link?.split('/').pop() || ''
-        let type = item.type
-        let link = item.link || ''
-
-        if (type === 'curtain') {
-          const images = item.images || []
-          const resolvedImages = await Promise.all(images.map(async img => {
-            const base = img.includes('/') ? img : `multimedia/${img}`
-            const withFolder = `multimedia/${folderWithId}/${img.split('/').pop()}`
-            return await fileExists(`/${withFolder}`) ? withFolder : base
-          }))
-          return {
-            title: alt,
-            media: {
-              type: 'curtain',
-              images: resolvedImages,
-              titles: item.titles || []
-            }
-          }
-        }
-
-        if (type === 'iframe') {
-          type = 'vr'
-          if (typeof link === 'string' && link.includes('<iframe')) {
-            const match = link.match(/src=["']([^"']+)["']/)
-            link = match ? match[1] : ''
-          }
-        }
-
-        if (type === 'img') {
-          const base = link.includes('/') ? link : `multimedia/${link}`
-          const withFolder = `multimedia/${folderWithId}/${link.split('/').pop()}`
-          link = await fileExists(`/${withFolder}`) ? withFolder : base
-        }
-
-        if (type === 'video') {
-          // poster
-          let poster = item.poster || ''
-          if (poster) {
-            const base = poster.includes('/') ? poster : `multimedia/${poster}`
-            const withFolder = `multimedia/${folderWithId}/${poster.split('/').pop()}`
-            poster = await fileExists(`/${withFolder}`) ? withFolder : base
-          }
-
-          // links
-          const links = await Promise.all(
-            (item.links || []).map(async video => {
-              const base = video.link.includes('/') ? video.link : `multimedia/${video.link}`
-              const withFolder = `multimedia/${folderWithId}/${video.link.split('/').pop()}`
-              const resolved = await fileExists(`/${withFolder}`) ? withFolder : base
-              return { ...video, link: resolved }
-            })
-          )
-
-          return {
-            title: alt,
-            media: {
-              type: 'video',
-              poster,
-              links
-            }
-          }
-        }
-
-        if (type === 'vr') {
-          return {
-            title: alt,
-            media: {
-              type: 'vr',
-              link,
-              width: item.width || null,
-              height: item.height || null
-            }
-          }
-        }
-
-        return {
-          title: alt,
-          media: {
-            type,
-            link
-          }
-        }
-      }))
-      return {
-        id: Date.now() + Math.random(),
-        items: rowItems
-      }
-    }))
+    folderWithId = `${rawFolder}-${projectId.value}`
   } else {
     // Новый проект
     isEditing.value = false
@@ -1255,7 +1165,104 @@ const loadProject = async () => {
       multimedia_grid: []
     }
     gridRows.value = []
+
+    const folderFromStorage = sessionStorage.getItem('project-folder')
+    if (folderFromStorage) {
+      folderWithId = folderFromStorage.replace(/^multimedia\//, '')
+    } else {
+      return // нет папки → нечего грузить
+    }
   }
+
+  gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
+    const rowItems = await Promise.all(items.map(async item => {
+      const alt = item.title || item.description || item.link?.split('/').pop() || ''
+      let type = item.type
+      let link = item.link || ''
+
+      if (type === 'curtain') {
+        const images = item.images || []
+        const resolvedImages = await Promise.all(images.map(async img => {
+          const base = img.includes('/') ? img : `multimedia/${img}`
+          const withFolder = `multimedia/${folderWithId}/${img.split('/').pop()}`
+          return await fileExists(`/${withFolder}`) ? withFolder : base
+        }))
+        return {
+          title: alt,
+          media: {
+            type: 'curtain',
+            images: resolvedImages,
+            titles: item.titles || []
+          }
+        }
+      }
+
+      if (type === 'iframe') {
+        type = 'vr'
+        if (typeof link === 'string' && link.includes('<iframe')) {
+          const match = link.match(/src=["']([^"']+)["']/)
+          link = match ? match[1] : ''
+        }
+      }
+
+      if (type === 'img') {
+        const base = link.includes('/') ? link : `multimedia/${link}`
+        const withFolder = `multimedia/${folderWithId}/${link.split('/').pop()}`
+        link = await fileExists(`/${withFolder}`) ? withFolder : base
+      }
+
+      if (type === 'video') {
+        let poster = item.poster || ''
+        if (poster) {
+          const base = poster.includes('/') ? poster : `multimedia/${poster}`
+          const withFolder = `multimedia/${folderWithId}/${poster.split('/').pop()}`
+          poster = await fileExists(`/${withFolder}`) ? withFolder : base
+        }
+
+        const links = await Promise.all(
+          (item.links || []).map(async video => {
+            const base = video.link.includes('/') ? video.link : `multimedia/${video.link}`
+            const withFolder = `multimedia/${folderWithId}/${video.link.split('/').pop()}`
+            const resolved = await fileExists(`/${withFolder}`) ? withFolder : base
+            return { ...video, link: resolved }
+          })
+        )
+
+        return {
+          title: alt,
+          media: {
+            type: 'video',
+            poster,
+            links
+          }
+        }
+      }
+
+      if (type === 'vr') {
+        return {
+          title: alt,
+          media: {
+            type: 'vr',
+            link,
+            width: item.width || null,
+            height: item.height || null
+          }
+        }
+      }
+
+      return {
+        title: alt,
+        media: {
+          type,
+          link
+        }
+      }
+    }))
+    return {
+      id: Date.now() + Math.random(),
+      items: rowItems
+    }
+  }))
 }
 
 watch(form, (newVal) => {
