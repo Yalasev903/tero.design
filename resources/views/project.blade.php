@@ -1,27 +1,3 @@
-@extends('layouts.app')
-
-@section('title', $project->meta_title ?? $project->title)
-@section('description', $project->meta_description)
-@section('keywords', $project->meta_keywords)
-
-@section('content')
-<div class="project">
-  <div class="project-head row2">
-    <h1 class="project-title">{{ $project->title }}</h1>
-
-      <a href="{{ route('home') }}#js-grid-item{{ $project->id }}" class="project-back-icon">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="48" height="48" fill="#fff">
-            <path d="M136.97 380.485l7.071-7.07c4.686-4.686 4.686-12.284 0-16.971L60.113 273H436c6.627 0 12-5.373 12-12v-10c0-6.627-5.373-12-12-12H60.113l83.928-83.444c4.686-4.686 4.686-12.284 0-16.971l-7.071-7.07c-4.686-4.686-12.284-4.686-16.97 0l-116.485 116c-4.686 4.686-4.686 12.284 0 16.971l116.485 116c4.686 4.686 12.284 4.686 16.97-.001z"/>
-            </svg>
-        </a>
-  </div>
-
-  <div class="project-description">
-    <div class="project-description-col">{!! $project->text1 !!}</div>
-    <div class="project-description-col">{!! $project->text2 !!}</div>
-  </div>
-</div>
-
 <div class="grid" id="js-gallery">
   @php $grid = $project->multimedia_grid; @endphp
 
@@ -31,14 +7,17 @@
         @php
           $w = $col['width'] ?? $col['first']['width'] ?? 1920;
           $h = $col['height'] ?? $col['first']['height'] ?? 1080;
+
+          // Универсальный хелпер для путей
+          $mediaPath = fn($path) => str_starts_with($path, 'multimedia/') ? '/' . $path : '/multimedia/' . ltrim($path, '/');
         @endphp
 
         @switch($col['type'])
 
           @case('img')
-            <a href="/multimedia/{{ $col['link'] }}" class="grid-item grid-item-img js-img"
+            <a href="{{ $mediaPath($col['link']) }}" class="grid-item grid-item-img js-img"
                data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <img data-src="/multimedia/{{ $col['link'] }}" alt="{{ $col['description'] ?? '' }}" class="js-grid-item-media tero-lazy-load">
+              <img data-src="{{ $mediaPath($col['link']) }}" alt="{{ $col['description'] ?? '' }}" class="js-grid-item-media tero-lazy-load">
             </a>
             @break
 
@@ -46,34 +25,34 @@
             <div class="grid-item" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
               <video preload="metadata" playsinline muted loop autoplay class="js-grid-item-media tero-lazy-load">
                 @foreach ($col['links'] ?? [] as $source)
-                  <source data-src="/multimedia/{{ $source['link'] }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+                  <source data-src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
                 @endforeach
               </video>
             </div>
             @break
 
-            @case('curtain')
+          @case('curtain')
             @php
                 $isNewFormat = isset($col['images']);
-                $img1 = '/multimedia/' . ($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
-                $img2 = '/multimedia/' . ($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
+                $img1 = $mediaPath($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
+                $img2 = $mediaPath($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
                 $width = $col['width'] ?? ($isNewFormat ? 1920 : ($col['first']['width'] ?? 1920));
                 $height = $col['height'] ?? ($isNewFormat ? 1080 : ($col['first']['height'] ?? 1080));
             @endphp
             <div class="grid-item curtain-container"
-                data-img1="{{ asset($img1) }}"
-                data-img2="{{ asset($img2) }}"
+                data-img1="{{ asset(ltrim($img1, '/')) }}"
+                data-img2="{{ asset(ltrim($img2, '/')) }}"
                 data-media-width="{{ $width }}"
                 data-media-height="{{ $height }}">
-            <canvas class="curtain-canvas"></canvas>
-            <div class="curtain-handle">
+              <canvas class="curtain-canvas"></canvas>
+              <div class="curtain-handle">
                 <span class="curtain-arrow left">←</span>
                 <span class="curtain-arrow right">→</span>
-            </div>
+              </div>
             </div>
             @break
 
-            @case('vr')
+          @case('vr')
             @php
               $iframeSrc = $col['link'];
               if (!str_starts_with($iframeSrc, '<iframe')) {
