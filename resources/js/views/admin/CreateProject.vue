@@ -973,101 +973,21 @@ const submit = async () => {
       res = await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
       ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
+      // Создание нового проекта
       res = await axios.post('/api/admin/projects', form.value)
 
-      if (res?.data?.project?.multimedia_grid) {
-        form.value.multimedia_grid = res.data.project.multimedia_grid
-
-        // Преобразуем multimedia_grid → gridRows
-        gridRows.value = form.value.multimedia_grid.map(items => ({
-          id: Date.now() + Math.random(),
-          items: items.map(item => {
-            const alt = item.title || item.description || item.link?.split('/').pop() || ''
-            const type = item.type
-            let link = item.link || ''
-
-            if (type === 'curtain') {
-              return {
-                title: alt,
-                media: {
-                  type: 'curtain',
-                  images: item.images || [],
-                  titles: item.titles || []
-                }
-              }
-            }
-
-            if (type === 'vr') {
-              return {
-                title: alt,
-                media: {
-                  type: 'vr',
-                  link: link,
-                  width: item.width,
-                  height: item.height
-                }
-              }
-            }
-
-            if (type === 'video') {
-              return {
-                title: alt,
-                media: {
-                  type: 'video',
-                  poster: item.poster || '',
-                  links: item.links || []
-                }
-              }
-            }
-
-            if (type === 'img') {
-              return {
-                title: alt,
-                media: {
-                  type: 'img',
-                  link: link
-                }
-              }
-            }
-
-            return { title: alt, media: {} }
-          })
-        }))
-      }
-
       const folderPath = res.data.folder
+      const newProjectId = res.data.project.id
+
+      // Сохраняем в sessionStorage
       sessionStorage.setItem('project-folder', folderPath)
 
-      // 🔧 Обновляем пути к медиа в gridRows
-      if (folderPath) {
-        gridRows.value.forEach(row => {
-          row.items.forEach(col => {
-            if (!col?.media) return
+      // Обновляем локальные переменные
+      projectId.value = newProjectId
+      isEditing.value = true
 
-            if (col.media.type === 'img' && col.media.link) {
-              col.media.link = `${folderPath}/${col.media.link.split('/').pop()}`
-            }
-
-            if (col.media.type === 'video') {
-              if (col.media.poster) {
-                col.media.poster = `${folderPath}/${col.media.poster.split('/').pop()}`
-              }
-              if (Array.isArray(col.media.links)) {
-                col.media.links = col.media.links.map(link => ({
-                  ...link,
-                  link: `${folderPath}/${link.link.split('/').pop()}`
-                }))
-              }
-            }
-
-            if (col.media.type === 'curtain' && Array.isArray(col.media.images)) {
-              col.media.images = col.media.images.map(img =>
-                `${folderPath}/${img.split('/').pop()}`
-              )
-            }
-          })
-        })
-      }
+      // Заново загружаем проект для корректных ссылок на изображения и видео
+      await loadProject()
 
       ElNotification({
         title: `Проект создан: ${res.data.project.title}`,
@@ -1124,6 +1044,7 @@ const submit = async () => {
     }
   }
 }
+
 
 const fileExists = async (path) => {
   try {
