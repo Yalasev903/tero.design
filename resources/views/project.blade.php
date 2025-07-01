@@ -1,3 +1,30 @@
+@extends('layouts.app')
+
+@section('title', $project->meta_title ?? $project->title)
+@section('description', $project->meta_description)
+@section('keywords', $project->meta_keywords)
+
+@section('content')
+@php
+  $mediaPath = fn($path) => str_starts_with($path, 'multimedia/') ? '/' . ltrim($path, '/') : '/multimedia/' . ltrim($path, '/');
+@endphp
+
+<div class="project">
+  <div class="project-head row2">
+    <h1 class="project-title">{{ $project->title }}</h1>
+    <a href="{{ route('home') }}#js-grid-item{{ $project->id }}" class="project-back-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="48" height="48" fill="#fff">
+        <path d="M136.97 380.485l7.071-7.07c4.686-4.686 4.686-12.284 0-16.971L60.113 273H436c6.627 0 12-5.373 12-12v-10c0-6.627-5.373-12-12-12H60.113l83.928-83.444c4.686-4.686 4.686-12.284 0-16.971l-7.071-7.07c-4.686-4.686-12.284-4.686-16.97 0l-116.485 116c-4.686 4.686-4.686 12.284 0 16.971l116.485 116c4.686 4.686 12.284 4.686 16.97-.001z"/>
+      </svg>
+    </a>
+  </div>
+
+  <div class="project-description">
+    <div class="project-description-col">{!! $project->text1 !!}</div>
+    <div class="project-description-col">{!! $project->text2 !!}</div>
+  </div>
+</div>
+
 <div class="grid" id="js-gallery">
   @php $grid = $project->multimedia_grid; @endphp
 
@@ -7,9 +34,6 @@
         @php
           $w = $col['width'] ?? $col['first']['width'] ?? 1920;
           $h = $col['height'] ?? $col['first']['height'] ?? 1080;
-
-          // Универсальный хелпер для путей
-          $mediaPath = fn($path) => str_starts_with($path, 'multimedia/') ? '/' . $path : '/multimedia/' . ltrim($path, '/');
         @endphp
 
         @switch($col['type'])
@@ -33,11 +57,11 @@
 
           @case('curtain')
             @php
-                $isNewFormat = isset($col['images']);
-                $img1 = $mediaPath($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
-                $img2 = $mediaPath($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
-                $width = $col['width'] ?? ($isNewFormat ? 1920 : ($col['first']['width'] ?? 1920));
-                $height = $col['height'] ?? ($isNewFormat ? 1080 : ($col['first']['height'] ?? 1080));
+              $isNewFormat = isset($col['images']);
+              $img1 = $mediaPath($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
+              $img2 = $mediaPath($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
+              $width = $col['width'] ?? ($isNewFormat ? 1920 : ($col['first']['width'] ?? 1920));
+              $height = $col['height'] ?? ($isNewFormat ? 1080 : ($col['first']['height'] ?? 1080));
             @endphp
             <div class="grid-item curtain-container"
                 data-img1="{{ asset(ltrim($img1, '/')) }}"
