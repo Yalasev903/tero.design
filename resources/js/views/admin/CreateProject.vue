@@ -595,9 +595,19 @@ console.log('>> FILE SELECTED:', JSON.stringify({ selectedCell: selectedCell.val
     modalMediaPreview.value = path
 
     if (isImage) {
-      const img = new Image()
-      img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
-      img.src = `/multimedia/${path}`
+        const img = new Image()
+        img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+        img.src = `/multimedia/${path}`
+        } else if (isVideo) {
+        const video = document.createElement('video')
+        video.preload = 'metadata'
+        video.src = `/multimedia/${path}`
+        video.onloadedmetadata = () => {
+            modalMediaSize.value = {
+            w: video.videoWidth,
+            h: video.videoHeight
+            }
+        }
     }
 
     showFileManager.value = false
