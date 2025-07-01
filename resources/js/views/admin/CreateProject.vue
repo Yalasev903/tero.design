@@ -426,7 +426,11 @@ const modalMediaSize = ref({ w: null, h: null })
 const isEditingMedia = ref(false)
 
 const buildMediaUrl = (link) => {
-  return link.startsWith('multimedia/') ? `/${link}` : `/multimedia/${link}`
+  if (!link) return ''
+  if (link.startsWith('http')) return link
+  if (link.startsWith('/')) return link
+  if (link.startsWith('multimedia/')) return `/${link}`
+  return `/multimedia/${link}`
 }
 
 // вызвать модалку
