@@ -265,7 +265,7 @@
         <div class="finder-homegrid">
             <vue-finder
                 ref="vueFinderRef"
-                v-if="showFileManager"
+                v-if="showFileManager && defaultFolder"
                 id="vuefinder"
                 :path="`/${defaultFolder}`"
                 :request="{
@@ -274,6 +274,7 @@
                     xsrfHeaderName: 'X-XSRF-TOKEN'
                 }"
                 @select="handleFileSelect"
+                @navigate="console.log('Навигация к папке', $event)"
                 />
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
@@ -668,29 +669,6 @@ const openMediaModal = async (type, rowIdx) => {
     }
   }
 }
-
-watch(showFileManager, (val) => {
-  console.log('[👁 showFileManager]', val)
-  console.log('[📁 defaultFolder.value]', defaultFolder.value)
-
-  if (val && defaultFolder.value) {
-    nextTick(() => {
-      console.log('[⏭ dispatch vf-navigate to]', `/${defaultFolder.value}`)
-      if (!vueFinderRef.value) {
-        console.warn('[⚠️ vueFinderRef.value отсутствует]')
-      } else if (!vueFinderRef.value.$el) {
-        console.warn('[⚠️ vueFinderRef.value.$el отсутствует]')
-      } else {
-        console.log('[✅ vueFinderRef.value.$el найден]', vueFinderRef.value.$el)
-        vueFinderRef.value?.$el?.dispatchEvent(
-          new CustomEvent('vf-navigate', {
-            detail: { path: `/${defaultFolder.value}` }
-          })
-        )
-      }
-    })
-  }
-})
 
 const vueFinderRef = ref(null)
 
