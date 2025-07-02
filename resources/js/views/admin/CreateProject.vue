@@ -2,15 +2,16 @@
   <div class="project-create-page">
     <h2 class="page-title">{{ isEditing ? 'Редактирование проекта' : 'Создание проекта' }}</h2>
 
-<template v-if="projectLink">
-  <div style="margin-bottom: 12px;">
-    <el-alert type="success" show-icon>
-      <template #title>
-        Проект создан. <a :href="projectLink" target="_blank" style="text-decoration: underline">Открыть проект</a>
-      </template>
-    </el-alert>
-  </div>
-</template>
+        <el-button
+        v-if="isEditing && projectId"
+        type="info"
+        :href="`/projects/${projectId}`"
+        target="_blank"
+        style="margin-bottom: 16px;"
+        >
+        <el-icon><View /></el-icon> Открыть проект
+        </el-button>
+
 
     <SeoProject :title="'SEO для проекта'" :model="form" />
     <el-form :model="form" label-position="top" @submit.prevent="submit">
@@ -390,8 +391,6 @@ const inputSize = inject('inputSize')
 
 const curtainTitle1 = ref('')
 const curtainTitle2 = ref('')
-
-const projectLink = ref('')
 
 const route = useRoute(), router = useRouter()
 const openTab = inject('openTab'), tabsMode = inject('tabsMode')
@@ -997,9 +996,6 @@ const submit = async () => {
 
       projectId.value = newProjectId
       isEditing.value = true
-
-      // Устанавливаем ссылку на проект
-      projectLink.value = `${window.location.origin}/projects/${newProjectId}`
 
       await loadProject()
 
