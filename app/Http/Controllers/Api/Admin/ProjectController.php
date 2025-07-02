@@ -28,27 +28,71 @@ class ProjectController extends Controller
         try {
             DB::beginTransaction();
 
-            // 1. Создаём проект в БД
+            // Создаём проект
             $project = Project::create($data);
 
-            // 2. Генерируем имя папки
-            $folderName = Str::slug($project->title) . '-' . $project->id;
-            $folderPath = "multimedia/$folderName";
+            // Проверяем — может файлы уже есть в старой папке?
+            $folderName = null;
+            $existingMedia = collect($data['multimedia_grid'] ?? [])->flatten(1);
 
-            $created = Storage::disk('multimedia')->makeDirectory($folderName);
-            if (!$created) {
-                throw new \Exception("Ошибка при создании папки '$folderPath'");
-}
-
-            // 4. Перемещаем все медиа
-            if (!empty($data['multimedia_grid'])) {
-                foreach ($data['multimedia_grid'] as $rowIndex => $row) {
-                    foreach ($row as $colIndex => $col) {
-                        $data['multimedia_grid'][$rowIndex][$colIndex] = $this->moveMediaToFolder($col, $folderPath);
+            foreach ($existingMedia as $item) {
+                $link = $item['link'] ?? ($item['poster'] ?? null);
+                if ($link && is_string($link) && str_starts_with($link, 'multimedia/')) {
+                    $parts = explode('/', $link);
+                    if (isset($parts[1])) {
+                        $folderName = $parts[1];
+                        break;
                     }
                 }
 
-                // 5. Обновляем JSON в проекте
+                if (isset($item['images']) && is_array($item['images'])) {
+                    foreach ($item['images'] as $img) {
+                        if (is_string($img) && str_starts_with($img, 'multimedia/')) {
+                            $parts = explode('/', $img);
+                            if (isset($parts[1])) {
+                                $folderName = $parts[1];
+                                break 2;
+                            }
+                        }
+                    }
+                }
+
+                if (isset($item['links']) && is_array($item['links'])) {
+                    foreach ($item['links'] as $video) {
+                        if (!empty($video['link']) && str_starts_with($video['link'], 'multimedia/')) {
+                            $parts = explode('/', $video['link']);
+                            if (isset($parts[1])) {
+                                $folderName = $parts[1];
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Если нет — генерим новую
+            if (!$folderName) {
+                $folderName = Str::slug($project->title) . '-' . $project->id;
+            }
+
+            $folderPath = "multimedia/$folderName";
+
+            // Создаём, если нет
+            if (!Storage::disk('multimedia')->exists($folderName)) {
+                $created = Storage::disk('multimedia')->makeDirectory($folderName);
+                if (!$created) throw new \Exception("Ошибка при создании папки '$folderPath'");
+            }
+
+            // Перемещаем медиа
+            $movedFiles = [];
+            if (!empty($data['multimedia_grid'])) {
+                foreach ($data['multimedia_grid'] as $rowIndex => $row) {
+                    foreach ($row as $colIndex => $col) {
+                        $data['multimedia_grid'][$rowIndex][$colIndex] = $this->moveMediaToFolder($col, $folderPath, $movedFiles);
+                    }
+                }
+
+                // Обновляем в проекте
                 $project->update([
                     'multimedia_grid' => $data['multimedia_grid'],
                 ]);
@@ -60,6 +104,7 @@ class ProjectController extends Controller
                 'message' => "Проект '{$project->title}' успешно создан",
                 'project' => $project,
                 'folder' => $folderPath,
+                'moved_files' => $movedFiles
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -160,10 +205,56 @@ class ProjectController extends Controller
             // Обновляем поля проекта
             $project->update($data);
 
-            $folderName = Str::slug($project->title) . '-' . $project->id;
+            // Попытка найти уже существующую подпапку
+            $existingMedia = collect($project->multimedia_grid)->flatten(1);
+            $folderName = null;
+
+            foreach ($existingMedia as $item) {
+                $link = $item['link'] ?? ($item['poster'] ?? null);
+
+                if ($link && is_string($link) && str_starts_with($link, 'multimedia/')) {
+                    $parts = explode('/', $link);
+                    if (isset($parts[1])) {
+                        $folderName = $parts[1]; // multimedia/this_folder/file.ext
+                        break;
+                    }
+                }
+
+                // Для шторки (curtain)
+                if (isset($item['images']) && is_array($item['images'])) {
+                    foreach ($item['images'] as $img) {
+                        if (is_string($img) && str_starts_with($img, 'multimedia/')) {
+                            $parts = explode('/', $img);
+                            if (isset($parts[1])) {
+                                $folderName = $parts[1];
+                                break 2;
+                            }
+                        }
+                    }
+                }
+
+                // Для видео (links)
+                if (isset($item['links']) && is_array($item['links'])) {
+                    foreach ($item['links'] as $video) {
+                        if (!empty($video['link']) && str_starts_with($video['link'], 'multimedia/')) {
+                            $parts = explode('/', $video['link']);
+                            if (isset($parts[1])) {
+                                $folderName = $parts[1];
+                                break 2;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Если не нашли — создаём по-новому
+            if (!$folderName) {
+                $folderName = Str::slug($project->title) . '-' . $project->id;
+            }
+
             $folderPath = "multimedia/$folderName";
 
-            // Создаём папку, если её ещё нет
+            // Создаём папку если её нет
             if (!Storage::disk('multimedia')->exists($folderName)) {
                 $created = Storage::disk('multimedia')->makeDirectory($folderName);
                 if (!$created) throw new \Exception("Ошибка при создании папки '$folderPath'");
@@ -171,7 +262,7 @@ class ProjectController extends Controller
 
             $movedFiles = [];
 
-            // Перемещаем медиафайлы если нужно
+            // Перемещаем медиафайлы
             if (!empty($data['multimedia_grid'])) {
                 foreach ($data['multimedia_grid'] as $rowIndex => $row) {
                     foreach ($row as $colIndex => $col) {
