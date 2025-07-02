@@ -705,12 +705,6 @@ const handleInitialNavigation = (e) => {
   }
 }
 
-watch(showFileManager, (opened) => {
-  if (opened && defaultFolder.value) {
-    console.log('[FileManager] ▶️ Открытие — defaultFolder:', defaultFolder.value)
-  }
-})
-
 const openFileManagerForModal = () => {
   if (!selectedProjectId.value) {
     ElNotification({
