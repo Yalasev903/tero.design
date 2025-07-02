@@ -367,9 +367,13 @@ function openTab(item) {
 function closeTab(tab) {
   const idx = tabs.value.indexOf(tab)
   if (idx !== -1) {
+    if (tab.path === '/projects/create') {
+      sessionStorage.removeItem('was-create-opened')
+      sessionStorage.removeItem('create-project-form')
+    }
+
     tabs.value.splice(idx, 1)
 
-    // Обновляем сохранённые вкладки
     sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
 
     if (activeTab.value === tab) {

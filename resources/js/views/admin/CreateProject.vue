@@ -1206,21 +1206,51 @@ watch(form, (newVal) => {
 
 onMounted(() => {
   const isEdit = route.name === 'EditProject' || !!route.params.id || !!route.query.id
+
   if (isEdit) {
     loadProject()
   } else {
-    resetForm()
+    const wasAlreadyOpened = sessionStorage.getItem('was-create-opened')
+    if (wasAlreadyOpened) {
+      // Загружаем черновик
+      const saved = sessionStorage.getItem('create-project-form')
+      if (saved) {
+        try {
+          const data = JSON.parse(saved)
+          form.value = data
+          gridRows.value = (data.multimedia_grid || []).map(row =>
+            ({
+              id: Date.now() + Math.random(),
+              items: row.map(col => ({ ...col }))
+            })
+          )
+        } catch (e) {
+          resetForm()
+        }
+      } else {
+        resetForm()
+      }
+    } else {
+      resetForm()
+    }
+
+    sessionStorage.setItem('was-create-opened', 'true')
   }
 })
 
-
 // При возврате кэшированной вкладки
 onActivated(() => {
-  const isCreate = route.path === '/projects/create'
-  if (isCreate) {
-    resetForm()
-  } else {
+  const isEdit = route.name === 'EditProject' || !!route.params.id || !!route.query.id
+
+  if (isEdit) {
     loadProject()
+  } else {
+    const wasAlreadyOpened = sessionStorage.getItem('was-create-opened')
+    if (!wasAlreadyOpened) {
+      resetForm()
+      sessionStorage.setItem('was-create-opened', 'true')
+    }
+    // если была открыта — ничего не делаем
   }
 })
 
