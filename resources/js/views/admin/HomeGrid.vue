@@ -659,13 +659,12 @@ const openMediaModal = async (type, rowIdx) => {
     }
   }
 
-  // 🟢 Назначаем текущий путь
+  // 🟢 Назначаем текущий путь.
   if (selectedProjectId.value) {
     const currentProject = projects.value.find(p => p.id === selectedProjectId.value)
     if (currentProject && currentProject.title) {
       const sanitized = currentProject.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
-      const folderPath = `multimedia/${sanitized}`
-      defaultFolder.value = folderPath
+      defaultFolder.value = sanitized
       sessionStorage.setItem('project-folder', sanitized)
     }
   }
