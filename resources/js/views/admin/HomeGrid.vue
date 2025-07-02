@@ -273,8 +273,7 @@
                     xsrfHeaderName: 'X-XSRF-TOKEN'
                 }"
                 @select="handleFileSelect"
-                @vf-mounted="navigateToDefault"
-                @vf-navigated="e => console.log('[VueFinder] 📁 Перешёл в папку:', e.detail.path)"
+                @vf-navigated="handleInitialNavigation"
                 @vf-error="e => console.error('[VueFinder] 🛑 Ошибка:', e)"
                 />
           <button class="close-btn" @click="showFileManager = false">✖</button>
@@ -684,6 +683,27 @@ const navigateToDefault = (e) => {
   }))
 }
 
+let hasNavigated = false
+
+const handleInitialNavigation = (e) => {
+  const currentPath = e.detail?.path || ''
+  console.log('[VueFinder] 📁 Перешёл в папку:', currentPath)
+
+  // Только если это корень — делаем переход в нужную папку
+  if (!hasNavigated && currentPath === '/') {
+    hasNavigated = true
+
+    const folder = defaultFolder.value.replace(/^multimedia\//, '')
+    console.log('[VueFinder] 🔄 Автопереход в подкаталог:', folder)
+
+    const el = document.querySelector('#vuefinder')
+    if (el) {
+      el.dispatchEvent(new CustomEvent('vf-navigate', {
+        detail: { path: folder }
+      }))
+    }
+  }
+}
 
 watch(showFileManager, (opened) => {
   if (opened && defaultFolder.value) {
