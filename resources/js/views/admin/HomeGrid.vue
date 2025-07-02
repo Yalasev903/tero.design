@@ -267,7 +267,7 @@
                 ref="vueFinderRef"
                 v-if="showFileManager && defaultFolder"
                 id="vuefinder"
-                :path="`/${defaultFolder}`"
+                :path="`local://${defaultFolder}`"
                 :request="{
                     baseUrl: '/api/vuefinder',
                     adapter: 'local',
