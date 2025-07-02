@@ -672,7 +672,6 @@ const openMediaModal = async (type, rowIdx) => {
 watch(showFileManager, (opened) => {
   if (!opened || !defaultFolder.value) return
 
-  // путь без префикса multimedia/
   const path = defaultFolder.value.replace(/^multimedia\//, '')
 
   const onReady = () => {
@@ -682,17 +681,17 @@ watch(showFileManager, (opened) => {
         detail: { path }
       }))
     }
-    // отписка
+    // отписка чтобы не дублировалось
     window.removeEventListener('vf-mounted', onReady)
   }
 
-  // слушаем готовность VueFinder
+  // слушаем готовность компонента
   window.addEventListener('vf-mounted', onReady)
 
-  // fallback через 1.8 сек если событие не сработало
+  // fallback через 1.5 секунды — на случай если событие не пришло
   setTimeout(() => {
     onReady()
-  }, 1800)
+  }, 1500)
 })
 
 const openFileManagerForModal = () => {
