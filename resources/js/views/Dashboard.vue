@@ -132,7 +132,10 @@
             <div class="tab-content">
             <!-- <component :is="activeTab.component" /> -->
                 <keep-alive :include="cachedComponentNames">
-                    <component :is="activeTab.component" :key="activeTab.path" />
+                <component
+                    :is="activeTab.component"
+                    :key="activeTab.path === '/projects/create' ? activeTab.path + '-' + Date.now() : activeTab.path"
+                />
                 </keep-alive>
             </div>
         </div>
