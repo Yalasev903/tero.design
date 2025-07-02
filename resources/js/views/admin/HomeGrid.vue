@@ -273,7 +273,6 @@
                     adapter: 'local',
                     xsrfHeaderName: 'X-XSRF-TOKEN'
                 }"
-                @vf-mounted="navigateToDefault"
                 @select="handleFileSelect"
                 />
           <button class="close-btn" @click="showFileManager = false">✖</button>
@@ -670,44 +669,33 @@ const openMediaModal = async (type, rowIdx) => {
   }
 }
 
-const vueFinderRef = ref(null)
-
-const navigateToDefault = async () => {
-  console.log('[VueFinder] 🚀 navigateToDefault вызван')
-
-  if (!defaultFolder.value) return
-  const folder = defaultFolder.value.replace(/^multimedia\//, '')
-
-  const exists = await axios
-    .post('/api/vuefinder', {
-      adapter: 'local',
-      path: folder,
-      q: 'ls'
-    })
-    .then(res => Array.isArray(res.data))
-    .catch(() => false)
-
-  if (!exists) {
-    console.warn(`[VueFinder] ❌ Папка ${folder} не найдена`)
-    return
-  }
+watch(showFileManager, async (visible) => {
+  if (!visible || !defaultFolder.value) return
 
   await nextTick()
 
+  // ⏳ чуть подождать рендер
+  setTimeout(() => {
+    navigateToDefault()
+  }, 500)
+})
+
+const vueFinderRef = ref(null)
+
+const navigateToDefault = async () => {
+  const folder = defaultFolder.value?.replace(/^multimedia\//, '')
+  if (!folder) return
+
   const el = vueFinderRef.value?.$el
-  if (!el) {
-    console.warn('[VueFinder] ❌ ref vueFinderRef не найден')
-    return
-  }
+  if (!el) return
 
-  // Сначала ручной переход в корень
+  // Переход в корень → потом в папку
   el.dispatchEvent(new CustomEvent('vf-navigate', { detail: { path: '/' } }))
-  console.log('[VueFinder] 🔄 Сначала переходим в корень')
+  console.log('[VueFinder] 📁 Переход в корень')
 
-  // Через 500мс — переход в нужную папку
   setTimeout(() => {
     el.dispatchEvent(new CustomEvent('vf-navigate', { detail: { path: folder } }))
-    console.log('[VueFinder] ✅ Переход в подкаталог:', folder)
+    console.log('[VueFinder] 📁 Переход в папку:', folder)
   }, 500)
 }
 
