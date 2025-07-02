@@ -6,7 +6,7 @@
         v-if="isEditing && projectId"
         :href="`/projects/${projectId}`"
         target="_blank"
-        class="el-button el-button--info"
+        class="inline-flex items-center text-blue-600 hover:underline text-lg font-medium mb-4"
         style="margin-bottom: 16px; display: inline-flex; align-items: center;"
         >
         <el-icon style="margin-right: 6px;"><View /></el-icon> Открыть проект
