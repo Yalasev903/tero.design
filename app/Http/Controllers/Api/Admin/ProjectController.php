@@ -100,6 +100,8 @@ class ProjectController extends Controller
 
             DB::commit();
 
+            $project->folder = $folderName; 
+
             return response()->json([
                 'message' => "Проект '{$project->title}' успешно создан",
                 'project' => $project,

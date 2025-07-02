@@ -701,33 +701,41 @@ const openFileManagerForModal = () => {
 
   const project = projects.value.find(p => p.id === selectedProjectId.value)
 
-  if (project && project.title) {
-    let folder = project.title.toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-_]/g, '')
+  if (project) {
+    let folder = ''
 
-    // Проверяем — есть ли ссылка на медиа, и использовалась ли уже папка с -id
-    const grid = project.multimedia_grid || []
-    let foundFolder = null
+    // ✅ если сервер уже вернул project.folder
+    if (project.folder) {
+      folder = project.folder
+    } else {
+      // 🔁 fallback: формируем на основе title
+      folder = project.title.toLowerCase()
+        .replace(/\s+/g, '-')
+        .replace(/[^a-z0-9-_]/g, '')
 
-    try {
-      const flattened = Array.isArray(grid) ? grid.flat(2) : []
+      // Проверяем мультимедиа на наличие -id
+      const grid = project.multimedia_grid || []
+      let foundFolder = null
 
-      for (const item of flattened) {
-        const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
-        if (typeof link === 'string' && link.startsWith('multimedia/')) {
-          const parts = link.split('/')
-          if (parts[1]) {
-            foundFolder = parts[1]
-            break
+      try {
+        const flattened = Array.isArray(grid) ? grid.flat(2) : []
+
+        for (const item of flattened) {
+          const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
+          if (typeof link === 'string' && link.startsWith('multimedia/')) {
+            const parts = link.split('/')
+            if (parts[1]) {
+              foundFolder = parts[1]
+              break
+            }
           }
         }
-      }
-    } catch (_) {}
+      } catch (_) {}
 
-    // Если найденная папка содержит `-id` в конце — это новый стиль
-    if (foundFolder && foundFolder.endsWith(`-${project.id}`)) {
-      folder = `${folder}-${project.id}`
+      // Если найденная папка содержит -id, используем её
+      if (foundFolder && foundFolder.endsWith(`-${project.id}`)) {
+        folder = `${folder}-${project.id}`
+      }
     }
 
     defaultFolder.value = `projects/${folder}`
