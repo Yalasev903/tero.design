@@ -672,26 +672,42 @@ const openMediaModal = async (type, rowIdx) => {
 watch(showFileManager, (opened) => {
   if (!opened || !defaultFolder.value) return
 
-  const path = defaultFolder.value.replace(/^multimedia\//, '')
+  const folder = defaultFolder.value.replace(/^multimedia\//, '')
 
-  const onReady = () => {
+  console.log('[FileManager] Открытие → defaultFolder:', defaultFolder.value)
+
+  let isNavigated = false
+
+  const onNavigated = () => {
+    if (isNavigated) return
+    isNavigated = true
+
     const el = document.querySelector('#vuefinder')
     if (el) {
+      console.log('[FileManager] Переход во внутреннюю папку:', folder)
       el.dispatchEvent(new CustomEvent('vf-navigate', {
-        detail: { path }
+        detail: { path: folder }
       }))
+    } else {
+      console.warn('[FileManager] Не найден элемент #vuefinder')
     }
-    // отписка чтобы не дублировалось
-    window.removeEventListener('vf-mounted', onReady)
+
+    window.removeEventListener('vf-navigated', onNavigated)
   }
 
-  // слушаем готовность компонента
-  window.addEventListener('vf-mounted', onReady)
+  const onMounted = () => {
+    console.log('[VueFinder] Смонтирован')
+  }
 
-  // fallback через 1.5 секунды — на случай если событие не пришло
+  // слушаем события VueFinder'а
+  window.addEventListener('vf-mounted', onMounted)
+  window.addEventListener('vf-navigated', onNavigated)
+
+  // fallback через 2 секунды
   setTimeout(() => {
-    onReady()
-  }, 1500)
+    console.warn('[FileManager] fallback vf-navigate через 2с (vf-navigated не пришёл)')
+    onNavigated()
+  }, 2000)
 })
 
 const openFileManagerForModal = () => {
