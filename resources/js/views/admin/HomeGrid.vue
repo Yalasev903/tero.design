@@ -675,7 +675,7 @@ watch(showFileManager, (opened) => {
       const el = document.querySelector('#vuefinder')
       if (el) {
         el.dispatchEvent(new CustomEvent('vf-navigate', {
-          detail: { path: defaultFolder.value }
+          detail: { path: defaultFolder.value.replace(/^multimedia\//, '') }
         }))
       }
     }, 600)
@@ -706,7 +706,6 @@ const openFileManagerForModal = () => {
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-_]/g, '')
 
-      // Проверяем мультимедиа на наличие -id
       const grid = project.multimedia_grid || []
       let foundFolder = null
 
@@ -725,18 +724,19 @@ const openFileManagerForModal = () => {
         }
       } catch (_) {}
 
-      // Если найденная папка содержит -id, используем её
       if (foundFolder && foundFolder.endsWith(`-${project.id}`)) {
         folder = `${folder}-${project.id}`
       }
     }
 
-    defaultFolder.value = `multimedia/${folder}`
+    // ⚠️ НЕ добавляем 'multimedia/', потому что это корень уже
+    defaultFolder.value = folder
     sessionStorage.setItem('project-folder', folder)
   }
 
   showFileManager.value = true
 }
+
 
 const cancelMediaInsert = () => {
   showMediaModal.value = false
