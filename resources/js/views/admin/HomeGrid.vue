@@ -264,19 +264,19 @@
       <div v-if="showFileManager" class="finder-modal">
         <div class="finder-homegrid">
             <vue-finder
-            v-if="showFileManager"
-            id="vuefinder"
-            :path="defaultFolder"
-            :request="{
-                baseUrl: '/api/vuefinder',
-                adapter: 'local',
-                xsrfHeaderName: 'X-XSRF-TOKEN'
-            }"
-            @select="handleFileSelect"
-              @vf-mounted="console.log('[VueFinder] ✅ vf-mounted')"
+                v-if="showFileManager"
+                id="vuefinder"
+                :path="defaultFolder"
+                :request="{
+                    baseUrl: '/api/vuefinder',
+                    adapter: 'local',
+                    xsrfHeaderName: 'X-XSRF-TOKEN'
+                }"
+                @select="handleFileSelect"
+                @vf-mounted="navigateToDefault"
                 @vf-navigated="e => console.log('[VueFinder] 📁 Перешёл в папку:', e.detail.path)"
                 @vf-error="e => console.error('[VueFinder] 🛑 Ошибка:', e)"
-            />
+                />
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
       </div>
@@ -672,37 +672,23 @@ const openMediaModal = async (type, rowIdx) => {
   }
 }
 
-watch(showFileManager, (opened) => {
-  if (!opened || !defaultFolder.value) return
+const navigateToDefault = (e) => {
+  if (!defaultFolder.value) return
 
   const folder = defaultFolder.value.replace(/^multimedia\//, '')
-  console.log('[FileManager] ▶️ Открытие — defaultFolder:', folder)
+  console.log('[VueFinder] ✅ vf-mounted → переход в', folder)
 
-  let retries = 0
-  const maxRetries = 10
+  // Отправляем навигацию прямо внутрь VueFinder
+  e.target.dispatchEvent(new CustomEvent('vf-navigate', {
+    detail: { path: folder }
+  }))
+}
 
-  const tryNavigate = () => {
-    const el = document.querySelector('#vuefinder')
 
-    if (!el) {
-      console.warn(`[FileManager] ❌ #vuefinder не найден, попытка ${retries + 1}`)
-      if (++retries <= maxRetries) {
-        return setTimeout(tryNavigate, 300)
-      } else {
-        console.error('[FileManager] ❌ Превышен лимит попыток ожидания VueFinder')
-        return
-      }
-    }
-
-    console.log('[FileManager] ✅ VueFinder найден. Отправляем событие vf-navigate →', folder)
-
-    el.dispatchEvent(new CustomEvent('vf-navigate', {
-      detail: { path: folder }
-    }))
+watch(showFileManager, (opened) => {
+  if (opened && defaultFolder.value) {
+    console.log('[FileManager] ▶️ Открытие — defaultFolder:', defaultFolder.value)
   }
-
-  // Пытаемся через небольшую задержку (рендеринг + transition)
-  setTimeout(tryNavigate, 300)
 })
 
 const openFileManagerForModal = () => {
