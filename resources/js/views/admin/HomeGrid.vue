@@ -691,15 +691,47 @@ watch(showFileManager, (opened) => {
 
 const openFileManagerForModal = () => {
   if (!selectedProjectId.value) {
-    ElNotification({ title: 'Ошибка', message: 'Сначала выберите проект', type: 'warning' })
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Сначала выберите проект',
+      type: 'warning'
+    })
     return
   }
 
   const project = projects.value.find(p => p.id === selectedProjectId.value)
+
   if (project && project.title) {
-    const sanitized = project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
-    defaultFolder.value = `projects/${sanitized}`
-    sessionStorage.setItem('project-folder', sanitized)
+    let folder = project.title.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-_]/g, '')
+
+    // Проверяем — есть ли ссылка на медиа, и использовалась ли уже папка с -id
+    const grid = project.multimedia_grid || []
+    let foundFolder = null
+
+    try {
+      const flattened = Array.isArray(grid) ? grid.flat(2) : []
+
+      for (const item of flattened) {
+        const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
+        if (typeof link === 'string' && link.startsWith('multimedia/')) {
+          const parts = link.split('/')
+          if (parts[1]) {
+            foundFolder = parts[1]
+            break
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Если найденная папка содержит `-id` в конце — это новый стиль
+    if (foundFolder && foundFolder.endsWith(`-${project.id}`)) {
+      folder = `${folder}-${project.id}`
+    }
+
+    defaultFolder.value = `projects/${folder}`
+    sessionStorage.setItem('project-folder', folder)
   }
 
   showFileManager.value = true
