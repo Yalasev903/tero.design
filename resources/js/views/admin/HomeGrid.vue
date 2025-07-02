@@ -671,14 +671,20 @@ const openMediaModal = async (type, rowIdx) => {
 
 watch(showFileManager, (opened) => {
   if (opened && defaultFolder.value) {
-    setTimeout(() => {
+    const waitForVueFinder = () => {
       const el = document.querySelector('#vuefinder')
-      if (el) {
-        el.dispatchEvent(new CustomEvent('vf-navigate', {
-          detail: { path: defaultFolder.value.replace(/^multimedia\//, '') }
-        }))
+
+      // ждем пока появится DOM элемент и будет смонтирован
+      if (!el || !el.__vueParentComponent) {
+        return setTimeout(waitForVueFinder, 100)
       }
-    }, 600)
+
+      el.dispatchEvent(new CustomEvent('vf-navigate', {
+        detail: { path: defaultFolder.value.replace(/^multimedia\//, '') }
+      }))
+    }
+
+    waitForVueFinder()
   }
 })
 
