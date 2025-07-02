@@ -267,7 +267,6 @@
                 ref="vueFinderRef"
                 v-if="showFileManager && defaultFolder"
                 id="vuefinder"
-                :path="`local://${defaultFolder}`"
                 :request="{
                     baseUrl: '/api/vuefinder',
                     adapter: 'local',
@@ -685,55 +684,48 @@ const openFileManagerForModal = async () => {
   const project = projects.value.find(p => p.id === selectedProjectId.value)
 
   if (project) {
-    let folder = ''
+    let folder = project.folder || project.title.toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-_]/g, '')
 
-    if (project.folder) {
-      folder = project.folder
-    } else {
-      folder = project.title.toLowerCase()
-        .replace(/\s+/g, '-')
-        .replace(/[^a-z0-9-_]/g, '')
+    const grid = project.multimedia_grid || []
+    let foundFolder = null
 
-      const grid = project.multimedia_grid || []
-      let foundFolder = null
-
-      try {
-        const flattened = Array.isArray(grid) ? grid.flat(2) : []
-
-        for (const item of flattened) {
-          const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
-          if (typeof link === 'string' && link.startsWith('multimedia/')) {
-            const parts = link.split('/')
-            if (parts[1]) {
-              foundFolder = parts[1]
-              break
-            }
+    try {
+      const flattened = Array.isArray(grid) ? grid.flat(2) : []
+      for (const item of flattened) {
+        const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
+        if (typeof link === 'string' && link.startsWith('multimedia/')) {
+          const parts = link.split('/')
+          if (parts[1]) {
+            foundFolder = parts[1]
+            break
           }
         }
-      } catch (_) {}
-
-      if (foundFolder && foundFolder.endsWith(`-${project.id}`)) {
-        folder = `${folder}-${project.id}`
       }
+    } catch (_) {}
+
+    if (foundFolder && foundFolder.endsWith(`-${project.id}`)) {
+      folder = `${folder}-${project.id}`
     }
 
-    // ⛔ НЕ добавляем 'multimedia/'
     defaultFolder.value = folder
     sessionStorage.setItem('project-folder', folder)
   }
 
-  // ⏳ Показываем окно
   showFileManager.value = true
 
-  // 🕒 ждём пока DOM отрендерит vue-finder
   await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 100)) // безопасно подождать
 
-  // ✅ Переходим вручную в нужную папку
   if (defaultFolder.value && vueFinderRef.value) {
-    const targetPath = `local://${defaultFolder.value}`
-    vueFinderRef.value.goTo(targetPath)
-    console.log('▶ vueFinderRef:', vueFinderRef.value)
-    console.log('🔁 Перешли вручную в:', targetPath)
+    const path = `local://${defaultFolder.value}`
+    try {
+      await vueFinderRef.value.goTo(path)
+      console.log('✅ Перешли в папку:', path)
+    } catch (e) {
+      console.error('❌ Ошибка перехода в папку:', path, e)
+    }
   }
 }
 
