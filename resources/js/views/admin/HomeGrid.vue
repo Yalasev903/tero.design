@@ -264,6 +264,7 @@
       <div v-if="showFileManager" class="finder-modal">
         <div class="finder-homegrid">
             <vue-finder
+                ref="vueFinderRef"
                 v-if="showFileManager"
                 id="vuefinder"
                 :path="'/'"
@@ -272,9 +273,8 @@
                     adapter: 'local',
                     xsrfHeaderName: 'X-XSRF-TOKEN'
                 }"
+                @vf-mounted="navigateToDefault"
                 @select="handleFileSelect"
-                @vf-navigated="handleInitialNavigation"
-                @vf-error="e => console.error('[VueFinder] 🛑 Ошибка:', e)"
                 />
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
@@ -670,12 +670,14 @@ const openMediaModal = async (type, rowIdx) => {
   }
 }
 
-const navigateToDefault = async () => {
-  if (!defaultFolder.value) return
+const vueFinderRef = ref(null)
 
+const navigateToDefault = async () => {
+  console.log('[VueFinder] 🚀 navigateToDefault вызван')
+
+  if (!defaultFolder.value) return
   const folder = defaultFolder.value.replace(/^multimedia\//, '')
 
-  // 🔍 Проверим — существует ли папка через VueFinder ls
   const exists = await axios
     .post('/api/vuefinder', {
       adapter: 'local',
@@ -690,15 +692,23 @@ const navigateToDefault = async () => {
     return
   }
 
+  await nextTick()
+
+  const el = vueFinderRef.value?.$el
+  if (!el) {
+    console.warn('[VueFinder] ❌ ref vueFinderRef не найден')
+    return
+  }
+
+  // Сначала ручной переход в корень
+  el.dispatchEvent(new CustomEvent('vf-navigate', { detail: { path: '/' } }))
+  console.log('[VueFinder] 🔄 Сначала переходим в корень')
+
+  // Через 500мс — переход в нужную папку
   setTimeout(() => {
-    const el = document.querySelector('#vuefinder')
-    if (el) {
-      console.log('[VueFinder] ✅ Переход в:', folder)
-      el.dispatchEvent(new CustomEvent('vf-navigate', {
-        detail: { path: folder }
-      }))
-    }
-  }, 300)
+    el.dispatchEvent(new CustomEvent('vf-navigate', { detail: { path: folder } }))
+    console.log('[VueFinder] ✅ Переход в подкаталог:', folder)
+  }, 500)
 }
 
 let hasNavigated = false
