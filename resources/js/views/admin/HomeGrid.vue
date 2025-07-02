@@ -273,6 +273,9 @@
                 xsrfHeaderName: 'X-XSRF-TOKEN'
             }"
             @select="handleFileSelect"
+              @vf-mounted="console.log('[VueFinder] ✅ vf-mounted')"
+                @vf-navigated="e => console.log('[VueFinder] 📁 Перешёл в папку:', e.detail.path)"
+                @vf-error="e => console.error('[VueFinder] 🛑 Ошибка:', e)"
             />
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
@@ -673,41 +676,33 @@ watch(showFileManager, (opened) => {
   if (!opened || !defaultFolder.value) return
 
   const folder = defaultFolder.value.replace(/^multimedia\//, '')
+  console.log('[FileManager] ▶️ Открытие — defaultFolder:', folder)
 
-  console.log('[FileManager] Открытие → defaultFolder:', defaultFolder.value)
+  let retries = 0
+  const maxRetries = 10
 
-  let isNavigated = false
-
-  const onNavigated = () => {
-    if (isNavigated) return
-    isNavigated = true
-
+  const tryNavigate = () => {
     const el = document.querySelector('#vuefinder')
-    if (el) {
-      console.log('[FileManager] Переход во внутреннюю папку:', folder)
-      el.dispatchEvent(new CustomEvent('vf-navigate', {
-        detail: { path: folder }
-      }))
-    } else {
-      console.warn('[FileManager] Не найден элемент #vuefinder')
+
+    if (!el) {
+      console.warn(`[FileManager] ❌ #vuefinder не найден, попытка ${retries + 1}`)
+      if (++retries <= maxRetries) {
+        return setTimeout(tryNavigate, 300)
+      } else {
+        console.error('[FileManager] ❌ Превышен лимит попыток ожидания VueFinder')
+        return
+      }
     }
 
-    window.removeEventListener('vf-navigated', onNavigated)
+    console.log('[FileManager] ✅ VueFinder найден. Отправляем событие vf-navigate →', folder)
+
+    el.dispatchEvent(new CustomEvent('vf-navigate', {
+      detail: { path: folder }
+    }))
   }
 
-  const onMounted = () => {
-    console.log('[VueFinder] Смонтирован')
-  }
-
-  // слушаем события VueFinder'а
-  window.addEventListener('vf-mounted', onMounted)
-  window.addEventListener('vf-navigated', onNavigated)
-
-  // fallback через 2 секунды
-  setTimeout(() => {
-    console.warn('[FileManager] fallback vf-navigate через 2с (vf-navigated не пришёл)')
-    onNavigated()
-  }, 2000)
+  // Пытаемся через небольшую задержку (рендеринг + transition)
+  setTimeout(tryNavigate, 300)
 })
 
 const openFileManagerForModal = () => {
