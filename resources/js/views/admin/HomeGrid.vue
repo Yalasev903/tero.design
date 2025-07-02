@@ -266,7 +266,7 @@
             <vue-finder
                 v-if="showFileManager"
                 id="vuefinder"
-                :path="defaultFolder"
+                :path="'/'"
                 :request="{
                     baseUrl: '/api/vuefinder',
                     adapter: 'local',
@@ -670,16 +670,35 @@ const openMediaModal = async (type, rowIdx) => {
   }
 }
 
-const navigateToDefault = (e) => {
+const navigateToDefault = async () => {
   if (!defaultFolder.value) return
 
   const folder = defaultFolder.value.replace(/^multimedia\//, '')
-  console.log('[VueFinder] ✅ vf-mounted → переход в', folder)
 
-  // Отправляем навигацию прямо внутрь VueFinder
-  e.target.dispatchEvent(new CustomEvent('vf-navigate', {
-    detail: { path: folder }
-  }))
+  // 🔍 Проверим — существует ли папка через VueFinder ls
+  const exists = await axios
+    .post('/api/vuefinder', {
+      adapter: 'local',
+      path: folder,
+      q: 'ls'
+    })
+    .then(res => Array.isArray(res.data))
+    .catch(() => false)
+
+  if (!exists) {
+    console.warn(`[VueFinder] ❌ Папка ${folder} не найдена`)
+    return
+  }
+
+  setTimeout(() => {
+    const el = document.querySelector('#vuefinder')
+    if (el) {
+      console.log('[VueFinder] ✅ Переход в:', folder)
+      el.dispatchEvent(new CustomEvent('vf-navigate', {
+        detail: { path: folder }
+      }))
+    }
+  }, 300)
 }
 
 let hasNavigated = false
@@ -704,7 +723,7 @@ const handleInitialNavigation = (e) => {
   }
 }
 
-const openFileManagerForModal = () => {
+const openFileManagerForModal = async () => {
   if (!selectedProjectId.value) {
     ElNotification({
       title: 'Ошибка',
@@ -719,11 +738,9 @@ const openFileManagerForModal = () => {
   if (project) {
     let folder = ''
 
-    // ✅ если сервер уже вернул project.folder
     if (project.folder) {
       folder = project.folder
     } else {
-      // 🔁 fallback: формируем на основе title
       folder = project.title.toLowerCase()
         .replace(/\s+/g, '-')
         .replace(/[^a-z0-9-_]/g, '')
@@ -751,14 +768,14 @@ const openFileManagerForModal = () => {
       }
     }
 
-    // ⚠️ НЕ добавляем 'multimedia/', потому что это корень уже
+    // ⛔ НЕ добавляем 'multimedia/'
     defaultFolder.value = folder
     sessionStorage.setItem('project-folder', folder)
   }
 
+  hasNavigated = false // сбрасываем каждый раз
   showFileManager.value = true
 }
-
 
 const cancelMediaInsert = () => {
   showMediaModal.value = false
