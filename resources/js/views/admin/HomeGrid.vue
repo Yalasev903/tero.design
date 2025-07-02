@@ -720,6 +720,10 @@ const openFileManagerForModal = async () => {
     // ⛔ НЕ добавляем 'multimedia/'
     defaultFolder.value = folder
     sessionStorage.setItem('project-folder', folder)
+
+    // 🔥 ВАЖНО: переходим вручную
+    await nextTick() // ждём пока рендерится модалка
+    vueFinderRef.value?.goTo(`local://${folder}`)
   }
 
   showFileManager.value = true
