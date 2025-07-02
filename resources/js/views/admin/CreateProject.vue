@@ -2,15 +2,15 @@
   <div class="project-create-page">
     <h2 class="page-title">{{ isEditing ? 'Редактирование проекта' : 'Создание проекта' }}</h2>
 
-        <el-button
+       <a
         v-if="isEditing && projectId"
-        type="info"
         :href="`/projects/${projectId}`"
         target="_blank"
-        style="margin-bottom: 16px;"
+        class="el-button el-button--info"
+        style="margin-bottom: 16px; display: inline-flex; align-items: center;"
         >
-        <el-icon><View /></el-icon> Открыть проект
-        </el-button>
+        <el-icon style="margin-right: 6px;"><View /></el-icon> Открыть проект
+        </a>
 
 
     <SeoProject :title="'SEO для проекта'" :model="form" />
