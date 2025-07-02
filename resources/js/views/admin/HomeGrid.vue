@@ -325,12 +325,6 @@ const mediaDescription = ref('')
 
 const defaultFolder = ref('')
 
-watch(showFileManager, (val) => {
-  if (val) {
-    defaultFolder.value = sessionStorage.getItem('project-folder') || ''
-  }
-})
-
 const isEditingModal = ref(false)
 const editingTarget = ref({ rowIdx: null, colIdx: null })
 
@@ -668,7 +662,7 @@ const openMediaModal = async (type, rowIdx) => {
     const currentProject = projects.value.find(p => p.id === selectedProjectId.value)
     if (currentProject && currentProject.title) {
       const sanitized = currentProject.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
-      const folderPath = `projects/${sanitized}`
+      const folderPath = `multimedia/${sanitized}`
       defaultFolder.value = folderPath
       sessionStorage.setItem('project-folder', sanitized)
     }
@@ -677,7 +671,6 @@ const openMediaModal = async (type, rowIdx) => {
 
 watch(showFileManager, (opened) => {
   if (opened && defaultFolder.value) {
-    // ⏳ чуть подождать, пока vuefinder смонтируется
     setTimeout(() => {
       const el = document.querySelector('#vuefinder')
       if (el) {
@@ -685,7 +678,7 @@ watch(showFileManager, (opened) => {
           detail: { path: defaultFolder.value }
         }))
       }
-    }, 500)
+    }, 600)
   }
 })
 
@@ -738,7 +731,7 @@ const openFileManagerForModal = () => {
       }
     }
 
-    defaultFolder.value = `projects/${folder}`
+    defaultFolder.value = `multimedia/${folder}`
     sessionStorage.setItem('project-folder', folder)
   }
 
