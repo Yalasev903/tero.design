@@ -267,7 +267,7 @@
                 ref="vueFinderRef"
                 v-if="showFileManager"
                 id="vuefinder"
-                :path="'/'"
+                :path="`/${defaultFolder}`"
                 :request="{
                     baseUrl: '/api/vuefinder',
                     adapter: 'local',
@@ -669,57 +669,7 @@ const openMediaModal = async (type, rowIdx) => {
   }
 }
 
-watch(showFileManager, async (visible) => {
-  if (!visible || !defaultFolder.value) return
-
-  await nextTick()
-
-  // ⏳ чуть подождать рендер
-  setTimeout(() => {
-    navigateToDefault()
-  }, 500)
-})
-
 const vueFinderRef = ref(null)
-
-const navigateToDefault = async () => {
-  const folder = defaultFolder.value?.replace(/^multimedia\//, '')
-  if (!folder) return
-
-  const el = vueFinderRef.value?.$el
-  if (!el) return
-
-  // Переход в корень → потом в папку
-  el.dispatchEvent(new CustomEvent('vf-navigate', { detail: { path: '/' } }))
-  console.log('[VueFinder] 📁 Переход в корень')
-
-  setTimeout(() => {
-    el.dispatchEvent(new CustomEvent('vf-navigate', { detail: { path: folder } }))
-    console.log('[VueFinder] 📁 Переход в папку:', folder)
-  }, 500)
-}
-
-let hasNavigated = false
-
-const handleInitialNavigation = (e) => {
-  const currentPath = e.detail?.path || ''
-  console.log('[VueFinder] 📁 Перешёл в папку:', currentPath)
-
-  // Только если это корень — делаем переход в нужную папку
-  if (!hasNavigated && currentPath === '/') {
-    hasNavigated = true
-
-    const folder = defaultFolder.value.replace(/^multimedia\//, '')
-    console.log('[VueFinder] 🔄 Автопереход в подкаталог:', folder)
-
-    const el = document.querySelector('#vuefinder')
-    if (el) {
-      el.dispatchEvent(new CustomEvent('vf-navigate', {
-        detail: { path: folder }
-      }))
-    }
-  }
-}
 
 const openFileManagerForModal = async () => {
   if (!selectedProjectId.value) {
@@ -771,7 +721,6 @@ const openFileManagerForModal = async () => {
     sessionStorage.setItem('project-folder', folder)
   }
 
-  hasNavigated = false // сбрасываем каждый раз
   showFileManager.value = true
 }
 
