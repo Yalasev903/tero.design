@@ -265,15 +265,15 @@
         <div class="finder-homegrid">
             <vue-finder
                 ref="vueFinderRef"
-                v-if="showFileManager && defaultFolder"
                 id="vuefinder"
+                :key="activeFinderPath"
+                :path="activeFinderPath"
                 :request="{
                     baseUrl: '/api/vuefinder',
                     adapter: 'local',
                     xsrfHeaderName: 'X-XSRF-TOKEN'
                 }"
                 @select="handleFileSelect"
-                @navigate="console.log('Навигация к папке', $event)"
                 />
           <button class="close-btn" @click="showFileManager = false">✖</button>
         </div>
@@ -669,64 +669,43 @@ const openMediaModal = async (type, rowIdx) => {
   }
 }
 
-const vueFinderRef = ref(null)
+const activeFinderPath = ref('')
 
 const openFileManagerForModal = async () => {
   if (!selectedProjectId.value) {
-    ElNotification({
-      title: 'Ошибка',
-      message: 'Сначала выберите проект',
-      type: 'warning'
-    })
+    ElNotification({ title: 'Ошибка', message: 'Сначала выберите проект', type: 'warning' })
     return
   }
 
   const project = projects.value.find(p => p.id === selectedProjectId.value)
+  if (!project) return
 
-  if (project) {
-    let folder = project.folder || project.title.toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-_]/g, '')
+  let folder = project.folder || project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
+  const grid = project.multimedia_grid || []
 
-    const grid = project.multimedia_grid || []
-    let foundFolder = null
-
-    try {
-      const flattened = Array.isArray(grid) ? grid.flat(2) : []
-      for (const item of flattened) {
-        const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
-        if (typeof link === 'string' && link.startsWith('multimedia/')) {
-          const parts = link.split('/')
-          if (parts[1]) {
-            foundFolder = parts[1]
-            break
-          }
+  try {
+    const flat = grid.flat(2)
+    for (const item of flat) {
+      const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
+      if (link?.startsWith('multimedia/')) {
+        const parts = link.split('/')
+        if (parts[1]) {
+          folder = parts[1]
+          break
         }
       }
-    } catch (_) {}
-
-    if (foundFolder && foundFolder.endsWith(`-${project.id}`)) {
-      folder = `${folder}-${project.id}`
     }
+  } catch (_) {}
 
-    defaultFolder.value = folder
-    sessionStorage.setItem('project-folder', folder)
-  }
+  defaultFolder.value = folder
+  sessionStorage.setItem('project-folder', folder)
+
+  activeFinderPath.value = '' // 🔄 сброс
+  await nextTick()
+  activeFinderPath.value = `local://${folder}` // 🔄 новая папка
 
   showFileManager.value = true
-
-  await nextTick()
-  await new Promise(resolve => setTimeout(resolve, 100)) // безопасно подождать
-
-  if (defaultFolder.value && vueFinderRef.value) {
-    const path = `local://${defaultFolder.value}`
-    try {
-      await vueFinderRef.value.goTo(path)
-      console.log('✅ Перешли в папку:', path)
-    } catch (e) {
-      console.error('❌ Ошибка перехода в папку:', path, e)
-    }
-  }
+  console.log('🧭 Устанавливаем путь:', activeFinderPath.value)
 }
 
 const cancelMediaInsert = () => {
