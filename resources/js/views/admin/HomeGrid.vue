@@ -720,13 +720,21 @@ const openFileManagerForModal = async () => {
     // ⛔ НЕ добавляем 'multimedia/'
     defaultFolder.value = folder
     sessionStorage.setItem('project-folder', folder)
-
-    // 🔥 ВАЖНО: переходим вручную
-    await nextTick() // ждём пока рендерится модалка
-    vueFinderRef.value?.goTo(`local://${folder}`)
   }
 
+  // ⏳ Показываем окно
   showFileManager.value = true
+
+  // 🕒 ждём пока DOM отрендерит vue-finder
+  await nextTick()
+
+  // ✅ Переходим вручную в нужную папку
+  if (defaultFolder.value && vueFinderRef.value) {
+    const targetPath = `local://${defaultFolder.value}`
+    vueFinderRef.value.goTo(targetPath)
+    console.log('▶ vueFinderRef:', vueFinderRef.value)
+    console.log('🔁 Перешли вручную в:', targetPath)
+  }
 }
 
 const cancelMediaInsert = () => {
