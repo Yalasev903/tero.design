@@ -12,14 +12,7 @@
                 :apiUrl="'/api/admin/pages/homegrid-seo'"
             />
             <br />
-            <div class="panel-buttons">
-                <el-button type="primary" @click="addRow">
-                <el-icon><Plus /></el-icon> Добавить строку
-                </el-button>
-                <el-button type="success" @click="saveGrid" :loading="saving">
-                <el-icon><Check /></el-icon> Сохранить изменения
-                </el-button>
-            </div>
+
 
             <div class="grid-rows">
                 <draggable
@@ -32,9 +25,6 @@
                     <div class="grid-row-wrap">
                     <div class="drag-row-overlay"></div>
 <div class="row-header">
-  <span class="drag-row" title="Перетащить строку">
-    <el-icon><Menu /></el-icon>
-  </span>
   <div class="row-actions">
     <el-button
       type="danger"
@@ -85,6 +75,11 @@
                                 col.media?.type ? 'grid-item-' + col.media.type : ''
                             ]"
                             >
+                            <div class="media-name">
+                                <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
+                                <el-icon v-else><Picture /></el-icon>
+                                {{ col.title || 'Без названия' }}
+                            </div>
                             <div
                                 class="media-thumb"
                                 @click="openPreview(col)"
@@ -125,15 +120,6 @@
                                 </div>
                                 <span class="edit-icon" @click.stop="openEditModal(rowIdx, colIdx)" title="Редактировать медиа">
                                 <el-icon><Edit /></el-icon>
-                                </span>
-                                <span class="media-name">
-                                <el-icon v-if="col.media?.type === 'video'">
-                                    <VideoCamera />
-                                </el-icon>
-                                <el-icon v-else>
-                                    <Picture />
-                                </el-icon>
-                                {{ col.title || 'Без названия' }}
                                 </span>
                             </div>
                             <div class="item-toolbar">
@@ -217,6 +203,14 @@
     <el-button type="primary" @click="insertMedia">Добавить</el-button>
   </template>
 </el-dialog>
+            </div>
+                        <div class="panel-buttons">
+                <el-button type="primary" @click="addRow">
+                <el-icon><Plus /></el-icon> Добавить строку
+                </el-button>
+                <el-button type="success" @click="saveGrid" :loading="saving">
+                <el-icon><Check /></el-icon> Сохранить изменения
+                </el-button>
             </div>
             </div>
         </div>
@@ -817,10 +811,25 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.panel-buttons { display: flex; gap: 15px; margin-bottom: 20px; }
 .grid-rows { display: flex; flex-direction: column; gap: 25px; }
 .grid-row-wrap { margin-bottom: 18px; border: 2px dashed #e3e3e3; border-radius: 12px; background: #f9f9fb; padding: 15px 8px 8px; position: relative; }
 .row-header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.panel-buttons {
+  display: flex;
+  justify-content: flex-start;
+  gap: 15px;
+  margin-top: 30px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 600px) {
+  .panel-buttons{
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+}
 .grid-row {
   display: flex;
   flex-direction: row;
