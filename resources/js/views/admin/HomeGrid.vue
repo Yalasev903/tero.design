@@ -73,11 +73,6 @@
                                 col.media?.type ? 'grid-item-' + col.media.type : ''
                             ]"
                             >
-                            <div class="media-name">
-                                <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
-                                <el-icon v-else><Picture /></el-icon>
-                                {{ col.title || 'Без названия' }}
-                            </div>
                             <div
                                 class="media-thumb"
                                 @click="openPreview(col)"
@@ -138,6 +133,12 @@
                                 >
                                 <el-icon><Delete /></el-icon>
                                 </el-button>
+                            </div>
+
+                            <div class="media-name">
+                                <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
+                                <el-icon v-else><Picture /></el-icon>
+                                {{ col.title || 'Без названия' }}
                             </div>
                                 </div>
                             </div>
@@ -966,17 +967,26 @@ onMounted(() => {
 }
 
 .item-toolbar {
+  position: absolute;
+  bottom: 24px; /* ← стало выше */
+  right: 6px;
   display: flex;
-  justify-content: center;
-  margin-top: 6px;
   gap: 6px;
+  z-index: 3;
 }
 
+.item-toolbar .el-button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  font-size: 14px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
 .media-name {
   position: absolute;
   left: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.4); /* ← стало полупрозрачным */
+  background: rgba(0, 0, 0, 0.4);
   color: #fff;
   font-size: 12px;
   padding: 2px 8px 2px 6px;
@@ -984,7 +994,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  pointer-events: none; /* ← НЕ блокирует кнопки */
+  pointer-events: none;
   width: 100%;
   justify-content: center;
   text-align: center;
