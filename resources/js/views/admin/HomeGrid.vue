@@ -20,196 +20,157 @@
                 <el-icon><Check /></el-icon> Сохранить изменения
                 </el-button>
             </div>
-            <div class="grid-rows">
-                <draggable
-                v-model="gridRows"
-                group="rows"
-                animation="220"
-                item-key="id"
+<div class="grid-rows">
+  <draggable
+    v-model="gridRows"
+    group="rows"
+    animation="220"
+    item-key="id"
+  >
+    <template #item="{ element: row, index: rowIdx }">
+      <div class="grid-row-wrap">
+        <div class="drag-row-overlay"></div>
+
+        <div class="grid-row-container">
+          <!-- Контент строки -->
+          <div class="grid-row">
+            <draggable
+              v-model="row.items"
+              group="cols"
+              handle=".grid-item"
+              animation="180"
+              item-key="id"
+              class="columns-draggable"
+              :style="{ display: 'flex', gap: '16px', width: '100%' }"
+            >
+              <template #item="{ element: col, index: colIdx }">
+                <div
+                  class="grid-item"
+                  :class="[
+                    col.is_mobile ? 'grid-item-mobile' : 'grid-item-desktop',
+                    col.media?.type ? 'grid-item-' + col.media.type : ''
+                  ]"
                 >
-                <template #item="{ element: row, index: rowIdx }">
-                    <div class="grid-row-wrap">
-                    <div class="drag-row-overlay"></div>
-                    <div class="row-actions-right">
-                        <el-button
-                            type="danger"
-                            size="small"
-                            circle
-                            @click.stop="removeRow(rowIdx)"
-                            title="Удалить строку"
-                        >
-                            <el-icon><Delete /></el-icon>
-                        </el-button>
-
-                        <el-dropdown
-                            class="add-col-dropdown"
-                            trigger="click"
-                            @command="type => openMediaModal(type, rowIdx)"
-                            :teleported="true"
-                        >
-                            <template #default>
-                            <button class="add-col-btn" type="button">
-                                <el-icon><Plus /></el-icon>
-                            </button>
-                            </template>
-
-                            <template #dropdown>
-                            <el-dropdown-menu>
-                                <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
-                                <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
-                            </el-dropdown-menu>
-                            </template>
-                        </el-dropdown>
-                        </div>
-                        <div class="grid-row-container">
-                    <div class="grid-row">
-                        <draggable
-                        v-model="row.items"
-                        group="cols"
-                        handle=".grid-item"
-                        animation="180"
-                        item-key="id"
-                        class="columns-draggable"
-                        :style="{ display: 'flex', gap: '16px', width: '100%' }"
-                        >
-                        <template #item="{ element: col, index: colIdx }">
-                            <div
-                            class="grid-item"
-                            :class="[
-                                col.is_mobile ? 'grid-item-mobile' : 'grid-item-desktop',
-                                col.media?.type ? 'grid-item-' + col.media.type : ''
-                            ]"
-                            >
-                            <div
-                                class="media-thumb"
-                                @click.stop="openPreview(col)"
-                                @mousedown="onMouseDown"
-                                @mouseup="onMouseUp"
-                            >
-                                <div v-if="col.media?.type === 'img' && col.media?.link">
-                                <img
-                                    :src="`/multimedia/${col.media.link}`"
-                                    alt=""
-                                    class="grid-img"
-                                    @load="e => setPreviewImgSize(e, rowIdx, colIdx)"
-                                />
-                                </div>
-                                <div v-else-if="col.media?.type === 'video' && col.media?.links?.length">
-                                <video
-                                    :key="col.media?.__v || col.id"
-                                    ref="allGridVideos"
-                                    muted
-                                    loop
-                                    playsinline
-                                    preload="auto"
-                                    class="grid-video"
-                                    :poster="`/multimedia/${col.media.poster || col.media.link}`"
-                                    @loadedmetadata="e => setPreviewVideoSize(e, rowIdx, colIdx)"
-                                    autoplay
-                                >
-                                    <source
-                                    v-for="(link, i) in col.media.links || []"
-                                    :key="i"
-                                    :src="`/multimedia/${link.link}`"
-                                    :type="link.mime || 'video/mp4'"
-                                    />
-                                </video>
-                                </div>
-                                <div v-else class="empty-media">
-                                <el-icon><Picture /></el-icon>
-                                </div>
-                                <span class="edit-icon" @click.stop="openEditModal(rowIdx, colIdx)" title="Редактировать медиа">
-                                <el-icon><Edit /></el-icon>
-                                </span>
-                            <div class="item-toolbar">
-                                <el-button
-                                    size="small"
-                                    circle
-                                    :type="col.is_mobile ? 'primary' : 'default'"
-                                    @click.stop="col.is_mobile = !col.is_mobile"
-                                    title="Показывать на мобильных"
-                                >
-                                    <el-icon><Iphone /></el-icon>
-                                </el-button>
-                                <el-button
-                                    size="small"
-                                    type="danger"
-                                    circle
-                                    @click.stop="removeCol(rowIdx, colIdx)"
-                                    title="Удалить колонку"
-                                >
-                                    <el-icon><Delete /></el-icon>
-                                </el-button>
-                              </div>
-                            <div class="media-name">
-                                <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
-                                <el-icon v-else><Picture /></el-icon>
-                                {{ col.title || 'Без названия' }}
-                            </div>
-                                </div>
-                            </div>
-                        </template>
-                        </draggable>
-
+                  <div
+                    class="media-thumb"
+                    @click.stop="openPreview(col)"
+                    @mousedown="onMouseDown"
+                    @mouseup="onMouseUp"
+                  >
+                    <div v-if="col.media?.type === 'img' && col.media?.link">
+                      <img
+                        :src="`/multimedia/${col.media.link}`"
+                        alt=""
+                        class="grid-img"
+                        @load="e => setPreviewImgSize(e, rowIdx, colIdx)"
+                      />
                     </div>
+                    <div v-else-if="col.media?.type === 'video' && col.media?.links?.length">
+                      <video
+                        :key="col.media?.__v || col.id"
+                        ref="allGridVideos"
+                        muted
+                        loop
+                        playsinline
+                        preload="auto"
+                        class="grid-video"
+                        :poster="`/multimedia/${col.media.poster || col.media.link}`"
+                        @loadedmetadata="e => setPreviewVideoSize(e, rowIdx, colIdx)"
+                        autoplay
+                      >
+                        <source
+                          v-for="(link, i) in col.media.links || []"
+                          :key="i"
+                          :src="`/multimedia/${link.link}`"
+                          :type="link.mime || 'video/mp4'"
+                        />
+                      </video>
                     </div>
+                    <div v-else class="empty-media">
+                      <el-icon><Picture /></el-icon>
                     </div>
-                </template>
-                </draggable>
 
-<el-dialog v-model="showMediaModal" title="Добавление медиа" width="600px" :append-to-body="true">
-  <el-form label-position="top">
-    <el-form-item label="Выберите проект">
-      <el-select v-model="selectedProjectId" placeholder="Проект" style="width: 100%">
-        <el-option
-        v-for="p in projects"
-        :key="p.id"
-        :label="`${p.title} (${p.usageCount})`"
-        :value="p.id"
-        />
-      </el-select>
-    </el-form-item>
+                    <span
+                      class="edit-icon"
+                      @click.stop="openEditModal(rowIdx, colIdx)"
+                      title="Редактировать медиа"
+                    >
+                      <el-icon><Edit /></el-icon>
+                    </span>
 
-    <el-form-item v-if="mediaType === 'img'" label="Изображение">
-      <el-button @click="openFileManagerForModal">Выбрать изображение</el-button>
-      <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
-        {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
+                    <div class="item-toolbar">
+                      <el-button
+                        size="small"
+                        circle
+                        :type="col.is_mobile ? 'primary' : 'default'"
+                        @click.stop="col.is_mobile = !col.is_mobile"
+                        title="Показывать на мобильных"
+                      >
+                        <el-icon><Iphone /></el-icon>
+                      </el-button>
+                      <el-button
+                        size="small"
+                        type="danger"
+                        circle
+                        @click.stop="removeCol(rowIdx, colIdx)"
+                        title="Удалить колонку"
+                      >
+                        <el-icon><Delete /></el-icon>
+                      </el-button>
+                    </div>
+
+                    <div class="media-name">
+                      <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
+                      <el-icon v-else><Picture /></el-icon>
+                      {{ col.title || 'Без названия' }}
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </draggable>
+          </div>
+
+          <!-- Кнопки справа -->
+          <div class="row-actions-inline">
+            <el-button
+              type="danger"
+              size="small"
+              circle
+              @click.stop="removeRow(rowIdx)"
+              title="Удалить строку"
+            >
+              <el-icon><Delete /></el-icon>
+            </el-button>
+
+            <el-dropdown
+              class="add-col-dropdown"
+              trigger="click"
+              @command="type => openMediaModal(type, rowIdx)"
+              :teleported="true"
+            >
+              <template #default>
+                <button class="add-col-btn" type="button">
+                  <el-icon><Plus /></el-icon>
+                </button>
+              </template>
+
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="img">
+                    <el-icon><Picture /></el-icon>Изображение
+                  </el-dropdown-item>
+                  <el-dropdown-item command="video">
+                    <el-icon><VideoCamera /></el-icon>Видео
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div>
         </div>
-      <div v-if="selectedPath" class="preview-img">
-        <img :src="`/multimedia/${selectedPath}`" @load="onImageLoad" style="max-width: 100%; margin-top: 10px"  />
       </div>
-    </el-form-item>
-
-          <el-form-item
-          v-if="mediaType === 'img' && showMediaModal"
-          label="SEO описание изображения">
-        <el-input
-            v-model="mediaDescription"
-            placeholder="Введите описание для alt / SEO"
-            :size="inputSize"
-            type="textarea"
-            rows="2"
-        />
-        </el-form-item>
-
-    <el-form-item v-if="mediaType === 'video'" label="Видео">
-      <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
-      <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
-        {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
-        </div>
-      <div v-if="selectedPath" class="preview-img">
-        <video autoplay loop muted playsinline @loadedmetadata="onVideoLoad" style="width: 100%; margin-top: 10px"
-          :src="`/multimedia/${selectedPath}`" />
-      </div>
-    </el-form-item>
-  </el-form>
-
-  <template #footer>
-    <el-button @click="cancelMediaInsert">Отмена</el-button>
-    <el-button type="primary" @click="insertMedia">Добавить</el-button>
-  </template>
-</el-dialog>
-            </div>
+    </template>
+  </draggable>
+</div>
             </div>
         </div>
         <el-dialog
@@ -811,12 +772,21 @@ onMounted(() => {
 <style scoped>
 .grid-rows { display: flex; flex-direction: column; gap: 25px; }
 .grid-row-wrap { margin-bottom: 18px; border: 2px dashed #e3e3e3; border-radius: 12px; background: #f9f9fb; padding: 15px 8px 8px; position: relative; }
+.row-actions-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 12px;
+  padding-top: 4px;
+}
 .grid-row-container {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
+  gap: 16px;
   width: 100%;
-  gap: 12px;
 }
 .row-actions-right {
   display: flex;
