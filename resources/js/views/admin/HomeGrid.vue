@@ -24,39 +24,37 @@
                 <template #item="{ element: row, index: rowIdx }">
                     <div class="grid-row-wrap">
                     <div class="drag-row-overlay"></div>
-<div class="row-header">
-  <div class="row-actions">
-    <el-button
-      type="danger"
-      size="small"
-      circle
-      @click.stop="removeRow(rowIdx)"
-      title="Удалить строку"
-    >
-      <el-icon><Delete /></el-icon>
-    </el-button>
+                    <div class="row-actions-right">
+                        <el-button
+                            type="danger"
+                            size="small"
+                            circle
+                            @click.stop="removeRow(rowIdx)"
+                            title="Удалить строку"
+                        >
+                            <el-icon><Delete /></el-icon>
+                        </el-button>
 
-    <el-dropdown
-      class="add-col-dropdown"
-      trigger="click"
-      @command="type => openMediaModal(type, rowIdx)"
-      :teleported="true"
-    >
-      <template #default>
-        <button class="add-col-btn" type="button">
-          <el-icon><Plus /></el-icon>
-        </button>
-      </template>
+                        <el-dropdown
+                            class="add-col-dropdown"
+                            trigger="click"
+                            @command="type => openMediaModal(type, rowIdx)"
+                            :teleported="true"
+                        >
+                            <template #default>
+                            <button class="add-col-btn" type="button">
+                                <el-icon><Plus /></el-icon>
+                            </button>
+                            </template>
 
-      <template #dropdown>
-        <el-dropdown-menu>
-          <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
-          <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
-        </el-dropdown-menu>
-      </template>
-    </el-dropdown>
-  </div>
-</div>
+                            <template #dropdown>
+                            <el-dropdown-menu>
+                                <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
+                                <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
+                            </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
+                        </div>
                     <div class="grid-row">
                         <draggable
                         v-model="row.items"
@@ -813,6 +811,13 @@ onMounted(() => {
 <style scoped>
 .grid-rows { display: flex; flex-direction: column; gap: 25px; }
 .grid-row-wrap { margin-bottom: 18px; border: 2px dashed #e3e3e3; border-radius: 12px; background: #f9f9fb; padding: 15px 8px 8px; position: relative; }
+.row-actions-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+  padding-top: 10px;
+}
 .row-header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
 .panel-buttons {
   display: flex;
@@ -858,23 +863,6 @@ onMounted(() => {
 .finder-modal { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.5); z-index: 9999; display: flex; justify-content: center; align-items: center; }
 .finder-container { width: 90%; height: 90%; background: #fff; border-radius: 8px; overflow: hidden; position: relative; }
 .close-btn { position: absolute; top: 98px; right: 95px; background: #e00; color: #fff; padding: 5px 10px; border: none; border-radius: 6px; cursor: pointer; z-index: 10; }
-
-.row-header {
-  display: flex;
-  justify-content: space-between; /* 👈 важное изменение */
-  align-items: center;
-  background: transparent;
-  padding: 0;
-}
-.row-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.row-header:hover {
-  background: #eaeaea;
-}
-
 .grid-rows {
   display: block;
   width: 100%;
@@ -925,12 +913,16 @@ onMounted(() => {
 .media-thumb {
   width: 160px;
   height: 100px;
+  overflow: hidden; /* ВАЖНО! */
+  position: relative;
 }
+
 .media-thumb img,
 .media-thumb video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
 }
 .empty-media {
   width: 100%;
@@ -962,14 +954,21 @@ onMounted(() => {
   position: absolute;
   left: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.4); /* ← стало полупрозрачным */
   color: #fff;
   font-size: 12px;
   padding: 2px 8px 2px 6px;
   border-radius: 0 9px 0 0;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
+  pointer-events: none; /* ← НЕ блокирует кнопки */
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .item-toolbar {
