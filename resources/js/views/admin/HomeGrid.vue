@@ -20,6 +20,7 @@
                 <el-icon><Check /></el-icon> Сохранить изменения
                 </el-button>
             </div>
+            </div>
 <div class="grid-rows">
   <draggable
     v-model="gridRows"
