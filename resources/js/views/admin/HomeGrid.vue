@@ -132,54 +132,55 @@
               </template>
             </draggable>
           </div>
-        </div>
 
-<!-- Кнопки справа -->
-<div class="row-actions-inline">
-  <el-button
-    type="danger"
-    size="small"
-    circle
-    @click.stop="removeRow(rowIdx)"
-    title="Удалить строку"
-  >
-    <el-icon><Delete /></el-icon>
-  </el-button>
+          <!-- Кнопки справа -->
+          <div class="row-actions-inline">
+            <el-button
+              type="danger"
+              size="small"
+              circle
+              @click.stop="removeRow(rowIdx)"
+              title="Удалить строку"
+            >
+              <el-icon><Delete /></el-icon>
+            </el-button>
 
-  <el-dropdown
-    class="add-col-dropdown"
-    trigger="click"
-    @command="type => openMediaModal(type, rowIdx)"
-    :teleported="true"
-  >
-    <template #default>
-      <button class="add-col-btn" type="button">
-        <el-icon><Plus /></el-icon>
-      </button>
-    </template>
+            <el-dropdown
+              class="add-col-dropdown"
+              trigger="click"
+              @command="type => openMediaModal(type, rowIdx)"
+              :teleported="true"
+            >
+              <template #default>
+                <button class="add-col-btn" type="button">
+                  <el-icon><Plus /></el-icon>
+                </button>
+              </template>
 
-    <template #dropdown>
-      <el-dropdown-menu>
-        <el-dropdown-item command="img">
-          <el-icon><Picture /></el-icon>Изображение
-        </el-dropdown-item>
-        <el-dropdown-item command="video">
-          <el-icon><VideoCamera /></el-icon>Видео
-        </el-dropdown-item>
-        <el-dropdown-item command="vr">
-          <el-icon><View /></el-icon>VR-тур
-        </el-dropdown-item>
-        <el-dropdown-item command="curtain">
-          <el-icon><Connection /></el-icon>Шторка
-        </el-dropdown-item>
-      </el-dropdown-menu>
-    </template>
- </el-dropdown>
-</div> <!-- row-actions-inline -->
-    </div> <!-- grid-row-container -->
-  </div> <!-- grid-row-wrap -->
-</template> <!-- ✅ Закрываем template #item -->
-</draggable> <!-- ✅ закрыт gridRows draggable -->
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="img">
+                    <el-icon><Picture /></el-icon>Изображение
+                  </el-dropdown-item>
+                  <el-dropdown-item command="video">
+                    <el-icon><VideoCamera /></el-icon>Видео
+                  </el-dropdown-item>
+                  <el-dropdown-item command="vr">
+                    <el-icon><View /></el-icon>VR-тур
+                  </el-dropdown-item>
+                  <el-dropdown-item command="curtain">
+                    <el-icon><Connection /></el-icon>Шторка
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </div> <!-- row-actions-inline -->
+
+        </div> <!-- grid-row-container -->
+      </div> <!-- grid-row-wrap -->
+    </template> <!-- 👈 ВОТ ЗДЕСЬ -->
+  </draggable>
+</div>
 
 <el-dialog v-model="showMediaModal" title="Добавление медиа" width="600px" :append-to-body="true">
   <el-form label-position="top">
@@ -374,7 +375,6 @@
       </div>
           </teleport>
  </div>
-      </template>
 
 <script setup>
 defineOptions({
