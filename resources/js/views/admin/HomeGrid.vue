@@ -173,6 +173,67 @@
   </el-dropdown>
 </div>
 
+<el-dialog v-model="showMediaModal" title="Добавление медиа" width="600px" :append-to-body="true">
+  <el-form label-position="top">
+    <el-form-item label="Выберите проект">
+      <el-select v-model="selectedProjectId" placeholder="Проект" style="width: 100%">
+        <el-option
+          v-for="p in projects"
+          :key="p.id"
+          :label="`${p.title} (${p.usageCount})`"
+          :value="p.id"
+        />
+      </el-select>
+    </el-form-item>
+
+    <el-form-item v-if="mediaType === 'img'" label="Изображение">
+      <el-button @click="openFileManagerForModal">Выбрать изображение</el-button>
+      <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
+        {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
+      </div>
+      <div v-if="selectedPath" class="preview-img">
+        <img :src="`/multimedia/${selectedPath}`" @load="onImageLoad" style="max-width: 100%; margin-top: 10px" />
+      </div>
+    </el-form-item>
+
+    <el-form-item
+      v-if="mediaType === 'img' && showMediaModal"
+      label="SEO описание изображения"
+    >
+      <el-input
+        v-model="mediaDescription"
+        placeholder="Введите описание для alt / SEO"
+        :size="inputSize"
+        type="textarea"
+        rows="2"
+      />
+    </el-form-item>
+
+    <el-form-item v-if="mediaType === 'video'" label="Видео">
+      <el-button @click="openFileManagerForModal">Выбрать видео</el-button>
+      <div v-if="modalMediaSize.w && modalMediaSize.h" class="media-size-modal" style="margin-bottom: 6px;">
+        {{ modalMediaSize.w }} × {{ modalMediaSize.h }} px
+      </div>
+      <div v-if="selectedPath" class="preview-img">
+        <video
+          autoplay
+          loop
+          muted
+          playsinline
+          @loadedmetadata="onVideoLoad"
+          style="width: 100%; margin-top: 10px"
+          :src="`/multimedia/${selectedPath}`"
+        />
+      </div>
+    </el-form-item>
+  </el-form>
+
+  <template #footer>
+    <el-button @click="cancelMediaInsert">Отмена</el-button>
+    <el-button type="primary" @click="insertMedia">Добавить</el-button>
+  </template>
+</el-dialog>
+
 <!-- Модалка предпросмотра -->
 <el-dialog v-model="previewVisible" title="Предпросмотр" width="50%" :append-to-body="true">
   <div class="preview-modal-content">
