@@ -10,49 +10,88 @@
                 $media = is_array($col['media']) ? $col['media'] : json_decode($col['media'] ?? '', true);
                 $mediaLink = $media['link'] ?? '';
                 $poster = $media['poster'] ?? $mediaLink;
+                $width = (float)($media['width'] ?? 16);
+                $height = (float)($media['height'] ?? 9);
+                $aspect = $width > 0 && $height > 0 ? $width / $height : 1;
             @endphp
 
-            {{-- Показываем всё на десктопе, на мобилке только is_mobile === true --}}
             @if(!$isMobile || ($isMobile && $showOnMobile))
-                <a href="#"
-                   data-image="/multimedia/{{ $mediaLink }}"
-                   data-video="@if(($media['type'] ?? '') === 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
-                   class="grid-item loading {{ $showOnMobile ? 'grid-item-mobile' : 'grid-item-desktop' }} grid-item-{{ $media['type'] ?? '' }}"
-                   data-media-width="{{ $media['width'] ?? '' }}"
-                   data-media-height="{{ $media['height'] ?? '' }}"
-                   data-project-link="{{ route('projects.show', ['id' => $col['project_id']]) }}"
-                   data-text2="{{ $col['text2'] ?? '' }}">
+                <div class="grid-item-wrapper" style="flex-grow: {{ number_format($aspect, 2, '.', '') }};">
+                    <a href="#"
+                       data-image="/multimedia/{{ $mediaLink }}"
+                       data-video="@if(($media['type'] ?? '') === 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
+                       class="grid-item {{ $showOnMobile ? 'grid-item-mobile' : 'grid-item-desktop' }} grid-item-{{ $media['type'] ?? '' }}"
+                       data-media-width="{{ $width }}"
+                       data-media-height="{{ $height }}"
+                       data-project-link="{{ route('projects.show', ['id' => $col['project_id']]) }}"
+                       data-text2="{{ $col['text2'] ?? '' }}">
 
-                    @if(($media['type'] ?? '') === 'img')
-                        <img
-                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
-                            data-src="/multimedia/{{ $mediaLink }}"
-                            alt="{{ $media['alt'] ?? '' }}"
-                            class="js-grid-item-media lazyload"
-                            style="background-color: #111; display: block;" />
-                    @elseif(($media['type'] ?? '') === 'video')
-                        <video
-                            muted
-                            loop
-                            playsinline
-                            preload="auto"
-                            class="js-grid-item-media lazyload"
-                            data-autoplay
-                            data-poster="/multimedia/{{ $poster }}"
-                            style="background-color: #000; display: block;"
-                        >
-                            @foreach($media['links'] ?? [] as $link)
-                                <source src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? 'video/mp4' }}">
-                            @endforeach
-                        </video>
-                    @endif
+                        @if(($media['type'] ?? '') === 'img')
+                            <img
+                                src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+                                data-src="/multimedia/{{ $mediaLink }}"
+                                alt="{{ $media['alt'] ?? '' }}"
+                                class="js-grid-item-media lazyload"
+                            />
+                        @elseif(($media['type'] ?? '') === 'video')
+                            <video
+                                muted
+                                loop
+                                playsinline
+                                preload="auto"
+                                class="js-grid-item-media lazyload"
+                                data-autoplay
+                                data-poster="/multimedia/{{ $poster }}"
+                            >
+                                @foreach($media['links'] ?? [] as $link)
+                                    <source src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? 'video/mp4' }}">
+                                @endforeach
+                            </video>
+                        @endif
 
-                    <h3 class="grid-item-title">{{ $col['title'] ?? '' }}</h3>
-                </a>
+                        <h3 class="grid-item-title">{{ $col['title'] ?? '' }}</h3>
+                    </a>
+                </div>
             @endif
         @endforeach
     </div>
 @endforeach
+<style>
+    .grid-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 10px;
+  margin-bottom: 12px;
+  width: 100%;
+  align-items: stretch;
+}
+
+.grid-item-wrapper {
+  flex-shrink: 1;
+  flex-basis: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: stretch;
+  width: 100%;
+}
+
+.grid-item {
+  width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+}
+
+.grid-item img,
+.grid-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  background-color: #000;
+}
+</style>
+
 <script>
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -73,4 +112,3 @@ document.querySelectorAll('video.js-grid-item-media').forEach(video => {
   observer.observe(video);
 });
 </script>
-
