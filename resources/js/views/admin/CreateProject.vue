@@ -40,7 +40,6 @@
         <div class="drag-row-overlay"></div>
 
         <div class="grid-row-container">
-          <!-- Левая часть: сетка колонок -->
           <div class="grid-row">
             <draggable
               v-model="row.items"
@@ -53,7 +52,7 @@
               <template #item="{ element: col, index: colIdx }">
                 <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
                   <div class="media-thumb" @click="openPreview(col)">
-                    <!-- Медиа -->
+                    <!-- Media content -->
                     <template v-if="col.media?.type === 'img'">
                       <img :src="buildMediaUrl(col.media.link)" :key="col.media?.__v || colIdx" class="grid-img" />
                     </template>
@@ -98,28 +97,28 @@
                       <div class="empty-media"><el-icon><Picture /></el-icon></div>
                     </template>
 
-                    <!-- Иконка редактирования -->
-                    <span class="edit-icon" @click.stop="handleEditClick(rowIdx, colIdx, col.media?.type)">
-                      <el-icon><Edit /></el-icon>
-                    </span>
+                    <!-- Overlay: Edit icon, file type icon, delete -->
+                    <div class="media-overlay">
+                      <span class="edit-icon" @click.stop="handleEditClick(rowIdx, colIdx, col.media?.type)">
+                        <el-icon><Edit /></el-icon>
+                      </span>
 
-                    <!-- Иконка формата + кнопка удаления внутри -->
-                    <div class="media-footer">
-                      <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
-                      <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
-                      <el-icon v-else-if="col.media?.type === 'vr'"><View /></el-icon>
-                      <el-icon v-else-if="col.media?.type === 'curtain'"><Connection /></el-icon>
+                      <div class="media-tools">
+                        <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
+                        <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
+                        <el-icon v-else-if="col.media?.type === 'vr'"><View /></el-icon>
+                        <el-icon v-else-if="col.media?.type === 'curtain'"><Connection /></el-icon>
 
-                      <el-button
-                        size="small"
-                        type="danger"
-                        circle
-                        @click.stop="removeCol(rowIdx, colIdx)"
-                        title="Удалить элемент"
-                        style="margin-left: auto"
-                      >
-                        <el-icon><Delete /></el-icon>
-                      </el-button>
+                        <el-button
+                          size="small"
+                          type="danger"
+                          circle
+                          @click.stop="removeCol(rowIdx, colIdx)"
+                          title="Удалить элемент"
+                        >
+                          <el-icon><Delete /></el-icon>
+                        </el-button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -127,7 +126,6 @@
             </draggable>
           </div>
 
-          <!-- Правая часть: кнопки управления строкой -->
           <div class="row-actions-inline">
             <el-button
               type="danger"
@@ -1370,22 +1368,48 @@ onActivated(() => {
   color: #ccc;
   background: #f5f5f7;
 }
-.edit-icon {
+
+.media-overlay {
   position: absolute;
-  top: 7px;
-  right: 8px;
-  border-radius: 50%;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.13);
-  font-size: 18px;
-  padding: 4px;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.edit-icon {
+  align-self: flex-start;
+  background: rgba(0, 0, 0, 0.45);
   color: #fff;
+  font-size: 16px;
+  border-radius: 6px;
+  padding: 4px;
+  pointer-events: auto;
   cursor: pointer;
   transition: background 0.2s;
-  z-index: 2;
 }
 .edit-icon:hover {
-  background: #f3f7ff;
+  background: rgba(0, 0, 0, 0.65);
 }
+
+.media-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.45);
+  padding: 4px 8px;
+  border-radius: 6px;
+  align-self: flex-end;
+  pointer-events: auto;
+}
+.media-tools .el-icon {
+  color: white;
+}
+
 .media-name {
   position: absolute;
   left: 0;
