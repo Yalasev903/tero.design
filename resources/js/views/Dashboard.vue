@@ -134,8 +134,8 @@
                 <keep-alive :include="cachedComponentNames">
                 <component
                     :is="activeTab.component"
-                    :key="activeTab.path === '/projects/create' ? activeTab.path + '-' + Date.now() : activeTab.path"
-                />
+                    :key="generateTabKey(activeTab)"
+                    />
                 </keep-alive>
             </div>
         </div>
@@ -351,7 +351,23 @@ function switchTab(tab) {
   }, 300)
 }
 
+function generateTabKey(tab) {
+  if (tab.path.startsWith('/projects/edit/')) {
+    return tab.path + '-' + (tab.timestamp || Date.now())
+  }
+  if (tab.path === '/projects/create') {
+    return tab.path + '-' + Date.now()
+  }
+  return tab.path
+}
+
+
 function openTab(item) {
+  // если это редактирование проекта — добавляем уникальный timestamp
+  if (item.path.startsWith('/projects/edit/')) {
+    item.timestamp = Date.now()
+  }
+
   let tab = tabs.value.find(t => t.path === item.path)
   if (!tab) {
     tab = { ...item }
@@ -360,8 +376,10 @@ function openTab(item) {
   } else if (item.label) {
     tab.label = item.label
   }
+
   activeTab.value = tab
   sessionStorage.setItem('active-tab-path', tab.path)
+
   if (!tabsMode.value) {
     router.push(item.path)
   }
