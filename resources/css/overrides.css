@@ -171,16 +171,27 @@ input:checked + .slider:before {
 .light-theme .header a.header-link:hover {
     color: #222 !important;
 }
-/* Тёмная тема по умолчанию */
-.header {
-    background-color: #0d0d0d; /* чёрный фон */
-    transition: background-color 0.3s ease, opacity 0.3s ease;
-    opacity: 1;
+html.light-theme .header-link {
+  position: relative;
+  display: inline-block;
+  padding-bottom: 4px;
+  text-decoration: none;
 }
 
-/* Светлая тема — белый фон */
-html.light-theme .header {
-    background-color: #fff !important; /* белый фон */
-    color: #000;
+html.light-theme .header-link::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 2px;
+  width: 100%;
+  background: #000; /* черная полоска */
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+html.light-theme .header-link:hover::after {
+  transform: scaleX(1);
 }
 
