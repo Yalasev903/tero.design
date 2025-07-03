@@ -12,8 +12,14 @@
                 :apiUrl="'/api/admin/pages/homegrid-seo'"
             />
             <br />
-
-
+               <div class="panel-buttons">
+                <el-button type="primary" @click="addRow">
+                <el-icon><Plus /></el-icon> Добавить строку
+                </el-button>
+                <el-button type="success" @click="saveGrid" :loading="saving">
+                <el-icon><Check /></el-icon> Сохранить изменения
+                </el-button>
+            </div>
             <div class="grid-rows">
                 <draggable
                 v-model="gridRows"
@@ -55,6 +61,7 @@
                             </template>
                         </el-dropdown>
                         </div>
+                        <div class="grid-row-container">
                     <div class="grid-row">
                         <draggable
                         v-model="row.items"
@@ -75,7 +82,7 @@
                             >
                             <div
                                 class="media-thumb"
-                                @click="openPreview(col)"
+                                @click.stop="openPreview(col)"
                                 @mousedown="onMouseDown"
                                 @mouseup="onMouseUp"
                             >
@@ -116,25 +123,24 @@
                                 </span>
                             <div class="item-toolbar">
                                 <el-button
-                                size="small"
-                                circle
-                                :type="col.is_mobile ? 'primary' : 'default'"
-                                @click="col.is_mobile = !col.is_mobile"
-                                title="Показывать на мобильных"
+                                    size="small"
+                                    circle
+                                    :type="col.is_mobile ? 'primary' : 'default'"
+                                    @click.stop="col.is_mobile = !col.is_mobile"
+                                    title="Показывать на мобильных"
                                 >
-                                <el-icon><Iphone /></el-icon>
+                                    <el-icon><Iphone /></el-icon>
                                 </el-button>
                                 <el-button
-                                size="small"
-                                type="danger"
-                                circle
-                                @click="removeCol(rowIdx, colIdx)"
-                                title="Удалить колонку"
+                                    size="small"
+                                    type="danger"
+                                    circle
+                                    @click.stop="removeCol(rowIdx, colIdx)"
+                                    title="Удалить колонку"
                                 >
-                                <el-icon><Delete /></el-icon>
+                                    <el-icon><Delete /></el-icon>
                                 </el-button>
-                            </div>
-
+                              </div>
                             <div class="media-name">
                                 <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
                                 <el-icon v-else><Picture /></el-icon>
@@ -145,6 +151,7 @@
                         </template>
                         </draggable>
 
+                    </div>
                     </div>
                     </div>
                 </template>
@@ -202,14 +209,6 @@
     <el-button type="primary" @click="insertMedia">Добавить</el-button>
   </template>
 </el-dialog>
-            </div>
-                        <div class="panel-buttons">
-                <el-button type="primary" @click="addRow">
-                <el-icon><Plus /></el-icon> Добавить строку
-                </el-button>
-                <el-button type="success" @click="saveGrid" :loading="saving">
-                <el-icon><Check /></el-icon> Сохранить изменения
-                </el-button>
             </div>
             </div>
         </div>
@@ -812,11 +811,18 @@ onMounted(() => {
 <style scoped>
 .grid-rows { display: flex; flex-direction: column; gap: 25px; }
 .grid-row-wrap { margin-bottom: 18px; border: 2px dashed #e3e3e3; border-radius: 12px; background: #f9f9fb; padding: 15px 8px 8px; position: relative; }
+.grid-row-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 12px;
+}
 .row-actions-right {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 10px;
   padding-top: 10px;
 }
 .row-header { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
@@ -941,12 +947,10 @@ onMounted(() => {
 .delete-icon {
   position: absolute;
   top: 6px;
-  background: #fff;
-  border-radius: 50%;
   box-shadow: 0 2px 6px rgba(0,0,0,0.13);
   font-size: 16px;
   padding: 4px;
-  color: #409EFF;
+  color: #fff;
   cursor: pointer;
   transition: background 0.2s;
   z-index: 2;
