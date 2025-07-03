@@ -171,3 +171,16 @@ input:checked + .slider:before {
 .light-theme .header a.header-link:hover {
     color: #222 !important;
 }
+/* Тёмная тема по умолчанию */
+.header {
+    background-color: #0d0d0d; /* чёрный фон */
+    transition: background-color 0.3s ease, opacity 0.3s ease;
+    opacity: 1;
+}
+
+/* Светлая тема — белый фон */
+html.light-theme .header {
+    background-color: #fff !important; /* белый фон */
+    color: #000;
+}
+
