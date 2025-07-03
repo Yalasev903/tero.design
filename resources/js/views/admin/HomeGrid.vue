@@ -917,6 +917,7 @@ onMounted(() => {
 .delete-icon {
   position: absolute;
   top: 6px;
+  background: rgba(0, 0, 0, 0.45);
   box-shadow: 0 2px 6px rgba(114, 113, 113, 0.13);
   font-size: 16px;
   padding: 4px;
