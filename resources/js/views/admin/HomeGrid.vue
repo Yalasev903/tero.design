@@ -170,8 +170,12 @@
         </el-dropdown-item>
       </el-dropdown-menu>
     </template>
-  </el-dropdown>
-</div>
+ </el-dropdown>
+</div> <!-- row-actions-inline -->
+    </div> <!-- grid-row-container -->
+  </div> <!-- grid-row-wrap -->
+</template> <!-- ✅ Закрываем template #item -->
+</draggable> <!-- ✅ закрыт gridRows draggable -->
 
 <el-dialog v-model="showMediaModal" title="Добавление медиа" width="600px" :append-to-body="true">
   <el-form label-position="top">
