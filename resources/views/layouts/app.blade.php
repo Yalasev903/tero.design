@@ -200,9 +200,14 @@
         <div class="wrap-header">
             <header class="header row2" id="js-header">
                 <a href="/" class="header-logo row">
-                    <video class="header-logo-img" preload="metadata" playsinline inline muted loop autoplay>
+                    <video class="header-logo-img dark-logo" preload="metadata" playsinline inline muted loop autoplay>
                         <source src="{{ asset('logo/small.256.webm') }}" type="video/webm;">
                         <source src="{{ asset('logo/small.256.mp4') }}" type="video/mp4;">
+                        <img src="{{ asset('logo/small.16.gif') }}">
+                    </video>
+
+                    <video class="header-logo-img light-logo" preload="metadata" playsinline inline muted loop autoplay>
+                        <source src="{{ asset('logo/light-theme.webm') }}" type="video/webm;">
                         <img src="{{ asset('logo/small.16.gif') }}">
                     </video>
                 </a>

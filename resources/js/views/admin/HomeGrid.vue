@@ -922,6 +922,7 @@ onMounted(() => {
   font-size: 16px;
   padding: 4px;
   color: #fff;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.2s;
   z-index: 2;

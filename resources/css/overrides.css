@@ -1,4 +1,3 @@
-
 body.loading .grid {
     display: none !important;
 }
@@ -16,6 +15,13 @@ body.loading {
     justify-content: center;
     transition: opacity 0.3s ease;
 }
+/* Скрытие лоадера после загрузки */
+.loader.hidden {
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
 .grid-item.loading {
   opacity: 1 !important;
   animation: none !important;
@@ -88,7 +94,22 @@ body.loading {
     100% { transform: rotate(360deg); }
 }
 
-/* Светлая тема */
+/* Логотипы по темам */
+.header-logo-img {
+    display: none !important;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+html.dark-theme .header-logo-img.dark-logo,
+html:not(.light-theme) .header-logo-img.dark-logo {
+    display: block !important;
+}
+
+html.light-theme .header-logo-img.light-logo {
+    display: block !important;
+}
+
 /* Toggle switch */
 .theme-toggle-wrapper {
     margin-left: 16px;
@@ -133,7 +154,7 @@ input:checked + .slider:before {
     transform: translateX(18px);
 }
 
-/* Светлая тема (опционально расширяй) */
+/* Светлая тема */
 .light-theme body {
     background-color: #fff;
     color: #111;
@@ -147,8 +168,6 @@ input:checked + .slider:before {
 .light-theme .header a.header-link {
     color: #000 !important;
 }
-
 .light-theme .header a.header-link:hover {
     color: #222 !important;
 }
-
