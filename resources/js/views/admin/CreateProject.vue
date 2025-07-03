@@ -33,145 +33,132 @@
         <el-button type="success" @click="submit"><el-icon><Check /></el-icon> Сохранить проект</el-button>
       </div>
 
-      <div class="grid-rows">
+        <div class="grid-rows">
         <draggable v-model="gridRows" group="rows" animation="200" item-key="id">
-          <template #item="{ element: row, index: rowIdx }">
+            <template #item="{ element: row, index: rowIdx }">
             <div class="grid-row-wrap">
-              <div class="row-header">
-                <span class="drag-row"><el-icon><Menu /></el-icon></span>
-                <el-button type="danger" size="small" circle @click="removeRow(rowIdx)">
-                  <el-icon><Delete /></el-icon>
-                </el-button>
-                <!-- ✅ новый квадратный плюс -->
-<el-dropdown
-  class="add-col-dropdown"
-  trigger="click"
-  @command="type => handleAddCol(rowIdx, type)"
-  :teleported="true"
->
-  <template #default>
-    <button class="add-col-btn" type="button">
-      <el-icon><Plus /></el-icon>
-    </button>
-  </template>
+                <div class="drag-row-overlay"></div>
 
-  <template #dropdown>
-    <el-dropdown-menu>
-      <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
-      <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
-      <el-dropdown-item command="vr"><el-icon><View /></el-icon>VR</el-dropdown-item>
-      <el-dropdown-item command="curtain"><el-icon><Connection /></el-icon>Шторка</el-dropdown-item>
-    </el-dropdown-menu>
-  </template>
-</el-dropdown>
-
-
-
-              </div>
-
-              <div class="grid-row">
-                <draggable
-                  v-model="row.items"
-                  group="cols"
-                  handle=".grid-item"
-                  animation="180"
-                  item-key="colIdx"
-                  class="columns-draggable"
-                >
-                  <template #item="{ element: col, index: colIdx }">
-                    <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
+                <div class="grid-row-container">
+                <!-- Левая часть: сетка колонок -->
+                <div class="grid-row">
+                    <draggable
+                    v-model="row.items"
+                    group="cols"
+                    handle=".grid-item"
+                    animation="180"
+                    item-key="colIdx"
+                    class="columns-draggable"
+                    >
+                    <template #item="{ element: col, index: colIdx }">
+                        <div class="grid-item" :class="col.media?.type ? 'grid-item-' + col.media.type : ''">
                         <div class="media-thumb" @click="openPreview(col)">
-                        <template v-if="col.media?.type === 'img'">
+                            <template v-if="col.media?.type === 'img'">
                             <img :src="buildMediaUrl(col.media.link)" :key="col.media?.__v || colIdx" class="grid-img" />
-                        </template>
+                            </template>
 
-                        <template v-else-if="col.media?.type === 'video'">
+                            <template v-else-if="col.media?.type === 'video'">
                             <video
                                 class="grid-video"
                                 :key="col.media?.__v || colIdx"
                                 autoplay muted loop playsinline preload="metadata"
-                                :poster="col.media.poster ? buildMediaUrl(col.media.poster) : undefined">
+                                :poster="col.media.poster ? buildMediaUrl(col.media.poster) : undefined"
+                            >
                                 <source
                                 v-for="(link, i) in col.media.links || []"
                                 :key="i"
                                 :src="buildMediaUrl(link.link)"
-                                :type="link.mime || 'video/mp4'" />
+                                :type="link.mime || 'video/mp4'"
+                                />
                             </video>
                             </template>
 
-                        <template v-else-if="col.media?.type === 'vr'">
+                            <template v-else-if="col.media?.type === 'vr'">
                             <iframe
-                            class="grid-iframe"
-                            :src="extractIframeSrc(col.media.link)"
-                            :width="col.media.width"
-                            :height="col.media.height"
-                            frameborder="0"
-                            allowfullscreen
-                            allow="xr-spatial-tracking; gyroscope; accelerometer"
-                            scrolling="no"
+                                class="grid-iframe"
+                                :src="extractIframeSrc(col.media.link)"
+                                :width="col.media.width"
+                                :height="col.media.height"
+                                frameborder="0"
+                                allowfullscreen
+                                allow="xr-spatial-tracking; gyroscope; accelerometer"
+                                scrolling="no"
                             ></iframe>
-                        </template>
+                            </template>
 
-                        <template v-else-if="col.media?.type === 'curtain'">
+                            <template v-else-if="col.media?.type === 'curtain'">
                             <div class="curtain-wrapper with-animation">
-                            <img
-                                class="curtain-img curtain-front"
-                                :src="buildMediaUrl(col.media.images[0])"
-                                alt="Curtain image 1"
-                            />
-                            <img
-                                class="curtain-img curtain-back"
-                                :src="buildMediaUrl(col.media.images[1])"
-                                alt="Curtain image 2"
-                            />
+                                <img class="curtain-img curtain-front" :src="buildMediaUrl(col.media.images[0])" />
+                                <img class="curtain-img curtain-back" :src="buildMediaUrl(col.media.images[1])" />
                             </div>
-                        </template>
+                            </template>
 
-                        <template v-else>
-                            <div class="empty-media">
-                            <el-icon><Picture /></el-icon>
-                            </div>
-                        </template>
+                            <template v-else>
+                            <div class="empty-media"><el-icon><Picture /></el-icon></div>
+                            </template>
 
-                        <span class="edit-icon" @click.stop="handleEditClick(rowIdx, colIdx, col.media?.type)">
+                            <span class="edit-icon" @click.stop="handleEditClick(rowIdx, colIdx, col.media?.type)">
                             <el-icon><Edit /></el-icon>
-                        </span>
+                            </span>
                         </div>
-                      <span class="media-name">
-                        <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
-                        <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
-                        <el-icon v-else-if="col.media?.type === 'vr'"><View /></el-icon>
-                        <el-icon v-else-if="col.media?.type === 'curtain'"><Connection /></el-icon>
-                      </span>
 
-                      <div class="item-toolbar">
-                        <el-button size="small" type="danger" circle @click="removeCol(rowIdx, colIdx)">
-                          <el-icon><Delete /></el-icon>
-                        </el-button>
-                      </div>
-                    </div>
-                  </template>
-                </draggable>
+                        <span class="media-name">
+                            <el-icon v-if="col.media?.type === 'video'"><VideoCamera /></el-icon>
+                            <el-icon v-else-if="col.media?.type === 'img'"><Picture /></el-icon>
+                            <el-icon v-else-if="col.media?.type === 'vr'"><View /></el-icon>
+                            <el-icon v-else-if="col.media?.type === 'curtain'"><Connection /></el-icon>
+                        </span>
 
-                <!-- Меню выбора типа медиа -->
-                <!-- <el-dropdown trigger="click" @command="type => handleAddCol(rowIdx, type)">
-                  <el-button size="small" circle type="primary" class="add-col-btn">
-                    <el-icon><Plus /></el-icon>
-                  </el-button>
-                  <template #dropdown>
-                    <el-dropdown-menu>
-                      <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
-                      <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
-                      <el-dropdown-item command="vr"><el-icon><View /></el-icon>VR</el-dropdown-item>
-                      <el-dropdown-item command="curtain"><el-icon><Connection /></el-icon>Шторка</el-dropdown-item>
-                    </el-dropdown-menu>
-                  </template>
-                </el-dropdown> -->
-              </div>
+                        <div class="item-toolbar">
+                            <el-button size="small" type="danger" circle @click="removeCol(rowIdx, colIdx)">
+                            <el-icon><Delete /></el-icon>
+                            </el-button>
+                        </div>
+                        </div>
+                    </template>
+                    </draggable>
+                </div>
+
+                <!-- Правая часть: кнопки управления строкой -->
+                <div class="row-actions-inline">
+                    <el-button
+                    type="danger"
+                    size="small"
+                    circle
+                    @click.stop="removeRow(rowIdx)"
+                    title="Удалить строку"
+                    >
+                    <el-icon><Delete /></el-icon>
+                    </el-button>
+
+                    <el-dropdown
+                    class="add-col-dropdown"
+                    trigger="click"
+                    @command="type => handleAddCol(rowIdx, type)"
+                    :teleported="true"
+                    >
+                    <template #default>
+                        <button class="add-col-btn" type="button">
+                        <el-icon><Plus /></el-icon>
+                        </button>
+                    </template>
+
+                    <template #dropdown>
+                        <el-dropdown-menu>
+                        <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
+                        <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
+                        <el-dropdown-item command="vr"><el-icon><View /></el-icon>VR</el-dropdown-item>
+                        <el-dropdown-item command="curtain"><el-icon><Connection /></el-icon>Шторка</el-dropdown-item>
+                        </el-dropdown-menu>
+                    </template>
+                    </el-dropdown>
+                </div>
+                </div>
             </div>
-          </template>
+            </template>
         </draggable>
-      </div>
+        </div>
+
     </el-form>
 
     <!-- Модалка добавления и редактирования видео или изображения -->
@@ -1379,7 +1366,6 @@ onActivated(() => {
   position: absolute;
   top: 7px;
   right: 8px;
-  background: #fff;
   border-radius: 50%;
   box-shadow: 0 2px 6px rgba(0,0,0,0.13);
   font-size: 18px;
@@ -1396,14 +1382,21 @@ onActivated(() => {
   position: absolute;
   left: 0;
   bottom: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0, 0, 0, 0.4);
   color: #fff;
-  font-size: 13px;
-  padding: 3px 12px 3px 7px;
+  font-size: 12px;
+  padding: 2px 8px 2px 6px;
   border-radius: 0 9px 0 0;
   display: flex;
   align-items: center;
-  gap: 7px;
+  gap: 6px;
+  pointer-events: none;
+  width: 100%;
+  justify-content: center;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .item-toolbar {
   display: flex;
@@ -1411,6 +1404,30 @@ onActivated(() => {
   gap: 8px;
   margin: 7px 0 2px 0;
 }
+
+.grid-row-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+.row-actions-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  padding-left: 12px;
+  padding-top: 4px;
+}
+.drag-row-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
 .add-col-btn {
   margin-top: 4px;
   width: 36px;
