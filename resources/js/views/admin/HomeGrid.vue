@@ -2,9 +2,11 @@
         <div>
             <div class="home-grid-panel">
                 <a href="/" target="_blank" class="inline-flex items-center text-blue-600 hover:underline text-lg font-medium mb-4">
+                <span class="inline-flex items-center">
                     <el-icon class="mr-1"><House /></el-icon>
                     Открыть главную страницу
-                    </a>
+                </span>
+                </a>
 
             <SeoIndex
                 v-model="form"
