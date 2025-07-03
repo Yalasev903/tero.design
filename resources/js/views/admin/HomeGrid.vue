@@ -31,40 +31,42 @@
                 <template #item="{ element: row, index: rowIdx }">
                     <div class="grid-row-wrap">
                     <div class="drag-row-overlay"></div>
-                    <div class="row-header">
-                        <span class="drag-row" title="Перетащить строку">
-                        <el-icon><Menu /></el-icon>
-                        </span>
-                        <el-button
-                        type="danger"
-                        size="small"
-                        circle
-                        @click.stop="removeRow(rowIdx)"
-                        title="Удалить строку"
-                        >
-                        <el-icon><Delete /></el-icon>
-                        </el-button>
-<el-dropdown
-  class="add-col-dropdown"
-  trigger="click"
-  @command="type => openMediaModal(type, rowIdx)"
-  :teleported="true"
->
-  <template #default>
-    <button class="add-col-btn" type="button">
-      <el-icon><Plus /></el-icon>
-    </button>
-  </template>
+<div class="row-header">
+  <span class="drag-row" title="Перетащить строку">
+    <el-icon><Menu /></el-icon>
+  </span>
+  <div class="row-actions">
+    <el-button
+      type="danger"
+      size="small"
+      circle
+      @click.stop="removeRow(rowIdx)"
+      title="Удалить строку"
+    >
+      <el-icon><Delete /></el-icon>
+    </el-button>
 
-  <template #dropdown>
-    <el-dropdown-menu>
-      <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
-      <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
-    </el-dropdown-menu>
-  </template>
-</el-dropdown>
+    <el-dropdown
+      class="add-col-dropdown"
+      trigger="click"
+      @command="type => openMediaModal(type, rowIdx)"
+      :teleported="true"
+    >
+      <template #default>
+        <button class="add-col-btn" type="button">
+          <el-icon><Plus /></el-icon>
+        </button>
+      </template>
 
-                    </div>
+      <template #dropdown>
+        <el-dropdown-menu>
+          <el-dropdown-item command="img"><el-icon><Picture /></el-icon>Изображение</el-dropdown-item>
+          <el-dropdown-item command="video"><el-icon><VideoCamera /></el-icon>Видео</el-dropdown-item>
+        </el-dropdown-menu>
+      </template>
+    </el-dropdown>
+  </div>
+</div>
                     <div class="grid-row">
                         <draggable
                         v-model="row.items"
@@ -850,15 +852,16 @@ onMounted(() => {
 
 .row-header {
   display: flex;
+  justify-content: space-between; /* 👈 важное изменение */
   align-items: center;
-  gap: 14px;
-  margin-bottom: 8px;
-  background: #f2f2f2;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: grab;
-  user-select: none;
+  background: transparent;
+  padding: 0;
 }
+.row-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .row-header:hover {
   background: #eaeaea;
 }
@@ -868,15 +871,9 @@ onMounted(() => {
   width: 100%;
 }
 .grid-row-wrap {
-  position: relative;
-  margin-bottom: 25px;
-  border: 2px dashed #e3e3e3;
-  border-radius: 12px;
-  background: #f9f9fb;
-  padding: 15px 8px 8px;
-  cursor: grab;
+  padding: 10px 6px 6px;
+  margin-bottom: 16px;
 }
-
 .grid-row-wrap * {
   cursor: auto; /* отменяем grab внутри */
 }
@@ -917,18 +914,8 @@ onMounted(() => {
 
 /* Иконка редактировать в верхнем правом углу превью */
 .media-thumb {
-  position: relative;
-  width: 180px;
-  height: 120px;
-  border-radius: 10px;
-  overflow: hidden;
-  background: #eee;
-  margin: 0 auto 10px auto;
-  cursor: pointer;
-  box-shadow: 0 3px 12px rgba(0,0,0,0.05);
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  width: 160px;
+  height: 100px;
 }
 .media-thumb img,
 .media-thumb video {
@@ -968,8 +955,8 @@ onMounted(() => {
   bottom: 0;
   background: rgba(0,0,0,0.55);
   color: #fff;
-  font-size: 13px;
-  padding: 3px 12px 3px 7px;
+  font-size: 12px;
+  padding: 2px 8px 2px 6px;
   border-radius: 0 9px 0 0;
   display: flex;
   align-items: center;
@@ -978,9 +965,9 @@ onMounted(() => {
 
 .item-toolbar {
   display: flex;
-  justify-content: center;
-  gap: 8px;
-  margin: 7px 0 2px 0;
+  justify-content: space-between;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .add-col-btn {
@@ -1022,10 +1009,9 @@ onMounted(() => {
 }
 
 .grid-item {
-    position: relative;
-    z-index: 10;
-    cursor: grab;
-  /* подсветка при drag можно добавить если хочешь */
+  padding: 6px;
+  min-width: 200px;
+  max-width: 240px;
 }
 
 /* Размеры над превью в сетке */
