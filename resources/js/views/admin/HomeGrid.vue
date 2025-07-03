@@ -130,6 +130,7 @@
               </template>
             </draggable>
           </div>
+        </div>
 
 <!-- Кнопки справа -->
 <div class="row-actions-inline">
