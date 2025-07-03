@@ -119,7 +119,6 @@
                                 <span class="edit-icon" @click.stop="openEditModal(rowIdx, colIdx)" title="Редактировать медиа">
                                 <el-icon><Edit /></el-icon>
                                 </span>
-                            </div>
                             <div class="item-toolbar">
                                 <el-button
                                 size="small"
@@ -140,6 +139,7 @@
                                 <el-icon><Delete /></el-icon>
                                 </el-button>
                             </div>
+                                </div>
                             </div>
                         </template>
                         </draggable>
@@ -911,10 +911,12 @@ onMounted(() => {
 
 /* Иконка редактировать в верхнем правом углу превью */
 .media-thumb {
-  width: 160px;
-  height: 100px;
-  overflow: hidden; /* ВАЖНО! */
+  width: 200px;
+  height: 130px;
   position: relative;
+  overflow: hidden;
+  border-radius: 6px;
+  background: #f5f5f5;
 }
 
 .media-thumb img,
@@ -934,21 +936,41 @@ onMounted(() => {
   color: #ccc;
   background: #f5f5f7;
 }
-.edit-icon {
+.edit-icon,
+.delete-icon {
   position: absolute;
-  top: 7px;
-  right: 8px;
+  top: 6px;
   background: #fff;
   border-radius: 50%;
   box-shadow: 0 2px 6px rgba(0,0,0,0.13);
-  font-size: 18px;
+  font-size: 16px;
   padding: 4px;
   color: #409EFF;
   cursor: pointer;
   transition: background 0.2s;
   z-index: 2;
 }
-.edit-icon:hover { background: #f3f7ff; }
+
+.edit-icon:hover,
+.delete-icon:hover {
+  background: #f3f7ff;
+}
+
+.edit-icon {
+  right: 34px;
+}
+
+.delete-icon {
+  right: 6px;
+  color: #e74c3c;
+}
+
+.item-toolbar {
+  display: flex;
+  justify-content: center;
+  margin-top: 6px;
+  gap: 6px;
+}
 
 .media-name {
   position: absolute;
@@ -969,13 +991,6 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.item-toolbar {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  margin-top: 4px;
 }
 
 .add-col-btn {
@@ -1017,9 +1032,9 @@ onMounted(() => {
 }
 
 .grid-item {
-  padding: 6px;
-  min-width: 200px;
+  min-width: 220px;
   max-width: 240px;
+  padding: 8px;
 }
 
 /* Размеры над превью в сетке */
