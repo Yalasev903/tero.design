@@ -130,89 +130,159 @@
             </draggable>
           </div>
 
-          <!-- Кнопки справа -->
-          <div class="row-actions-inline">
-            <el-button
-              type="danger"
-              size="small"
-              circle
-              @click.stop="removeRow(rowIdx)"
-              title="Удалить строку"
-            >
-              <el-icon><Delete /></el-icon>
-            </el-button>
+<!-- Кнопки справа -->
+<div class="row-actions-inline">
+  <el-button
+    type="danger"
+    size="small"
+    circle
+    @click.stop="removeRow(rowIdx)"
+    title="Удалить строку"
+  >
+    <el-icon><Delete /></el-icon>
+  </el-button>
 
-            <el-dropdown
-              class="add-col-dropdown"
-              trigger="click"
-              @command="type => openMediaModal(type, rowIdx)"
-              :teleported="true"
-            >
-              <template #default>
-                <button class="add-col-btn" type="button">
-                  <el-icon><Plus /></el-icon>
-                </button>
-              </template>
-
-              <template #dropdown>
-                <el-dropdown-menu>
-                  <el-dropdown-item command="img">
-                    <el-icon><Picture /></el-icon>Изображение
-                  </el-dropdown-item>
-                  <el-dropdown-item command="video">
-                    <el-icon><VideoCamera /></el-icon>Видео
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </template>
-            </el-dropdown>
-          </div>
-        </div>
-      </div>
+  <el-dropdown
+    class="add-col-dropdown"
+    trigger="click"
+    @command="type => openMediaModal(type, rowIdx)"
+    :teleported="true"
+  >
+    <template #default>
+      <button class="add-col-btn" type="button">
+        <el-icon><Plus /></el-icon>
+      </button>
     </template>
-  </draggable>
+
+    <template #dropdown>
+      <el-dropdown-menu>
+        <el-dropdown-item command="img">
+          <el-icon><Picture /></el-icon>Изображение
+        </el-dropdown-item>
+        <el-dropdown-item command="video">
+          <el-icon><VideoCamera /></el-icon>Видео
+        </el-dropdown-item>
+        <el-dropdown-item command="vr">
+          <el-icon><View /></el-icon>VR-тур
+        </el-dropdown-item>
+        <el-dropdown-item command="curtain">
+          <el-icon><Connection /></el-icon>Шторка
+        </el-dropdown-item>
+      </el-dropdown-menu>
+    </template>
+  </el-dropdown>
 </div>
-            </div>
+
+<!-- Модалка предпросмотра -->
+<el-dialog v-model="previewVisible" title="Предпросмотр" width="50%" :append-to-body="true">
+  <div class="preview-modal-content">
+    <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
+      {{ previewSize.w }} × {{ previewSize.h }} px
+    </div>
+
+    <img v-if="previewItem?.type === 'img'" :src="`/multimedia/${previewItem.link}`" class="preview-img" />
+
+    <video v-else-if="previewItem?.type === 'video'" class="preview-video" controls autoplay loop muted playsinline
+           :poster="`/multimedia/${previewItem.poster || previewItem.link}`">
+      <source v-for="(link, i) in previewItem.links" :key="i" :src="`/multimedia/${link.link}`" />
+    </video>
+
+    <iframe v-else-if="previewItem?.type === 'vr'"
+            class="preview-iframe"
+            :src="extractIframeSrc(previewItem.link)"
+            :width="previewItem.width || 800"
+            :height="previewItem.height || 500"
+            frameborder="0"
+            allowfullscreen
+            allow="xr-spatial-tracking; gyroscope; accelerometer"
+            scrolling="no">
+    </iframe>
+
+    <div v-else-if="previewItem?.type === 'curtain'" class="curtain-preview-container">
+      <div class="curtain-preview">
+        <img class="curtain-img curtain-front" :src="`/multimedia/${previewItem.images[0]}`" />
+        <img class="curtain-img curtain-back" :src="`/multimedia/${previewItem.images[1]}`" />
+        <div class="curtain-slider" ref="curtainSlider" @mousedown="startCurtainDrag" />
+      </div>
+    </div>
+
+    <p v-else>Нет данных для предпросмотра</p>
+
+    <el-input
+      v-if="previewItem?.type === 'img'"
+      v-model="previewItem.title"
+      placeholder="Название / alt"
+      style="margin-top: 16px; width: 100%; text-align: center;"
+    />
+  </div>
+</el-dialog>
+
+<!-- Модалка добавления VR -->
+<el-dialog v-model="showVrModal" title="Добавление VR-тура" width="600px" :append-to-body="true">
+  <el-form label-position="top">
+    <el-form-item label="HTML iframe код">
+      <el-input
+        type="textarea"
+        v-model="vrIframeCode"
+        rows="4"
+        placeholder='<iframe src="..." width="..." height="..." ...></iframe>'
+      />
+    </el-form-item>
+
+    <el-row :gutter="10">
+      <el-col :span="12">
+        <el-form-item label="Ширина">
+          <el-input-number v-model="vrWidth" :min="100" :step="100" />
+        </el-form-item>
+      </el-col>
+      <el-col :span="12">
+        <el-form-item label="Высота">
+          <el-input-number v-model="vrHeight" :min="100" :step="100" />
+        </el-form-item>
+      </el-col>
+    </el-row>
+  </el-form>
+
+  <template #footer>
+    <el-button @click="cancelVrInsert">Отмена</el-button>
+    <el-button type="primary" @click="insertVrIframe">Добавить</el-button>
+    <el-button @click="detectVrIframeSize">Определить размер</el-button>
+  </template>
+</el-dialog>
+
+<!-- Модалка добавления шторки -->
+<el-dialog v-model="showCurtainModal" title="Добавление шторки" width="600px" :append-to-body="true">
+  <div style="display: flex; flex-direction: column; gap: 20px">
+    <div>
+      <p><b>Первое изображение:</b></p>
+      <div v-if="curtainImage1" class="preview-img">
+        <div v-if="curtainSize1.w && curtainSize1.h" style="margin-bottom: 4px; font-size: 13px; text-align: center;">
+          {{ curtainSize1.w }} × {{ curtainSize1.h }} px
         </div>
-        <el-dialog
-        v-model="previewVisible"
-        title="Предпросмотр"
-        width="50%"
-        class="preview-dialog"
-        :append-to-body="true"
-        >
-        <div class="preview-modal-content">
-            <div v-if="previewSize.w && previewSize.h" class="media-size-modal">
-            {{ previewSize.w }} × {{ previewSize.h }} px
-            </div>
+        <img :src="`/multimedia/${curtainImage1}`" style="max-width: 100%;" />
+      </div>
+      <el-button @click="selectCurtainImage(1)">Выбрать изображение 1</el-button>
+      <el-input v-model="curtainTitle1" placeholder="alt для первого изображения" style="margin-top: 10px" />
+    </div>
 
-            <div v-if="previewItem?.type === 'img'">
-            <img :src="`/multimedia/${previewItem.link}`" class="preview-img" />
-            </div>
-
-            <div v-else-if="previewItem?.type === 'video' && previewItem?.links?.length">
-            <video
-                class="preview-video"
-                controls
-                autoplay
-                loop
-                muted
-                playsinline
-                :poster="`/multimedia/${previewItem.poster || previewItem.link}`"
-            >
-                <source
-                v-for="(link, i) in previewItem.links"
-                :key="i"
-                :src="`/multimedia/${link.link}`"
-                :type="link.mime || 'video/mp4'"
-                />
-            </video>
-            </div>
-
-            <div v-else>
-            <p>Нет данных для предпросмотра</p>
-            </div>
+    <div>
+      <p><b>Второе изображение:</b></p>
+      <div v-if="curtainImage2" class="preview-img">
+        <div v-if="curtainSize2.w && curtainSize2.h" style="margin-bottom: 4px; font-size: 13px; text-align: center;">
+          {{ curtainSize2.w }} × {{ curtainSize2.h }} px
         </div>
-        </el-dialog>
+        <img :src="`/multimedia/${curtainImage2}`" style="max-width: 100%;" />
+      </div>
+      <el-button @click="selectCurtainImage(2)">Выбрать изображение 2</el-button>
+      <el-input v-model="curtainTitle2" placeholder="alt для второго изображения" style="margin-top: 10px" />
+    </div>
+  </div>
+
+  <template #footer>
+    <el-button @click="cancelCurtainInsert">Отмена</el-button>
+    <el-button type="primary" @click="insertCurtain">Добавить шторку</el-button>
+  </template>
+</el-dialog>
 
     <!-- VueFinder -->
     <teleport to="body">
