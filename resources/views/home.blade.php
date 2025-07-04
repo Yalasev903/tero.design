@@ -33,17 +33,29 @@
             .info-block { right: 11px; top: 45px; background: #0009; padding: 8px 8px; text-align: left;}
         }
         .close_svg { position: absolute; right: 10px; top: 26px; width: 28px; cursor: pointer;}
-        .project-link-icon {
-        margin-right: 10px;
-        display: inline-flex;
+        .project-info {
+        display: flex;
         align-items: center;
-        cursor: pointer;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 5px;
+        margin-top: -5px;
     }
-    .project-link-icon svg {
-        width: 24px;
-        height: 24px;
+
+    .project-info h3 {
+        font-size: 18px;
+        color: #fff;
+        margin: 0;
+        flex: 1;
     }
-    .project-link-icon:hover svg {
+
+    .project-link-text {
+        color: #fff;
+        text-decoration: underline;
+        font-size: 14px;
+        white-space: nowrap;
+    }
+    .project-link-text:hover {
         opacity: 0.8;
     }
         #scroll-to-top {
@@ -105,24 +117,27 @@ document.addEventListener('DOMContentLoaded', function() {
             var projectInfo = document.createElement('div');
             projectInfo.classList.add('project-info');
 
-            // 🔗 Ссылка на проект (если есть)
+            // заголовок проекта
+            var titleElement = document.createElement('h3');
+            titleElement.innerText = title;
+            projectInfo.appendChild(titleElement);
+
+            // ссылка "View Full Project"
             if (projectLink) {
                 var link = document.createElement('a');
                 link.href = projectLink;
                 link.target = '_blank';
                 link.rel = 'noopener';
-                link.classList.add('project-link-icon');
-                link.title = 'View Full Project';
-                link.innerHTML = `
-                    <svg width="24" height="24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M10 3H5a2 2 0 0 0-2 2v5h2V5h5V3zm4 0h5a2 2 0 0 1 2 2v5h-2V5h-5V3zm7 14v5a2 2 0 0 1-2 2h-5v-2h5v-5h2zM3 17v5a2 2 0 0 0 2 2h5v-2H5v-5H3z"/>
-                    </svg>`;
+                link.classList.add('project-link-text');
+                link.textContent = 'View Full Project';
                 projectInfo.appendChild(link);
             }
 
             // кнопка "i"
-            var infoIcon = document.createElement('svg');
+            var infoIcon = document.createElement('span');
             infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
+            infoIcon.style.marginLeft = '10px';
+            infoIcon.style.cursor = 'pointer';
             infoIcon.addEventListener('click', function() {
                 var infoBlock = projectInfo.querySelector('.info-block');
                 if (infoBlock) {
@@ -136,18 +151,11 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             projectInfo.appendChild(infoIcon);
 
-            // заголовок
-            var titleElement = document.createElement('h3');
-            titleElement.innerText = title;
-            projectInfo.appendChild(titleElement);
-
-            // финально
             popupInner.appendChild(projectInfo);
             popup.innerHTML = '';
             popup.appendChild(popupInner);
             popup.classList.add('active');
 
-            // Закрытие по клику на картинку/видео
             var mediaEl = popupInner.querySelector('img, video');
             mediaEl?.addEventListener('click', function(e) {
                 if (e.target === this) {
@@ -158,7 +166,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Закрытие по клику вне
     popup.addEventListener('click', function(e) {
         if (e.target === this) {
             this.innerHTML = '';
