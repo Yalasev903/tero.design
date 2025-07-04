@@ -139,7 +139,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 🔧 Контейнер с кнопками в правом верхнем углу
             const buttonContainer = document.createElement('div');
             buttonContainer.style.position = 'absolute';
-            buttonContainer.style.top = '10px';
+            buttonContainer.style.top = '-10px';
             buttonContainer.style.right = '10px';
             buttonContainer.style.display = 'flex';
             buttonContainer.style.gap = '10px';
