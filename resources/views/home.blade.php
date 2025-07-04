@@ -34,153 +34,166 @@
             .info-block { right: 11px; top: 45px; background: #0009; padding: 8px 8px; text-align: left;}
         }
         .close_svg { position: absolute; right: 10px; top: 26px; width: 28px; cursor: pointer;}
+        .project-link-icon {
+        margin-right: 10px;
+        display: inline-flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    .project-link-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+    .project-link-icon:hover svg {
+        opacity: 0.8;
+    }
     </style>
     {{-- / Внутренние стили главной --}}
 
     {{-- JS для popup --}}
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            var gridItemLinks = document.getElementsByClassName('grid-item');
-            var popup = document.createElement('div');
-            popup.classList.add('popup');
-            document.body.appendChild(popup);
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var gridItemLinks = document.getElementsByClassName('grid-item');
+    var popup = document.createElement('div');
+    popup.classList.add('popup');
+    document.body.appendChild(popup);
 
-            for (var i = 0; i < gridItemLinks.length; i++) {
-                gridItemLinks[i].addEventListener('click', function(e) {
-                    e.preventDefault();
-                    var mediaType = this.classList.contains('grid-item-video') ? 'video' : 'image';
-                    var mediaUrl = this.dataset.image;
-                    var title = this.querySelector('.grid-item-title').innerText;
-                    var projectLink = this.dataset.projectLink;
-                    var text2 = this.dataset.text2;
+    for (var i = 0; i < gridItemLinks.length; i++) {
+        gridItemLinks[i].addEventListener('click', function(e) {
+            e.preventDefault();
+            var mediaType = this.classList.contains('grid-item-video') ? 'video' : 'image';
+            var mediaUrl = this.dataset.image;
+            var title = this.querySelector('.grid-item-title').innerText;
+            var projectLink = this.dataset.projectLink;
+            var text2 = this.dataset.text2;
 
-                    if (mediaType === 'image') {
-                        mediaUrl = this.dataset.image;
-                        var popupInner = document.createElement('div');
-                        popupInner.classList.add('popup-inner');
-                        var img = document.createElement('img');
-                        img.src = mediaUrl;
-                        popupInner.appendChild(img);
+            var popupInner = document.createElement('div');
+            popupInner.classList.add('popup-inner');
 
-                        var projectInfo = document.createElement('div');
-                        projectInfo.classList.add('project-info');
-                        var titleElement = document.createElement('h3');
-                        titleElement.innerText = title;
-
-                        var infoIcon = document.createElement('svg');
-                        infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="">';
-                        infoIcon.addEventListener('click', function() {
-                            var infoBlock = projectInfo.querySelector('.info-block');
-                            if (infoBlock) {
-                                projectInfo.removeChild(infoBlock);
-                            } else {
-                                infoBlock = document.createElement('div');
-                                infoBlock.classList.add('info-block');
-                                infoBlock.innerHTML = text2;
-                                projectInfo.appendChild(infoBlock);
-                            }
-                        });
-
-                        projectInfo.appendChild(infoIcon);
-                        projectInfo.appendChild(titleElement);
-                        popupInner.appendChild(projectInfo);
-
-                        popup.innerHTML = '';
-                        popup.appendChild(popupInner);
-                        popup.classList.add('active');
-
-                        img.addEventListener('click', function(e) {
-                            if (e.target === this) {
-                                popup.innerHTML = '';
-                                popup.classList.remove('active');
-                            }
-                        });
-                    } else if (mediaType === 'video') {
-                        mediaUrl = this.dataset.video;
-                        var popupInner = document.createElement('div');
-                        popupInner.classList.add('popup-inner');
-                        var video = document.createElement('video');
-                        video.preload = 'metadata';
-                        video.muted = true;
-                        video.loop = true;
-                        video.autoplay = true;
-                        var source = document.createElement('source');
-                        source.src = mediaUrl;
-                        video.appendChild(source);
-                        popupInner.appendChild(video);
-
-                        var projectInfo = document.createElement('div');
-                        projectInfo.classList.add('project-info');
-                        var titleElement = document.createElement('h3');
-                        titleElement.innerText = title;
-
-                        var infoIcon = document.createElement('svg');
-                        infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="">';
-                        infoIcon.addEventListener('click', function() {
-                            var infoBlock = projectInfo.querySelector('.info-block');
-                            if (infoBlock) {
-                                projectInfo.removeChild(infoBlock);
-                            } else {
-                                infoBlock = document.createElement('div');
-                                infoBlock.classList.add('info-block');
-                                infoBlock.innerHTML = text2;
-                                projectInfo.appendChild(infoBlock);
-                            }
-                        });
-
-                        projectInfo.appendChild(infoIcon);
-                        projectInfo.appendChild(titleElement);
-                        popupInner.appendChild(projectInfo);
-
-                        popup.innerHTML = '';
-                        popup.appendChild(popupInner);
-                        popup.classList.add('active');
-
-                        video.addEventListener('click', function(e) {
-                            if (e.target === this) {
-                                popup.innerHTML = '';
-                                popup.classList.remove('active');
-                            }
-                        });
-                    }
-                });
+            if (mediaType === 'image') {
+                var img = document.createElement('img');
+                img.src = mediaUrl;
+                popupInner.appendChild(img);
+            } else if (mediaType === 'video') {
+                mediaUrl = this.dataset.video;
+                var video = document.createElement('video');
+                video.preload = 'metadata';
+                video.muted = true;
+                video.loop = true;
+                video.autoplay = true;
+                var source = document.createElement('source');
+                source.src = mediaUrl;
+                video.appendChild(source);
+                popupInner.appendChild(video);
             }
 
-            popup.addEventListener('click', function(e) {
+            // блок project-info
+            var projectInfo = document.createElement('div');
+            projectInfo.classList.add('project-info');
+
+            // 🔗 Ссылка на проект (если есть)
+            if (projectLink) {
+                var link = document.createElement('a');
+                link.href = projectLink;
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.classList.add('project-link-icon');
+                link.title = 'View Full Project';
+                link.innerHTML = `
+                    <svg width="24" height="24" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M10 3H5a2 2 0 0 0-2 2v5h2V5h5V3zm4 0h5a2 2 0 0 1 2 2v5h-2V5h-5V3zm7 14v5a2 2 0 0 1-2 2h-5v-2h5v-5h2zM3 17v5a2 2 0 0 0 2 2h5v-2H5v-5H3z"/>
+                    </svg>`;
+                projectInfo.appendChild(link);
+            }
+
+            // кнопка "i"
+            var infoIcon = document.createElement('svg');
+            infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
+            infoIcon.addEventListener('click', function() {
+                var infoBlock = projectInfo.querySelector('.info-block');
+                if (infoBlock) {
+                    projectInfo.removeChild(infoBlock);
+                } else {
+                    infoBlock = document.createElement('div');
+                    infoBlock.classList.add('info-block');
+                    infoBlock.innerHTML = text2;
+                    projectInfo.appendChild(infoBlock);
+                }
+            });
+            projectInfo.appendChild(infoIcon);
+
+            // заголовок
+            var titleElement = document.createElement('h3');
+            titleElement.innerText = title;
+            projectInfo.appendChild(titleElement);
+
+            // финально
+            popupInner.appendChild(projectInfo);
+            popup.innerHTML = '';
+            popup.appendChild(popupInner);
+            popup.classList.add('active');
+
+            // Закрытие по клику на картинку/видео
+            var mediaEl = popupInner.querySelector('img, video');
+            mediaEl?.addEventListener('click', function(e) {
                 if (e.target === this) {
-                    this.innerHTML = '';
-                    this.classList.remove('active');
+                    popup.innerHTML = '';
+                    popup.classList.remove('active');
                 }
             });
         });
+    }
 
-        let batch = 1;
-        let loading = false;
+    // Закрытие по клику вне
+    popup.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.innerHTML = '';
+            this.classList.remove('active');
+        }
+    });
+});
 
-        window.addEventListener('scroll', async () => {
-            if (loading) return;
-
-            const scrollPosition = window.innerHeight + window.scrollY;
-            const pageHeight = document.body.offsetHeight;
-
-            if (scrollPosition >= pageHeight - 500) {
-                loading = true;
-
-                try {
-                    const response = await fetch(`/?batch=${batch}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-                    const result = await response.json();
-
-                    if (result.rows.trim()) {
-                        document.querySelector('#js-gallery').insertAdjacentHTML('beforeend', result.rows);
-                        batch++;
-                        loading = false;
-                    }
-                } catch (err) {
-                    console.error('Ошибка подгрузки:', err);
-                }
+// lazyload
+document.addEventListener('lazyloaded', function (e) {
+    const el = e.target;
+    if (el.tagName === 'VIDEO') {
+        el.querySelectorAll('source').forEach(source => {
+            if (source.dataset.src && !source.src) {
+                source.src = source.dataset.src;
             }
         });
-    </script>
+        el.load();
+        el.play().catch(() => {});
+    }
+});
+
+// Infinite scroll
+let batch = 1;
+let loading = false;
+
+window.addEventListener('scroll', async () => {
+    if (loading) return;
+
+    const scrollPosition = window.innerHeight + window.scrollY;
+    const pageHeight = document.body.offsetHeight;
+
+    if (scrollPosition >= pageHeight - 500) {
+        loading = true;
+        try {
+            const response = await fetch(`/?batch=${batch}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+            const result = await response.json();
+            if (result.rows.trim()) {
+                document.querySelector('#js-gallery').insertAdjacentHTML('beforeend', result.rows);
+                batch++;
+                loading = false;
+            }
+        } catch (err) {
+            console.error('Ошибка подгрузки:', err);
+        }
+    }
+});
+</script>
+
     {{-- / JS для popup --}}
     @section('scripts')
     {{-- ... все скрипты ... --}}
