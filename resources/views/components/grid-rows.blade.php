@@ -24,7 +24,7 @@
             $aspectTotal += $aspect;
         }
 
-        $rowWidth = 1000; // Можно сделать адаптивным в JS
+        $rowWidth = 1000;
     @endphp
 
     <div class="grid-row">
@@ -39,19 +39,25 @@
                 $mediaLink = $media['link'] ?? '';
                 $poster = $media['poster'] ?? $mediaLink;
                 $itemWidth = $aspectTotal > 0 ? ($aspect / $aspectTotal) * $rowWidth : 400;
+                $hasProject = !empty($col['project_id']);
             @endphp
 
             @if(!$isMobile || ($isMobile && $showOnMobile))
-                <a href="#"
-                   data-image="/multimedia/{{ $mediaLink }}"
-                   data-video="@if(($media['type'] ?? '') === 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
-                   class="grid-item grid-item-{{ $media['type'] ?? '' }} {{ $showOnMobile ? 'grid-item-mobile' : 'grid-item-desktop' }} visible"
-                   data-media-width="{{ $width }}"
-                   data-media-height="{{ $height }}"
-                   data-project-link="{{ route('projects.show', ['id' => $col['project_id']]) }}"
-                   data-text2="{{ $col['text2'] ?? '' }}"
-                   style="width: {{ number_format($itemWidth, 3, '.', '') }}px;">
-
+                <a
+                    @if($hasProject)
+                        href="{{ route('projects.show', ['id' => $col['project_id']]) }}"
+                        data-project-link="{{ route('projects.show', ['id' => $col['project_id']]) }}"
+                    @else
+                        href="javascript:void(0)"
+                    @endif
+                    data-image="/multimedia/{{ $mediaLink }}"
+                    data-video="@if(($media['type'] ?? '') === 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
+                    class="grid-item grid-item-{{ $media['type'] ?? '' }} {{ $showOnMobile ? 'grid-item-mobile' : 'grid-item-desktop' }} visible"
+                    data-media-width="{{ $width }}"
+                    data-media-height="{{ $height }}"
+                    data-text2="{{ $col['text2'] ?? '' }}"
+                    style="width: {{ number_format($itemWidth, 3, '.', '') }}px;"
+                >
                     @if(($media['type'] ?? '') === 'img')
                         <img
                             src="/multimedia/{{ $mediaLink }}"
