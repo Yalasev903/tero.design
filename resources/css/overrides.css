@@ -186,13 +186,24 @@ html.light-theme .header-link:hover::after {
     transform: scaleX(1);
 }
 
-/* ❗ Только светлая тема: чёрный круг + белая иконка */
-html.light-theme .footer-social-link svg {
-    background-color: #000;
-    color: #fff;
+/* Базовый стиль для всех иконок */
+.footer-social-link svg {
     border-radius: 50%;
     padding: 6px;
     width: 32px;
     height: 32px;
     transition: all 0.3s ease;
+    display: block;
+}
+
+/* 🌙 ТЁМНАЯ тема: белый фон, чёрная иконка */
+html:not(.light-theme) .footer-social-link svg {
+    background-color: #fff;
+    color: #000;
+}
+
+/* ☀️ СВЕТЛАЯ тема: чёрный фон, белая иконка */
+html.light-theme .footer-social-link svg {
+    background-color: #000;
+    color: #fff;
 }
