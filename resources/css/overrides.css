@@ -206,20 +206,23 @@ html.light-theme .header-link:hover::after {
     display: block;
 }
 
-/* 🌙 ТЁМНАЯ ТЕМА */
+/* ☀️ СВЕТЛАЯ ТЕМА — белая иконка (на чёрном фоне) */
+html.light-theme .footer-social-link .icon-wrapper:not(.white) {
+    display: none;
+}
+html.light-theme .footer-social-link .icon-wrapper.white {
+    display: flex;
+    background-color: #000;
+    color: #fff; /* Важно! Это работает с fill="currentColor" */
+}
+
+/* 🌙 ТЁМНАЯ ТЕМА — чёрная иконка (на белом фоне) */
 html.dark-theme .footer-social-link .icon-wrapper.white {
     display: none;
 }
 html.dark-theme .footer-social-link .icon-wrapper:not(.white) {
     display: flex;
     background-color: #fff;
+    color: #000; /* Тоже важно! */
 }
 
-/* ☀️ СВЕТЛАЯ ТЕМА */
-html.light-theme .footer-social-link .icon-wrapper.white {
-    display: flex;
-    background-color: #000;
-}
-html.light-theme .footer-social-link .icon-wrapper:not(.white) {
-    display: none;
-}
