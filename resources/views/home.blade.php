@@ -50,19 +50,20 @@
     }
 
     .project-link-text {
-    background: #ccc;               /* светло-серый фон */
-    color: #000;                    /* чёрный текст */
+    background: #ccc;
+    color: #000;
     text-decoration: none;
     font-size: 14px;
     padding: 4px 10px;
     border-radius: 4px;
     transition: all 0.2s ease;
-}
+    }
 
-.project-link-text:hover {
-    background: #000;               /* чёрный фон при наведении */
-    color: #ccc;                    /* светло-серый текст */
-}
+    .project-link-text:hover {
+        background: #000;
+        color: #ccc;
+    }
+
 /* Повышаем специфичность и применяем !important */
 body #scroll-to-top {
     position: fixed !important;
@@ -98,96 +99,97 @@ body #scroll-to-top:hover img {
     {{-- JS для popup --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    var gridItemLinks = document.getElementsByClassName('grid-item');
-    var popup = document.createElement('div');
+    const gridItemLinks = document.getElementsByClassName('grid-item');
+    const popup = document.createElement('div');
     popup.classList.add('popup');
     document.body.appendChild(popup);
 
-    for (var i = 0; i < gridItemLinks.length; i++) {
+    for (let i = 0; i < gridItemLinks.length; i++) {
         gridItemLinks[i].addEventListener('click', function (e) {
             e.preventDefault();
 
-            var mediaType = this.classList.contains('grid-item-video') ? 'video' : 'image';
-            var mediaUrl = this.dataset.image;
-            var title = this.querySelector('.grid-item-title').innerText;
-            var projectLink = this.dataset.projectLink;
-            var text2 = this.dataset.text2;
+            const mediaType = this.classList.contains('grid-item-video') ? 'video' : 'image';
+            let mediaUrl = this.dataset.image;
+            const title = this.querySelector('.grid-item-title').innerText;
+            const projectLink = this.dataset.projectLink;
+            const text2 = this.dataset.text2;
 
-            var popupInner = document.createElement('div');
+            const popupInner = document.createElement('div');
             popupInner.classList.add('popup-inner');
+            popupInner.style.position = 'relative';
 
-            // 🎥 Медиаконтент
+            // 🎥 Медиа
             if (mediaType === 'image') {
-                var img = document.createElement('img');
+                const img = document.createElement('img');
                 img.src = mediaUrl;
                 popupInner.appendChild(img);
             } else {
                 mediaUrl = this.dataset.video;
-                var video = document.createElement('video');
+                const video = document.createElement('video');
                 video.preload = 'metadata';
                 video.muted = true;
                 video.loop = true;
                 video.autoplay = true;
-                var source = document.createElement('source');
+                const source = document.createElement('source');
                 source.src = mediaUrl;
                 video.appendChild(source);
                 popupInner.appendChild(video);
             }
 
-            // 🔧 Info-блок
-            var projectInfo = document.createElement('div');
-            projectInfo.classList.add('project-info');
+            // 🔧 Контейнер с кнопками в правом верхнем углу
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.position = 'absolute';
+            buttonContainer.style.top = '10px';
+            buttonContainer.style.right = '10px';
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = '10px';
+            buttonContainer.style.zIndex = '2';
 
-            // Заголовок (слева)
-            var titleElement = document.createElement('h3');
-            titleElement.innerText = title;
-            titleElement.classList.add('project-title');
-            projectInfo.appendChild(titleElement);
-
-            // Обёртка справа
-            var rightSide = document.createElement('div');
-            rightSide.style.display = 'flex';
-            rightSide.style.gap = '10px';
-            rightSide.style.alignItems = 'center';
-            rightSide.style.marginLeft = 'auto';
-
-            // Ссылка "View Full Project"
+            // Кнопка "View Full Project"
             if (projectLink) {
-                var link = document.createElement('a');
+                const link = document.createElement('a');
                 link.href = projectLink;
                 link.target = '_blank';
                 link.rel = 'noopener';
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
-                rightSide.appendChild(link);
+                buttonContainer.appendChild(link);
             }
 
             // Кнопка info (i)
-            var infoIcon = document.createElement('span');
+            const infoIcon = document.createElement('span');
             infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
             infoIcon.classList.add('info-button');
+            infoIcon.style.cursor = 'pointer';
+
             infoIcon.addEventListener('click', function () {
-                var infoBlock = projectInfo.querySelector('.info-block');
+                let infoBlock = popupInner.querySelector('.info-block');
                 if (infoBlock) {
-                    projectInfo.removeChild(infoBlock);
+                    popupInner.removeChild(infoBlock);
                 } else {
                     infoBlock = document.createElement('div');
                     infoBlock.classList.add('info-block');
                     infoBlock.innerHTML = text2;
-                    projectInfo.appendChild(infoBlock);
+                    popupInner.appendChild(infoBlock);
                 }
             });
-            rightSide.appendChild(infoIcon);
 
-            // Добавляем правую часть после заголовка
-            projectInfo.appendChild(rightSide);
+            buttonContainer.appendChild(infoIcon);
+            popupInner.appendChild(buttonContainer);
 
-            popupInner.appendChild(projectInfo);
+            // Заголовок (если нужно оставить)
+            const titleElement = document.createElement('h3');
+            titleElement.innerText = title;
+            titleElement.classList.add('project-title');
+            titleElement.style.color = '#fff';
+            titleElement.style.marginTop = '10px';
+            popupInner.appendChild(titleElement);
+
             popup.innerHTML = '';
             popup.appendChild(popupInner);
             popup.classList.add('active');
 
-            var mediaEl = popupInner.querySelector('img, video');
+            const mediaEl = popupInner.querySelector('img, video');
             mediaEl?.addEventListener('click', function (e) {
                 if (e.target === this) {
                     popup.innerHTML = '';
@@ -203,46 +205,6 @@ document.addEventListener('DOMContentLoaded', function () {
             this.classList.remove('active');
         }
     });
-});
-
-// lazyload
-document.addEventListener('lazyloaded', function (e) {
-    const el = e.target;
-    if (el.tagName === 'VIDEO') {
-        el.querySelectorAll('source').forEach(source => {
-            if (source.dataset.src && !source.src) {
-                source.src = source.dataset.src;
-            }
-        });
-        el.load();
-        el.play().catch(() => {});
-    }
-});
-
-// Infinite scroll
-let batch = 1;
-let loading = false;
-
-window.addEventListener('scroll', async () => {
-    if (loading) return;
-
-    const scrollPosition = window.innerHeight + window.scrollY;
-    const pageHeight = document.body.offsetHeight;
-
-    if (scrollPosition >= pageHeight - 500) {
-        loading = true;
-        try {
-            const response = await fetch(`/?batch=${batch}`, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
-            const result = await response.json();
-            if (result.rows.trim()) {
-                document.querySelector('#js-gallery').insertAdjacentHTML('beforeend', result.rows);
-                batch++;
-                loading = false;
-            }
-        } catch (err) {
-            console.error('Ошибка подгрузки:', err);
-        }
-    }
 });
 </script>
 
