@@ -183,8 +183,8 @@ html.light-theme .header-link:hover::after {
 /* Соцсети */
 .footer-social-link {
     display: inline-block;
-    width: 42px;
-    height: 42px;
+    width: 24px;
+    height: 24px;
     margin: 0 6px;
     position: relative;
 }
