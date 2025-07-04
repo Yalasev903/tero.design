@@ -405,7 +405,7 @@ window.addEventListener('load', function () {
   position: absolute;
   top: 0;
   left: 50%;
-  width: 6px;
+  width: 2px;
   height: 100%;
   background: rgba(255,255,255,0.7);
   z-index: 10;
