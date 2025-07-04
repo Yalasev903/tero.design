@@ -154,7 +154,7 @@ input:checked + .slider:before {
 }
 .light-theme .header,
 .light-theme .footer {
-    background-color: #fff; /* Было #f4f4f4 */
+    background-color: #fff;
     color: #000;
 }
 .light-theme .header-link,
@@ -186,14 +186,13 @@ html.light-theme .header-link:hover::after {
     transform: scaleX(1);
 }
 
-/* SVG иконки в футере — тема зависит от фильтра */
-/* По умолчанию (тёмная тема): белый круг, чёрная иконка */
-.footer-social-link svg {
-    filter: invert(1) brightness(1.2);
-    transition: filter 0.3s ease;
-}
-
-/* В светлой теме: чёрный круг, белая иконка */
+/* ❗ Только светлая тема: чёрный круг + белая иконка */
 html.light-theme .footer-social-link svg {
-    filter: invert(1) brightness(0.2);
+    background-color: #000;
+    color: #fff;
+    border-radius: 50%;
+    padding: 6px;
+    width: 32px;
+    height: 32px;
+    transition: all 0.3s ease;
 }
