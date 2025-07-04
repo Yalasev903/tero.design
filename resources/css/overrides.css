@@ -186,23 +186,34 @@ html.light-theme .header-link:hover::after {
     transform: scaleX(1);
 }
 
-/* Базовый стиль для всех иконок */
-.footer-social-link svg {
-    padding: 6px;
-    width: 17px;
-    height: 17px;
-    transition: all 0.3s ease;
-    display: block;
+.footer-social-link {
+    display: inline-block;
+    width: 42px;
+    height: 42px;
+    margin: 0 6px;
 }
 
-/* 🌙 ТЁМНАЯ тема: белый фон, чёрная иконка */
-html:not(.light-theme) .footer-social-link svg {
+.footer-social-link svg {
+    width: 42px;
+    height: 42px;
+    padding: 8px;
+    border-radius: 50%;
+    display: block;
+    transition: all 0.3s ease;
+    background-color: transparent; /* изначально фон прозрачный */
+}
+
+/* 🌙 ТЁМНАЯ ТЕМА */
+html.dark-theme .footer-social-link svg {
     background-color: #fff;
     color: #000;
+    fill: currentColor;
 }
 
-/* ☀️ СВЕТЛАЯ тема: чёрный фон, белая иконка */
+/* ☀️ СВЕТЛАЯ ТЕМА */
 html.light-theme .footer-social-link svg {
     background-color: #000;
     color: #fff;
+    fill: currentColor;
 }
+
