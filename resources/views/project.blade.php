@@ -484,15 +484,24 @@ window.addEventListener('load', function () {
 
 /* Mobile */
 @media (max-width: 768px) {
-  .grid-row {
+.grid-row {
     flex-direction: column;
     height: auto;
   }
 
   .grid-item {
     width: 100% !important;
-    height: auto !important;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 16 / 9 !important;
+    height: auto; /* можно убрать или оставить для fallback */
+    max-height: 100vh;
+  }
+
+  .grid-item img,
+  .grid-item video,
+  .grid-item iframe {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
   }
 }
 </style>
