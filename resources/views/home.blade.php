@@ -50,14 +50,19 @@
     }
 
     .project-link-text {
-        color: #fff;
-        text-decoration: underline;
-        font-size: 14px;
-        white-space: nowrap;
-    }
-    .project-link-text:hover {
-        opacity: 0.8;
-    }
+    background: #ccc;               /* светло-серый фон */
+    color: #000;                    /* чёрный текст */
+    text-decoration: none;
+    font-size: 14px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    transition: all 0.2s ease;
+}
+
+.project-link-text:hover {
+    background: #000;               /* чёрный фон при наведении */
+    color: #ccc;                    /* светло-серый текст */
+}
         #scroll-to-top {
         position: fixed;
         bottom: 30px;
