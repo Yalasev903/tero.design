@@ -110,29 +110,35 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let divider = 0.5;
   let dragging = false;
 
+  // Основной рендер
   const draw = () => {
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
+
+    // Нижний слой
     ctx.drawImage(img2, 0, 0, w, h);
+
+    // Верхний слой, ограниченный divider
     ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
   };
 
+  // Обновление положения полосы
   const updateHandle = () => {
     handle.style.left = `${divider * 100}%`;
   };
 
+  // Движение мыши или пальца
   const onMove = e => {
     if (!dragging) return;
     const bounds = canvas.getBoundingClientRect();
     const x = (e.touches ? e.touches[0].clientX : e.clientX) - bounds.left;
     divider = Math.max(0.01, Math.min(0.99, x / bounds.width));
-
-    // Сначала двигаем полосу (чтобы сразу визуально отреагировала)
     updateHandle();
     draw();
-};
+  };
 
+  // События мыши/тача
   handle.addEventListener('mousedown', () => (dragging = true));
   handle.addEventListener('touchstart', () => (dragging = true), { passive: true });
   window.addEventListener('mouseup', () => (dragging = false));
@@ -140,11 +146,34 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   window.addEventListener('mousemove', onMove);
   window.addEventListener('touchmove', onMove, { passive: true });
 
-  img1.onload = img2.onload = () => {
+  // Когда оба изображения загружены
+  img1.onload = () => {
+    if (!img2.complete) return;
+    finalize();
+  };
+  img2.onload = () => {
+    if (!img1.complete) return;
+    finalize();
+  };
+
+  // Устанавливаем размер canvas по минимальному размеру изображений
+  const finalize = () => {
+    const w = Math.min(img1.width, img2.width);
+    const h = Math.min(img1.height, img2.height);
+
+    // Применяем размеры к canvas
+    canvas.width = w;
+    canvas.height = h;
+
+    // Удаляем ограничения из CSS (если есть)
+    canvas.style.width = '100%';
+    canvas.style.height = 'auto';
+
     draw();
     updateHandle();
   };
 
+  // Задаём пути к изображениям
   img1.src = img1src;
   img2.src = img2src;
 }
@@ -365,11 +394,11 @@ window.addEventListener('load', function () {
   position: relative;
   width: 100%;
   height: 100%; /* ← важно! чтобы соответствовать соседним */
-  aspect-ratio: auto; /* убираем ограничение */
+  aspect-ratio: 16 / 9; /* убираем ограничение */
 }
 .curtain-canvas {
   display: block;
-  width: 100%;
+   max-width: 100%;
   height: 100%;
 }
 
