@@ -106,6 +106,7 @@ document.addEventListener('DOMContentLoaded', function () {
     for (var i = 0; i < gridItemLinks.length; i++) {
         gridItemLinks[i].addEventListener('click', function (e) {
             e.preventDefault();
+
             var mediaType = this.classList.contains('grid-item-video') ? 'video' : 'image';
             var mediaUrl = this.dataset.image;
             var title = this.querySelector('.grid-item-title').innerText;
@@ -137,11 +138,18 @@ document.addEventListener('DOMContentLoaded', function () {
             var projectInfo = document.createElement('div');
             projectInfo.classList.add('project-info');
 
-            // Заголовок
+            // Заголовок (слева)
             var titleElement = document.createElement('h3');
             titleElement.innerText = title;
             titleElement.classList.add('project-title');
             projectInfo.appendChild(titleElement);
+
+            // Обёртка справа
+            var rightSide = document.createElement('div');
+            rightSide.style.display = 'flex';
+            rightSide.style.gap = '10px';
+            rightSide.style.alignItems = 'center';
+            rightSide.style.marginLeft = 'auto';
 
             // Ссылка "View Full Project"
             if (projectLink) {
@@ -151,10 +159,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.rel = 'noopener';
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
-                projectInfo.appendChild(link);
+                rightSide.appendChild(link);
             }
 
-            // Кнопка i
+            // Кнопка info (i)
             var infoIcon = document.createElement('span');
             infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
             infoIcon.classList.add('info-button');
@@ -169,7 +177,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     projectInfo.appendChild(infoBlock);
                 }
             });
-            projectInfo.appendChild(infoIcon);
+            rightSide.appendChild(infoIcon);
+
+            // Добавляем правую часть после заголовка
+            projectInfo.appendChild(rightSide);
 
             popupInner.appendChild(projectInfo);
             popup.innerHTML = '';
