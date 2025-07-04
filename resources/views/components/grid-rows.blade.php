@@ -29,7 +29,7 @@
             }
         }
 
-        $rowHeightVw = $inverseAspectMax * 100; // итоговая высота строки в vw
+        $rowHeightVw = $aspectTotal > 0 ? 100 / $aspectTotal : 56.25;
     @endphp
 
     <div class="grid-row" style="height: {{ number_format($rowHeightVw, 2, '.', '') }}vw;">
@@ -93,6 +93,8 @@
 .grid-row {
   display: flex;
   flex-wrap: nowrap;
+  gap: 10px;
+  margin-bottom: 0px;
   width: 100%;
   align-items: stretch;
 }
