@@ -83,14 +83,14 @@
 
     {{-- JS для popup --}}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     var gridItemLinks = document.getElementsByClassName('grid-item');
     var popup = document.createElement('div');
     popup.classList.add('popup');
     document.body.appendChild(popup);
 
     for (var i = 0; i < gridItemLinks.length; i++) {
-        gridItemLinks[i].addEventListener('click', function(e) {
+        gridItemLinks[i].addEventListener('click', function (e) {
             e.preventDefault();
             var mediaType = this.classList.contains('grid-item-video') ? 'video' : 'image';
             var mediaUrl = this.dataset.image;
@@ -101,11 +101,12 @@ document.addEventListener('DOMContentLoaded', function() {
             var popupInner = document.createElement('div');
             popupInner.classList.add('popup-inner');
 
+            // 🎥 Медиаконтент
             if (mediaType === 'image') {
                 var img = document.createElement('img');
                 img.src = mediaUrl;
                 popupInner.appendChild(img);
-            } else if (mediaType === 'video') {
+            } else {
                 mediaUrl = this.dataset.video;
                 var video = document.createElement('video');
                 video.preload = 'metadata';
@@ -118,16 +119,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 popupInner.appendChild(video);
             }
 
-            // блок project-info
+            // 🔧 Info-блок
             var projectInfo = document.createElement('div');
             projectInfo.classList.add('project-info');
 
-            // заголовок проекта
+            // Заголовок
             var titleElement = document.createElement('h3');
             titleElement.innerText = title;
+            titleElement.classList.add('project-title');
             projectInfo.appendChild(titleElement);
 
-            // ссылка "View Full Project"
+            // Ссылка "View Full Project"
             if (projectLink) {
                 var link = document.createElement('a');
                 link.href = projectLink;
@@ -138,12 +140,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 projectInfo.appendChild(link);
             }
 
-            // кнопка "i"
+            // Кнопка i
             var infoIcon = document.createElement('span');
             infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
-            infoIcon.style.marginLeft = '10px';
-            infoIcon.style.cursor = 'pointer';
-            infoIcon.addEventListener('click', function() {
+            infoIcon.classList.add('info-button');
+            infoIcon.addEventListener('click', function () {
                 var infoBlock = projectInfo.querySelector('.info-block');
                 if (infoBlock) {
                     projectInfo.removeChild(infoBlock);
@@ -162,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
             popup.classList.add('active');
 
             var mediaEl = popupInner.querySelector('img, video');
-            mediaEl?.addEventListener('click', function(e) {
+            mediaEl?.addEventListener('click', function (e) {
                 if (e.target === this) {
                     popup.innerHTML = '';
                     popup.classList.remove('active');
@@ -171,7 +172,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    popup.addEventListener('click', function(e) {
+    popup.addEventListener('click', function (e) {
         if (e.target === this) {
             this.innerHTML = '';
             this.classList.remove('active');
