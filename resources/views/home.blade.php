@@ -63,28 +63,35 @@
     background: #000;               /* чёрный фон при наведении */
     color: #ccc;                    /* светло-серый текст */
 }
-    #scroll-to-top {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    cursor: pointer;
-    z-index: 9999;
-    display: none;
-    transition: opacity 0.3s ease;
+/* Повышаем специфичность и применяем !important */
+body #scroll-to-top {
+    position: fixed !important;
+    bottom: 30px !important;
+    right: 30px !important;
+    cursor: pointer !important;
+    z-index: 9999 !important;
+    display: none !important;
+    transition: opacity 0.3s ease !important;
+    background-color: #ccc !important; /* серый фон */
+    border-radius: 50% !important;
+    width: 60px !important;
+    height: 60px !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    box-shadow: 0 0 8px #0005 !important;
 }
 
-#scroll-to-top img {
-    width: 40px;
-    height: 40px;
-    filter: drop-shadow(0 0 3px #000a);
-    transition: filter 0.2s ease, brightness 0.2s ease;
+body #scroll-to-top img {
+    width: 30px !important;
+    height: 30px !important;
+    filter: drop-shadow(0 0 2px #000a) !important;
+    transition: filter 0.2s ease !important;
 }
 
-/* При наведении делаем белым */
-#scroll-to-top:hover img {
-    filter: brightness(10) drop-shadow(0 0 3px #000a);
+body #scroll-to-top:hover img {
+    filter: brightness(10) drop-shadow(0 0 2px #000a) !important;
 }
-
     </style>
     {{-- / Внутренние стили главной --}}
 
