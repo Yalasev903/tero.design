@@ -188,10 +188,9 @@ html.light-theme .header-link:hover::after {
 
 /* Базовый стиль для всех иконок */
 .footer-social-link svg {
-    border-radius: 50%;
     padding: 6px;
-    width: 32px;
-    height: 32px;
+    width: 17px;
+    height: 17px;
     transition: all 0.3s ease;
     display: block;
 }
