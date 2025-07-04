@@ -3,20 +3,43 @@
 @endphp
 
 @foreach($projects_grid as $row)
+    @php
+        $normalizedRow = [];
+        $aspectTotal = 0;
+
+        foreach ($row as $col) {
+            $media = is_array($col['media']) ? $col['media'] : json_decode($col['media'] ?? '', true);
+            $width = (float)($media['width'] ?? 16);
+            $height = (float)($media['height'] ?? 9);
+            $aspect = $width > 0 && $height > 0 ? $width / $height : 1;
+
+            $normalizedRow[] = [
+                'col' => $col,
+                'media' => $media,
+                'aspect' => $aspect,
+                'width' => $width,
+                'height' => $height,
+            ];
+            $aspectTotal += $aspect;
+        }
+    @endphp
+
     <div class="grid-row">
-        @foreach($row as $col)
+        @foreach($normalizedRow as $entry)
             @php
+                $col = $entry['col'];
+                $media = $entry['media'];
+                $aspect = $entry['aspect'];
+                $width = $entry['width'];
+                $height = $entry['height'];
                 $showOnMobile = $col['is_mobile'] ?? false;
-                $media = is_array($col['media']) ? $col['media'] : json_decode($col['media'] ?? '', true);
                 $mediaLink = $media['link'] ?? '';
                 $poster = $media['poster'] ?? $mediaLink;
-                $width = (float)($media['width'] ?? 16);
-                $height = (float)($media['height'] ?? 9);
-                $aspect = $width > 0 && $height > 0 ? $width / $height : 1;
+                $normalizedGrow = $aspectTotal > 0 ? ($aspect / $aspectTotal) * 100 : 100;
             @endphp
 
             @if(!$isMobile || ($isMobile && $showOnMobile))
-                <div class="grid-item-wrapper" style="flex-grow: {{ number_format($aspect, 2, '.', '') }};">
+                <div class="grid-item-wrapper" style="flex: {{ number_format($normalizedGrow, 4, '.', '') }} 0 0%;">
                     <a href="#"
                        data-image="/multimedia/{{ $mediaLink }}"
                        data-video="@if(($media['type'] ?? '') === 'video')/multimedia/{{ $media['links'][0]['link'] ?? '' }}@endif"
@@ -56,8 +79,9 @@
         @endforeach
     </div>
 @endforeach
+
 <style>
-    .grid-row {
+.grid-row {
   display: flex;
   flex-wrap: nowrap;
   gap: 10px;
@@ -67,12 +91,9 @@
 }
 
 .grid-item-wrapper {
-  flex-shrink: 1;
-  flex-basis: 0;
   display: flex;
   flex-direction: column;
   justify-content: stretch;
-  width: 100%;
 }
 
 .grid-item {
