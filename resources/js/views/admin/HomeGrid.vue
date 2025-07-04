@@ -180,13 +180,14 @@
   <el-form label-position="top">
     <el-form-item label="Выберите проект">
       <el-select v-model="selectedProjectId" placeholder="Проект" style="width: 100%">
-        <el-option
-          v-for="p in projects"
-          :key="p.id"
-          :label="`${p.title} (${p.usageCount})`"
-          :value="p.id"
-        />
-      </el-select>
+  <el-option :label="'— No project —'" :value="null" />
+  <el-option
+    v-for="p in projects"
+    :key="p.id"
+    :label="`${p.title} (${p.usageCount})`"
+    :value="p.id"
+  />
+</el-select>
     </el-form-item>
 
     <el-form-item v-if="mediaType === 'img'" label="Изображение">
@@ -354,14 +355,14 @@ const editingTarget = ref({ rowIdx: null, colIdx: null })
 const openEditModal = (rowIdx, colIdx) => {
   const cell = gridRows.value[rowIdx].items[colIdx]
 
-  selectedProjectId.value = cell.project_id
+  selectedProjectId.value = cell.project_id ?? null
   if (cell.media?.type === 'img') {
-  selectedPath.value = cell.media.link
-  mediaDescription.value = cell.media?.description || ''
-} else if (cell.media?.type === 'video') {
-  selectedPath.value = cell.media.links?.[0]?.link || ''
-  mediaDescription.value = ''
-}
+    selectedPath.value = cell.media.link
+    mediaDescription.value = cell.media?.description || ''
+  } else if (cell.media?.type === 'video') {
+    selectedPath.value = cell.media.links?.[0]?.link || ''
+    mediaDescription.value = ''
+  }
 
   mediaType.value = cell.media?.type || 'img'
   modalMediaSize.value = { w: null, h: null }
@@ -694,37 +695,36 @@ const openMediaModal = async (type, rowIdx) => {
 const activeFinderPath = ref('')
 
 const openFileManagerForModal = async () => {
-  if (!selectedProjectId.value) {
-    ElNotification({ title: 'Ошибка', message: 'Сначала выберите проект', type: 'warning' })
-    return
-  }
+  let folder = 'no-project' // По умолчанию для "No project"
 
-  const project = projects.value.find(p => p.id === selectedProjectId.value)
-  if (!project) return
+  if (selectedProjectId.value) {
+    const project = projects.value.find(p => p.id === selectedProjectId.value)
+    if (!project) return
 
-  let folder = project.folder || project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
-  const grid = project.multimedia_grid || []
+    folder = project.folder || project.title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-_]/g, '')
 
-  try {
-    const flat = grid.flat(2)
-    for (const item of flat) {
-      const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
-      if (link?.startsWith('multimedia/')) {
-        const parts = link.split('/')
-        if (parts[1]) {
-          folder = parts[1]
-          break
+    const grid = project.multimedia_grid || []
+    try {
+      const flat = grid.flat(2)
+      for (const item of flat) {
+        const link = item?.link || item?.poster || item?.images?.[0] || item?.links?.[0]?.link
+        if (link?.startsWith('multimedia/')) {
+          const parts = link.split('/')
+          if (parts[1]) {
+            folder = parts[1]
+            break
+          }
         }
       }
-    }
-  } catch (_) {}
+    } catch (_) {}
+  }
 
   defaultFolder.value = folder
   sessionStorage.setItem('project-folder', folder)
 
-  activeFinderPath.value = '' // 🔄 сброс
+  activeFinderPath.value = ''
   await nextTick()
-  activeFinderPath.value = `local://${folder}` // 🔄 новая папка
+  activeFinderPath.value = `local://${folder}`
 
   showFileManager.value = true
   console.log('🧭 Устанавливаем путь:', activeFinderPath.value)
@@ -747,7 +747,6 @@ const insertMedia = async () => {
     return
   }
 
-  // 🕐 Ждём рендер и срабатывание @load / @loadedmetadata
   await nextTick()
   await new Promise(resolve => setTimeout(resolve, 150))
 
@@ -757,7 +756,7 @@ const insertMedia = async () => {
   if (!w || !h) {
     ElNotification({
       title: 'Ошибка',
-      message: 'Не удалось определить размеры изображения или видео. Попробуйте загрузить файл заново.',
+      message: 'Не удалось определить размеры. Попробуйте загрузить файл заново.',
       type: 'error'
     })
     return
@@ -765,51 +764,40 @@ const insertMedia = async () => {
 
   const project = projects.value.find(p => p.id === selectedProjectId.value)
 
-  const media =
-    mediaType.value === 'img'
-      ? {
-          type: 'img',
+  const media = mediaType.value === 'img'
+    ? {
+        type: 'img',
+        link: selectedPath.value,
+        description: mediaDescription.value.trim(),
+        width: w,
+        height: h
+      }
+    : {
+        type: 'video',
+        poster: selectedPath.value,
+        width: w,
+        height: h,
+        links: [{
           link: selectedPath.value,
-          description: mediaDescription.value.trim(),
-          width: w,
-          height: h
-        }
-      : {
-          type: 'video',
-          poster: selectedPath.value,
-          width: w,
-          height: h,
-          links: [{
-            link: selectedPath.value,
-            mime: selectedPath.value.endsWith('.webm')
-              ? 'video/webm'
-              : 'video/mp4'
-          }]
-        }
+          mime: selectedPath.value.endsWith('.webm') ? 'video/webm' : 'video/mp4'
+        }]
+      }
 
   if (isEditingModal.value) {
-    // Режим редактирования
     const { rowIdx, colIdx } = editingTarget.value
     const cell = gridRows.value[rowIdx].items[colIdx]
-    cell.project_id = selectedProjectId.value
-    cell.title = project?.title || 'Без названия'
-    cell.media = {
-      ...JSON.parse(JSON.stringify(media)),
-      __v: Date.now()
-    }
+    cell.project_id = selectedProjectId.value ?? null
+    cell.title = project?.title || 'No project'
+    cell.media = { ...JSON.parse(JSON.stringify(media)), __v: Date.now() }
 
     ElNotification({ title: 'Обновлено', message: 'Контент обновлён', type: 'success' })
   } else {
-    // Режим добавления
     const rowIdx = targetRowIdx.value
     const newCol = {
       id: `cell_${rowIdx}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
-      project_id: selectedProjectId.value || null,
-      title: project?.title || 'Без проекта',
-      media: {
-        ...JSON.parse(JSON.stringify(media)),
-        __v: Date.now()
-      },
+      project_id: selectedProjectId.value ?? null,
+      title: project?.title || 'No project',
+      media: { ...JSON.parse(JSON.stringify(media)), __v: Date.now() },
       is_mobile: false
     }
 
@@ -825,22 +813,30 @@ const loadProjects = async () => {
   try {
     const { data } = await axios.get('/api/admin/projects')
 
-    // Подсчёт вхождений каждого project_id в текущей сетке
     const usageMap = {}
+    let emptyCount = 0
 
     gridRows.value.forEach(row => {
       row.items.forEach(col => {
         if (col.project_id) {
           usageMap[col.project_id] = (usageMap[col.project_id] || 0) + 1
+        } else {
+          emptyCount++
         }
       })
     })
 
-    // Добавляем счётчик к каждому проекту
-    projects.value = data.map(p => ({
-      ...p,
-      usageCount: usageMap[p.id] || 0
-    }))
+    projects.value = [
+      {
+        id: null,
+        title: 'No project',
+        usageCount: emptyCount
+      },
+      ...data.map(p => ({
+        ...p,
+        usageCount: usageMap[p.id] || 0
+      }))
+    ]
 
     console.log('Проекты с подсчётом:', projects.value)
   } catch (e) {
@@ -852,6 +848,7 @@ const loadProjects = async () => {
     })
   }
 }
+
 
 onMounted(() => {
   loadGrid()
