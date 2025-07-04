@@ -47,6 +47,21 @@
     .project-link-icon:hover svg {
         opacity: 0.8;
     }
+        #scroll-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        cursor: pointer;
+        z-index: 9999;
+        display: none;
+        transition: opacity 0.3s ease;
+    }
+
+    #scroll-to-top img {
+        width: 40px;
+        height: 40px;
+        filter: drop-shadow(0 0 3px #000a);
+    }
     </style>
     {{-- / Внутренние стили главной --}}
 
@@ -195,6 +210,25 @@ window.addEventListener('scroll', async () => {
 </script>
 
     {{-- / JS для popup --}}
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const scrollBtn = document.getElementById('scroll-to-top');
+
+        // Появление кнопки при скролле вниз
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 400) {
+                scrollBtn.style.display = 'block';
+            } else {
+                scrollBtn.style.display = 'none';
+            }
+        });
+
+        // Скролл наверх по клику
+        scrollBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    });
+</script>
     @section('scripts')
     {{-- ... все скрипты ... --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
