@@ -23,9 +23,10 @@
                     preload="metadata"
                     controls
                     playsinline
-                    muted
-                    style="display:none;">
-                    <!-- Sources вставим позже через JS -->
+                    style="display:none;"
+                    controlsList="nodownload noplaybackrate nofullscreen"
+                    disablePictureInPicture
+                    autoplay>
                 </video>
             </div>
             <a href="#" class="showreel-close" id="js-showreel-close">

@@ -68,114 +68,164 @@
         body {
     font-family: 'Montserrat', sans-serif;
 }
+.showreel {
+    pointer-events: auto;
+    position: fixed;
+    left: 0; top: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    overflow: auto;
+    transition: none;
+}
+.showreel.open {
+    display: flex !important;
+}
+.showreel::before {
+    content: "";
+    position: fixed;
+    left: 0; top: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.72);
+    z-index: 1;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+    pointer-events: auto;
+}
+.showreel-center {
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding-top: 0;
+    z-index: 2;
+}
 
-        .showreel {
-            pointer-events: auto;
-            position: fixed;
-            left: 0; top: 0; width: 100vw; height: 100vh;
-            /* background: rgba(0, 0, 0, 0.02); */
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-            overflow: auto;
-            transition: none;
-        }
-        .showreel.open {
-            display: flex !important;
-        }
-        .showreel-center {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            align-items: flex-start;
-            justify-content: center;
-            position: relative;
-            padding-top: 0; /* Поднимает блок выше */
-        }
+/* Постер и видео обёртка */
+.showreel-poster-block,
+.showreel-player-video {
+    position: relative;
+    width: 80vw;
+    height: 80vh;
+    max-width: 1200px;
+    max-height: 90vh;
+    aspect-ratio: 16/9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
+    z-index: 2;
+}
 
-        .showreel-poster-block {
-            position: relative;
-            width: 76vw;
-            max-width: 1200px;
-            min-width: 340px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .showreel-poster-block img {
-            width: 100%;
-            max-width: 1200px;
-            min-width: 340px;
-            display: block;
-            box-shadow: 0 2px 38px rgba(0,0,0,0.38);
-            transition: box-shadow 0.2s;
-        }
-        .showreel-play {
-            position: absolute;
-            left: 50%; top: 44%;
-            transform: translate(-50%, -50%);
-            background: none; border: none; outline: none; cursor: pointer; z-index: 2;
-        }
-        .showreel-title {
-            display: none;
-            position: absolute;
-            left: 50%; top: 64%;
-            transform: translate(-50%, 0);
-            color: #fff;
-            font-size: 2.3rem;
-            font-family: Montserrat,sans-serif;
-            font-weight: 300;
-            letter-spacing: .18em;
-            text-shadow: 0 1px 18px #000;
-            z-index: 2;
-            pointer-events: none;
-            text-align: center;
-            width: 100%;
-        }
-        .showreel-player-video {
-            width: 76vw;
-            max-width: 1200px;
-            min-width: 340px;
-            background: #000;
-            box-shadow: 0 2px 38px rgba(0,0,0,0.33);
-            margin-top: 0;
-            z-index: 3;
-            display: block;
-        }
-        .showreel-close {
-            position: absolute;
-            top: 16px; right: 24px;
-            z-index: 100;
-            background: none; border: none; cursor: pointer; outline: none;
-        }
-        .showreel-close svg {
-            width: 36px;
-            height: 36px;
-            filter: drop-shadow(0 2px 14px #000);
-        }
+/* Постер внутри */
+.showreel-poster-block img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
+    transition: box-shadow 0.2s;
+}
 
-        /* Мобильные адаптации */
-        @media (max-width: 1250px) {
-            .showreel-poster-block, .showreel-player-video {
-                width: 96vw; max-width: 96vw; min-width: 0;
-            }
-            .showreel-title { font-size: 1.5rem; }
-        }
-        @media (max-width: 900px) {
-            .showreel-poster-block, .showreel-player-video {
-                width: 99vw; max-width: 99vw; min-width: 0;
-            }
-            .showreel-title { font-size: 1.15rem; }
-        }
-        @media (max-width: 700px) {
-            .showreel-poster-block, .showreel-player-video {
-                width: 100vw; max-width: 100vw; min-width: 0;
-            }
-            .showreel-title { font-size: 1.02rem; }
-            .showreel-close svg { width: 28px; height: 28px; }
-            .showreel-close { top: 12px; right: 16px; }
-        }
+/* Кнопка Play */
+.showreel-play {
+    position: absolute;
+    left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    background: none;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    z-index: 3;
+}
+
+/* Заголовок */
+.showreel-title {
+    display: none;
+    position: absolute;
+    left: 50%;
+    top: 64%;
+    transform: translate(-50%, 0);
+    color: #fff;
+    font-size: 2.3rem;
+    font-family: Montserrat,sans-serif;
+    font-weight: 300;
+    letter-spacing: .18em;
+    text-shadow: 0 1px 18px #000;
+    z-index: 3;
+    pointer-events: none;
+    text-align: center;
+    width: 100%;
+}
+
+/* Видео */
+.showreel-player-video {
+    display: none;
+}
+
+/* Кнопка закрытия */
+.showreel-close {
+    position: absolute;
+    top: 16px;
+    right: 24px;
+    z-index: 100;
+    background: none;
+    border: none;
+    cursor: pointer;
+    outline: none;
+}
+.showreel-close svg {
+    width: 36px;
+    height: 36px;
+    filter: drop-shadow(0 2px 14px #000);
+}
+
+/* Адаптив */
+@media (max-width: 1250px) {
+    .showreel-poster-block,
+    .showreel-player-video {
+        width: 90vw;
+        height: 60vh;
+    }
+    .showreel-title {
+        font-size: 1.5rem;
+    }
+}
+@media (max-width: 900px) {
+    .showreel-poster-block,
+    .showreel-player-video {
+        width: 96vw;
+        height: 58vh;
+    }
+    .showreel-title {
+        font-size: 1.15rem;
+    }
+}
+@media (max-width: 700px) {
+    .showreel-poster-block,
+    .showreel-player-video {
+        width: 100vw;
+        height: 56vh;
+    }
+    .showreel-title {
+        font-size: 1.02rem;
+    }
+    .showreel-close svg {
+        width: 28px;
+        height: 28px;
+    }
+    .showreel-close {
+        top: 12px;
+        right: 16px;
+    }
+}
         </style>
 </head>
 <body id="page" class="loading">

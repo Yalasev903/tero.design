@@ -39,8 +39,6 @@
                 $mediaLink = $media['link'] ?? '';
                 $poster = $media['poster'] ?? $mediaLink;
                 $itemWidth = $aspectTotal > 0 ? ($aspect / $aspectTotal) * $rowWidth : 400;
-
-                dump($media);
             @endphp
 
             @if(!$isMobile || ($isMobile && $showOnMobile))
