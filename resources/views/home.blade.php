@@ -10,7 +10,7 @@
     </div>
 
     <div id="scroll-to-top">
-       <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjZmZmIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZD0iTTExIDhsLTYgNiAxLjQxIDEuNDFMMTIgMTAuODMgMTguNTkgMTUuNDFMMjAgMTRsLTYtNi02IDZ6Ii8+PC9zdmc+" alt="↑">
+   <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgOC4zN2w2LjI5IDYuMjktMS40MSAxLjQxTDExLjk5IDEwLjgzbC02Ljg3IDYuODcgLTEuNDItMS40MUwxMiA4LjM3eiIvPjwvc3ZnPg==" alt="↑">
     </div>
 
     {{-- Внутренние стили главной --}}
@@ -63,21 +63,28 @@
     background: #000;               /* чёрный фон при наведении */
     color: #ccc;                    /* светло-серый текст */
 }
-        #scroll-to-top {
-        position: fixed;
-        bottom: 30px;
-        right: 30px;
-        cursor: pointer;
-        z-index: 9999;
-        display: none;
-        transition: opacity 0.3s ease;
-    }
+    #scroll-to-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    cursor: pointer;
+    z-index: 9999;
+    display: none;
+    transition: opacity 0.3s ease;
+}
 
-    #scroll-to-top img {
-        width: 40px;
-        height: 40px;
-        filter: drop-shadow(0 0 3px #000a);
-    }
+#scroll-to-top img {
+    width: 40px;
+    height: 40px;
+    filter: drop-shadow(0 0 3px #000a);
+    transition: filter 0.2s ease, brightness 0.2s ease;
+}
+
+/* При наведении делаем белым */
+#scroll-to-top:hover img {
+    filter: brightness(10) drop-shadow(0 0 3px #000a);
+}
+
     </style>
     {{-- / Внутренние стили главной --}}
 
