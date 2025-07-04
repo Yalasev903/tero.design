@@ -747,11 +747,17 @@ const insertMedia = async () => {
     return
   }
 
-  // 💥 Проверяем размеры перед сохранением
-  if (!modalMediaSize.value.w || !modalMediaSize.value.h) {
+  // 🕐 Ждём рендер и срабатывание @load / @loadedmetadata
+  await nextTick()
+  await new Promise(resolve => setTimeout(resolve, 150))
+
+  const w = modalMediaSize.value.w
+  const h = modalMediaSize.value.h
+
+  if (!w || !h) {
     ElNotification({
       title: 'Ошибка',
-      message: 'Дождитесь загрузки изображения или видео перед добавлением.',
+      message: 'Не удалось определить размеры изображения или видео. Попробуйте загрузить файл заново.',
       type: 'error'
     })
     return
@@ -765,14 +771,14 @@ const insertMedia = async () => {
           type: 'img',
           link: selectedPath.value,
           description: mediaDescription.value.trim(),
-          width: modalMediaSize.value.w,
-          height: modalMediaSize.value.h
+          width: w,
+          height: h
         }
       : {
           type: 'video',
           poster: selectedPath.value,
-          width: modalMediaSize.value.w,
-          height: modalMediaSize.value.h,
+          width: w,
+          height: h,
           links: [{
             link: selectedPath.value,
             mime: selectedPath.value.endsWith('.webm')
