@@ -25,8 +25,7 @@
                     playsinline
                     style="display:none;"
                     controlsList="nodownload noplaybackrate nofullscreen"
-                    disablePictureInPicture
-                    autoplay>
+                    disablePictureInPicture>
                 </video>
             </div>
             <a href="#" class="showreel-close" id="js-showreel-close">

@@ -161,7 +161,7 @@ input:checked + .slider:before {
 }
 .light-theme .header,
 .light-theme .footer {
-    background-color: #f4f4f4;
+    background-color: #fff;
     color: #000;
 }
 .light-theme .header-link,
@@ -193,5 +193,15 @@ html.light-theme .header-link::after {
 
 html.light-theme .header-link:hover::after {
   transform: scaleX(1);
+}
+/* Все SVG иконки в футере */
+.footer-social-link svg {
+    filter: invert(1); /* по умолчанию – бело-чёрные */
+    transition: filter 0.3s ease;
+}
+
+/* В светлой теме делаем чёрно-белыми */
+html.light-theme .footer-social-link svg {
+    filter: invert(0); /* убираем инверсию */
 }
 
