@@ -225,4 +225,7 @@ html.light-theme .footer-social-link .icon-wrapper.white {
     background-color: #fff;
     color: #000; /* Тоже важно! */
 }
+html.light-theme .info-block {
+    color: #fff !important;
+}
 
