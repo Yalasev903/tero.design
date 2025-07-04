@@ -6,12 +6,14 @@
     @php
         $normalizedRow = [];
         $aspectTotal = 0;
+        $inverseAspectMax = 0;
 
         foreach ($row as $col) {
             $media = is_array($col['media']) ? $col['media'] : json_decode($col['media'] ?? '', true);
             $width = (float)($media['width'] ?? 16);
             $height = (float)($media['height'] ?? 9);
             $aspect = $width > 0 && $height > 0 ? $width / $height : 1;
+            $inverse = $aspect > 0 ? 1 / $aspect : 1;
 
             $normalizedRow[] = [
                 'col' => $col,
@@ -19,12 +21,18 @@
                 'aspect' => $aspect,
                 'width' => $width,
                 'height' => $height,
+                'inverse' => $inverse,
             ];
             $aspectTotal += $aspect;
+            if ($inverse > $inverseAspectMax) {
+                $inverseAspectMax = $inverse; // наибольшая относительная высота
+            }
         }
+
+        $rowHeightVw = $inverseAspectMax * 100; // итоговая высота строки в vw
     @endphp
 
-    <div class="grid-row">
+    <div class="grid-row" style="height: {{ number_format($rowHeightVw, 2, '.', '') }}vw;">
         @foreach($normalizedRow as $entry)
             @php
                 $col = $entry['col'];
@@ -32,6 +40,7 @@
                 $aspect = $entry['aspect'];
                 $width = $entry['width'];
                 $height = $entry['height'];
+                $inverse = $entry['inverse'];
                 $showOnMobile = $col['is_mobile'] ?? false;
                 $mediaLink = $media['link'] ?? '';
                 $poster = $media['poster'] ?? $mediaLink;
@@ -84,8 +93,6 @@
 .grid-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 10px;
-  margin-bottom: 12px;
   width: 100%;
   align-items: stretch;
 }
