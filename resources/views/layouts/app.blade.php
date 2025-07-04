@@ -292,25 +292,45 @@
     <div class="footer-social row">
         @if(!empty($setting?->col_behance))
             <a href="{{ $setting->col_behance }}" class="footer-social-link" target="_blank">
-                @include('components.svg.behance')
+                <span class="icon-wrapper" data-icon="behance">
+                    @include('components.svg.behance')
+                </span>
+                <span class="icon-wrapper white" data-icon="behance-white">
+                    @include('components.svg.behance-white')
+                </span>
             </a>
         @endif
 
         @if(!empty($setting?->col_facebook))
             <a href="{{ $setting->col_facebook }}" class="footer-social-link" target="_blank">
-                @include('components.svg.facebook')
+                <span class="icon-wrapper" data-icon="facebook">
+                    @include('components.svg.facebook')
+                </span>
+                <span class="icon-wrapper white" data-icon="facebook-white">
+                    @include('components.svg.facebook-white')
+                </span>
             </a>
         @endif
 
         @if(!empty($setting?->col_instagram))
             <a href="{{ $setting->col_instagram }}" class="footer-social-link" target="_blank">
-                @include('components.svg.instagram')
+                <span class="icon-wrapper" data-icon="instagram">
+                    @include('components.svg.instagram')
+                </span>
+                <span class="icon-wrapper white" data-icon="instagram-white">
+                    @include('components.svg.instagram-white')
+                </span>
             </a>
         @endif
 
         @if(!empty($setting?->col_linkedin))
             <a href="{{ $setting->col_linkedin }}" class="footer-social-link" target="_blank">
-                @include('components.svg.linkedin')
+                <span class="icon-wrapper" data-icon="linkedin">
+                    @include('components.svg.linkedin')
+                </span>
+                <span class="icon-wrapper white" data-icon="linkedin-white">
+                    @include('components.svg.linkedin-white')
+                </span>
             </a>
         @endif
     </div>
@@ -319,6 +339,7 @@
         All rights reserved © {{ now()->year }} TERODESIGN
     </div>
 </footer>
+
 
         {{-- SHOWREEL MODAL --}}
     @include('components.showreel', ['showreel' => $showreel])

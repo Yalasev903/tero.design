@@ -29,25 +29,21 @@ body.loading {
 .grid-item.loading:before {
     content: none !important;
 }
-
 .grid-item {
     opacity: 0;
     transform: scale(0.85);
     transition: transform 0.5s ease, opacity 0.5s ease;
     will-change: opacity, transform;
 }
-
 .grid-item.visible {
     opacity: 1;
     transform: scale(1);
 }
-
 .js-grid-item-media {
     background-color: #111;
     display: block;
     object-fit: cover;
 }
-
 .js-grid-item-media:not([src]):not([data-src]) {
     background-image: url('/img/placeholder.png');
     background-size: cover;
@@ -56,12 +52,10 @@ body.loading {
     min-height: 200px;
     display: block;
 }
-
 .media-wrapper {
     position: relative;
     background-color: #111;
 }
-
 .media-loader {
     position: absolute;
     top: 0; left: 0;
@@ -186,34 +180,46 @@ html.light-theme .header-link:hover::after {
     transform: scaleX(1);
 }
 
+/* Соцсети */
 .footer-social-link {
     display: inline-block;
     width: 42px;
     height: 42px;
     margin: 0 6px;
+    position: relative;
 }
 
-.footer-social-link svg {
-    width: 42px;
-    height: 42px;
-    padding: 8px;
+.footer-social-link .icon-wrapper {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     border-radius: 50%;
-    display: block;
+    padding: 6px;
     transition: all 0.3s ease;
-    background-color: transparent; /* изначально фон прозрачный */
+}
+
+.footer-social-link .icon-wrapper svg {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 /* 🌙 ТЁМНАЯ ТЕМА */
-html.dark-theme .footer-social-link svg {
+html.dark-theme .footer-social-link .icon-wrapper.white {
+    display: none;
+}
+html.dark-theme .footer-social-link .icon-wrapper:not(.white) {
+    display: flex;
     background-color: #fff;
-    color: #000;
-    fill: currentColor;
 }
 
 /* ☀️ СВЕТЛАЯ ТЕМА */
-html.light-theme .footer-social-link svg {
+html.light-theme .footer-social-link .icon-wrapper.white {
+    display: flex;
     background-color: #000;
-    color: #fff;
-    fill: currentColor;
 }
-
+html.light-theme .footer-social-link .icon-wrapper:not(.white) {
+    display: none;
+}
