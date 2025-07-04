@@ -752,13 +752,17 @@ const insertMedia = async () => {
   const media =
     mediaType.value === 'img'
       ? {
-        type: 'img',
-        link: selectedPath.value,
-        description: mediaDescription.value.trim()
+          type: 'img',
+          link: selectedPath.value,
+          description: mediaDescription.value.trim(),
+          width: modalMediaSize.value.w,
+          height: modalMediaSize.value.h
         }
       : {
           type: 'video',
           poster: selectedPath.value,
+          width: modalMediaSize.value.w,
+          height: modalMediaSize.value.h,
           links: [{
             link: selectedPath.value,
             mime: selectedPath.value.endsWith('.webm')
@@ -774,9 +778,9 @@ const insertMedia = async () => {
     cell.project_id = selectedProjectId.value
     cell.title = project?.title || 'Без названия'
     cell.media = {
-  ...JSON.parse(JSON.stringify(media)),
-  __v: Date.now()
-}
+      ...JSON.parse(JSON.stringify(media)),
+      __v: Date.now()
+    }
 
     ElNotification({ title: 'Обновлено', message: 'Контент обновлён', type: 'success' })
   } else {
@@ -786,11 +790,15 @@ const insertMedia = async () => {
       id: `cell_${rowIdx}_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`,
       project_id: selectedProjectId.value || null,
       title: project?.title || 'Без проекта',
-      media: JSON.parse(JSON.stringify(media)),
+      media: {
+        ...JSON.parse(JSON.stringify(media)),
+        __v: Date.now()
+      },
       is_mobile: false
     }
 
     gridRows.value[rowIdx].items.push(newCol)
+
     ElNotification({ title: 'Добавлено', message: 'Контент добавлен', type: 'success' })
   }
 
