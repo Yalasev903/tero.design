@@ -747,6 +747,16 @@ const insertMedia = async () => {
     return
   }
 
+  // 💥 Проверяем размеры перед сохранением
+  if (!modalMediaSize.value.w || !modalMediaSize.value.h) {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Дождитесь загрузки изображения или видео перед добавлением.',
+      type: 'error'
+    })
+    return
+  }
+
   const project = projects.value.find(p => p.id === selectedProjectId.value)
 
   const media =
