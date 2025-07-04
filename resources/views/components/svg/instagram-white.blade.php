@@ -1,6 +1,3 @@
-{!! '<'.'?xml version="1.0" encoding="UTF-8"?>' !!}
-<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<!-- Creator: CorelDRAW -->
 <svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" width="44.731mm" height="44.7309mm" version="1.1" style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
 viewBox="0 0 3559.72 3559.71"
  xmlns:xlink="http://www.w3.org/1999/xlink"
