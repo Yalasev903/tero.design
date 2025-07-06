@@ -123,20 +123,19 @@
     @endphp
 
     <div class="grid-item curtain-container"
-        style="width: {{ $widthPercent }}%;"
-        data-img1="{{ asset(ltrim($img1, '/')) }}"
-        data-img2="{{ asset(ltrim($img2, '/')) }}"
-        data-media-width="{{ $img1W }}"
-        data-media-height="{{ $img1H }}"
-        data-aspect="{{ $aspect }}">
-        <div class="grid-inner-wrapper">
-        <canvas class="curtain-canvas" data-aspect="{{ $aspect }}"></canvas>
-        <div class="curtain-handle">
-            <span class="curtain-arrow left">←</span>
-            <span class="curtain-arrow right">→</span>
-        </div>
-        </div>
+    style="width: {{ $widthPercent }}%;"
+    data-img1="{{ asset(ltrim($img1, '/')) }}"
+    data-img2="{{ asset(ltrim($img2, '/')) }}"
+    data-media-width="{{ $img1W }}"
+    data-media-height="{{ $img1H }}">
+  <div class="grid-inner-wrapper">
+    <canvas class="curtain-canvas" data-aspect="{{ $aspect }}"></canvas>
+    <div class="curtain-handle">
+        <span class="curtain-arrow left">←</span>
+        <span class="curtain-arrow right">→</span>
     </div>
+  </div>
+</div>
     @break
 
       @case('vr')
@@ -184,8 +183,13 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let dragging = false;
 
   const draw = () => {
-    const w = canvas.width;
-    const h = canvas.height;
+    const w = canvas.offsetWidth;
+    const aspect = parseFloat(canvas.dataset.aspect) || (canvas.dataset.aspect = img1.width / img1.height);
+    const h = w / aspect;
+
+    canvas.width = w;
+    canvas.height = h;
+
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(img2, 0, 0, w, h);
     ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
@@ -211,30 +215,19 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   window.addEventListener('mousemove', onMove);
   window.addEventListener('touchmove', onMove, { passive: true });
 
-  img1.onload = () => img2.complete && finalize();
-  img2.onload = () => img1.complete && finalize();
-
+  let ready = 0;
   const finalize = () => {
-    const aspect = img1.width / img1.height;
-
+    if (++ready < 2) return;
     requestAnimationFrame(() => {
-      const w = canvas.offsetWidth;
-      const h = w / aspect;
-
-      // Устанавливаем размеры только ОДИН раз после загрузки изображений
-      canvas.removeAttribute('width');
-      canvas.removeAttribute('height');
-      canvas.width = w;
-      canvas.height = h;
-
       canvas.style.width = '100%';
       canvas.style.height = 'auto';
-      canvas.dataset.aspect = aspect;
-
       draw();
       updateHandle();
     });
   };
+
+  img1.onload = finalize;
+  img2.onload = finalize;
 
   img1.src = img1src;
   img2.src = img2src;
@@ -245,7 +238,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const canvas = container.querySelector('.curtain-canvas');
     const img1 = container.getAttribute('data-img1');
     const img2 = container.getAttribute('data-img2');
-
     initCurtainCanvas(canvas, img1, img2);
   });
 
