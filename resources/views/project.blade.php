@@ -183,18 +183,29 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let dragging = false;
 
   // Основной рендер
-  const draw = () => {
-    const w = canvas.offsetWidth;
-    const aspect = img1.naturalWidth / img1.naturalHeight;
-    const h = w / aspect;
+ const draw = () => {
+  const w = canvas.offsetWidth;
+  const aspect1 = img1.naturalWidth / img1.naturalHeight;
+  const aspect2 = img2.naturalWidth / img2.naturalHeight;
+  const aspect = Math.min(aspect1, aspect2);
+  const h = w / aspect;
 
-    canvas.width = w;
-    canvas.height = h;
+  canvas.width = w;
+  canvas.height = h;
 
-    ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(img2, 0, 0, w, h);
-    ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
-  };
+  ctx.clearRect(0, 0, w, h);
+
+  // Рисуем img2 на весь фон
+  ctx.drawImage(img2, 0, 0, w, h);
+
+  // Обрезаем левую часть
+  ctx.save();
+  ctx.beginPath();
+  ctx.rect(0, 0, w * divider, h);
+  ctx.clip();
+  ctx.drawImage(img1, 0, 0, w, h);
+  ctx.restore();
+};
 
   const updateHandle = () => {
     handle.style.left = `${divider * 100}%`;
@@ -268,7 +279,12 @@ window.addEventListener('resize', () => {
 
     const ctx = canvas.getContext('2d');
     const w = canvas.offsetWidth;
-    const h = w / (img1.naturalWidth / img1.naturalHeight);
+    const aspect = Math.min(
+  img1.naturalWidth / img1.naturalHeight,
+  img2.naturalWidth / img2.naturalHeight
+);
+    const h = w / aspect;
+
 
     canvas.width = w;
     canvas.height = h;
