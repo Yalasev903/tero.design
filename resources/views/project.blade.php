@@ -356,7 +356,7 @@ document.addEventListener('DOMContentLoaded', () => {
   position: relative;
   width: 100%;
   height: 100%; /* ← важно! чтобы соответствовать соседним */
-  aspect-ratio: 16 / 9; /* убираем ограничение */
+ /* убираем ограничение */
 }
 .curtain-canvas {
   display: block;
