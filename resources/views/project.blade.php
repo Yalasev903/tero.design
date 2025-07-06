@@ -29,25 +29,45 @@
   @php $grid = $project->multimedia_grid; @endphp
 
   @foreach ($grid as $rowIndex => $row)
+    @php
+      $totalRatio = 0;
+      $preparedCols = [];
+      foreach ($row as $col) {
+        $w = $col['width'] ?? $col['first']['width'] ?? 1920;
+        $h = $col['height'] ?? $col['first']['height'] ?? 1080;
+        $ratio = $w / $h;
+        $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
+        $totalRatio += $ratio;
+      }
+    @endphp
+
     <div class="grid-row" data-row-index="{{ $rowIndex }}">
-      @foreach ($row as $col)
+      @foreach ($preparedCols as $entry)
         @php
-          $w = $col['width'] ?? $col['first']['width'] ?? 1920;
-          $h = $col['height'] ?? $col['first']['height'] ?? 1080;
+          $col = $entry['col'];
+          $w = $entry['w'];
+          $h = $entry['h'];
+          $ratio = $entry['ratio'];
+          $widthPercent = ($ratio / $totalRatio) * 100;
         @endphp
 
         @switch($col['type'])
-
           @case('img')
             <a href="{{ $mediaPath($col['link']) }}" class="grid-item grid-item-img js-img"
-               data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <img data-src="{{ $mediaPath($col['link']) }}" alt="{{ $col['description'] ?? '' }}" class="js-grid-item-media tero-lazy-load">
+               data-media-width="{{ $w }}" data-media-height="{{ $h }}"
+               style="width: {{ $widthPercent }}%">
+              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
+              <img data-src="{{ $mediaPath($col['link']) }}" alt="{{ $col['description'] ?? '' }}"
+                   class="js-grid-item-media tero-lazy-load" loading="lazy">
             </a>
             @break
 
           @case('video')
-            <div class="grid-item" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <video preload="metadata" playsinline muted loop autoplay class="js-grid-item-media tero-lazy-load">
+            <div class="grid-item" style="width: {{ $widthPercent }}%"
+                 data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
+              <video preload="metadata" playsinline muted loop autoplay
+                     class="js-grid-item-media tero-lazy-load" loading="lazy">
                 @foreach ($col['links'] ?? [] as $source)
                   <source data-src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
                 @endforeach
@@ -60,14 +80,14 @@
               $isNewFormat = isset($col['images']);
               $img1 = $mediaPath($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
               $img2 = $mediaPath($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
-              $width = $col['width'] ?? ($isNewFormat ? 1920 : ($col['first']['width'] ?? 1920));
-              $height = $col['height'] ?? ($isNewFormat ? 1080 : ($col['first']['height'] ?? 1080));
             @endphp
             <div class="grid-item curtain-container"
-                data-img1="{{ asset(ltrim($img1, '/')) }}"
-                data-img2="{{ asset(ltrim($img2, '/')) }}"
-                data-media-width="{{ $width }}"
-                data-media-height="{{ $height }}">
+                 style="width: {{ $widthPercent }}%"
+                 data-img1="{{ asset(ltrim($img1, '/')) }}"
+                 data-img2="{{ asset(ltrim($img2, '/')) }}"
+                 data-media-width="{{ $w }}"
+                 data-media-height="{{ $h }}">
+              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
               <canvas class="curtain-canvas"></canvas>
               <div class="curtain-handle">
                 <span class="curtain-arrow left">←</span>
@@ -80,19 +100,22 @@
             @php
               $iframeSrc = $col['link'];
               if (!str_starts_with($iframeSrc, '<iframe')) {
-                $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no"></iframe>';
+                $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style="width:100%;height:100%"></iframe>';
               }
             @endphp
-            <div class="grid-item" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+            <div class="grid-item" style="width: {{ $widthPercent }}%"
+                 data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
               {!! $iframeSrc !!}
             </div>
             @break
 
           @default
-            <div class="grid-item" data-media-width="16" data-media-height="9">
+            <div class="grid-item" style="width: {{ $widthPercent }}%"
+                 data-media-width="16" data-media-height="9">
+              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
               {{ $col['link'] ?? '' }}
             </div>
-
         @endswitch
       @endforeach
     </div>
@@ -100,6 +123,7 @@
 </div>
 
 <script>
+// 🎬 Инициализация canvas-шторки
 function initCurtainCanvas(canvas, img1src, img2src) {
   const ctx = canvas.getContext('2d');
   const handle = canvas.parentElement.querySelector('.curtain-handle');
@@ -110,25 +134,18 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let divider = 0.5;
   let dragging = false;
 
-  // Основной рендер
   const draw = () => {
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
-
-    // Нижний слой
     ctx.drawImage(img2, 0, 0, w, h);
-
-    // Верхний слой, ограниченный divider
     ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
   };
 
-  // Обновление положения полосы
   const updateHandle = () => {
     handle.style.left = `${divider * 100}%`;
   };
 
-  // Движение мыши или пальца
   const onMove = e => {
     if (!dragging) return;
     const bounds = canvas.getBoundingClientRect();
@@ -138,7 +155,6 @@ function initCurtainCanvas(canvas, img1src, img2src) {
     draw();
   };
 
-  // События мыши/тача
   handle.addEventListener('mousedown', () => (dragging = true));
   handle.addEventListener('touchstart', () => (dragging = true), { passive: true });
   window.addEventListener('mouseup', () => (dragging = false));
@@ -146,112 +162,48 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   window.addEventListener('mousemove', onMove);
   window.addEventListener('touchmove', onMove, { passive: true });
 
-  // Когда оба изображения загружены
-  img1.onload = () => {
-    if (!img2.complete) return;
-    finalize();
-  };
-  img2.onload = () => {
-    if (!img1.complete) return;
-    finalize();
-  };
+  img1.onload = () => img2.complete && finalize();
+  img2.onload = () => img1.complete && finalize();
 
-  // Устанавливаем размер canvas по минимальному размеру изображений
   const finalize = () => {
     const w = Math.min(img1.width, img2.width);
     const h = Math.min(img1.height, img2.height);
-
-    // Применяем размеры к canvas
     canvas.width = w;
     canvas.height = h;
-
-    // Удаляем ограничения из CSS (если есть)
     canvas.style.width = '100%';
     canvas.style.height = 'auto';
-
     draw();
     updateHandle();
   };
 
-  // Задаём пути к изображениям
   img1.src = img1src;
   img2.src = img2src;
 }
-</script>
 
-{{-- Скрипт для расчёта размеров + просмотр изображений --}}
-<script>
+// ✅ Один раз при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
+  // Инициализация всех curtain
   document.querySelectorAll('.curtain-container').forEach(container => {
     const canvas = container.querySelector('.curtain-canvas');
     const img1 = container.getAttribute('data-img1');
     const img2 = container.getAttribute('data-img2');
-    const w = parseInt(container.getAttribute('data-media-width'));
-    const h = parseInt(container.getAttribute('data-media-height'));
-
+    const w = parseFloat(container.getAttribute('data-media-width')) || 1920;
+    const h = parseFloat(container.getAttribute('data-media-height')) || 1080;
     canvas.width = w;
     canvas.height = h;
-
     initCurtainCanvas(canvas, img1, img2);
   });
-});
 
-window.addEventListener('load', function () {
-    // 1. Инициализация шторок
-
-  // 2. Инициализация размеров сетки
-  const rows = document.querySelectorAll('.grid-row');
-
-  rows.forEach((row, rowIndex) => {
-    const items = Array.from(row.querySelectorAll('.grid-item'));
-    const count = items.length;
-    let ratios = [];
-
-    if (count >= 5) {
-      row.classList.add('is-compact');
-
-      for (let i = 0; i < count; i++) {
-        let weight = (rowIndex % 2 === 1 && i === 0) ? 1.6 : 1;
-        const mediaW = parseFloat(items[i].getAttribute('data-media-width')) || 1920;
-        const mediaH = parseFloat(items[i].getAttribute('data-media-height')) || 1080;
-        const aspectRatio = mediaW / mediaH;
-        ratios.push({ el: items[i], r: weight * aspectRatio });
-      }
-
-      const total = ratios.reduce((sum, r) => sum + r.r, 0);
-      ratios.forEach(({ el, r }) => {
-        el.style.width = `${(r / total) * 100}%`;
-        el.style.aspectRatio = "16 / 9";
-      });
-    } else {
-      for (let i = 0; i < count; i++) {
-        let weight = 1.2;
-        if (rowIndex % 2 === 0) {
-          if (i === 0) weight = 0.9;
-          if (i === 1) weight = 1.6;
-        } else {
-          if (i === 0) weight = 1.6;
-          if (i === 1) weight = 0.9;
-        }
-        if (i > 1) weight = 1.0 + Math.random() * 0.2;
-        ratios.push({ el: items[i], r: weight });
-      }
-
-      const total = ratios.reduce((sum, r) => sum + r.r, 0);
-      ratios.forEach(({ el, r }) => {
-        el.style.width = `${(r / total) * 100}%`;
-      });
-    }
-  });
-
-    // Автоинициализация LightGallery при загрузке
+  // Инициализация LightGallery для изображений
+  if (window.lightGallery) {
     lightGallery(document.getElementById('js-gallery'), {
-    selector: '.js-img',
-    download: false,
-    zoom: true,
-    fullScreen: true,
-    share: false
+      selector: '.js-img',
+      download: false,
+      zoom: true,
+      fullScreen: true,
+      share: false
     });
+  }
 });
 </script>
 
