@@ -27,7 +27,9 @@
 
 <div class="grid" id="js-gallery">
   @php $grid = $project->multimedia_grid; @endphp
-
+<pre style="background:#111; color:#0f0; padding:20px; overflow:auto; font-size:12px;">
+  {!! nl2br(e(json_encode($grid, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) !!}
+</pre>
   @foreach ($grid as $rowIndex => $row)
     @php
       $totalRatio = 0;
