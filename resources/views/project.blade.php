@@ -166,13 +166,15 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let divider = 0.5;
   let dragging = false;
 
-  const draw = () => {
-    const w = canvas.width;
-    const h = canvas.height;
-    ctx.clearRect(0, 0, w, h);
-    ctx.drawImage(img2, 0, 0, w, h);
-    ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
-  };
+const draw = () => {
+  const w = canvas.offsetWidth;
+  const h = w / (canvas.dataset.aspect || 1.777);
+  canvas.width = w;
+  canvas.height = h;
+  ctx.clearRect(0, 0, w, h);
+  ctx.drawImage(img2, 0, 0, w, h);
+  ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
+};
 
   const updateHandle = () => {
     handle.style.left = `${divider * 100}%`;
@@ -198,16 +200,22 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   img2.onload = () => img1.complete && finalize();
 
   const finalize = () => {
-    const w = Math.min(img1.width, img2.width);
-    const h = Math.min(img1.height, img2.height);
-    canvas.removeAttribute('width');
-    canvas.removeAttribute('height');
-    canvas.style.width = '100%';
-    canvas.style.height = 'auto';
-    canvas.style.aspectRatio = `${w}/${h}`;
-    draw();
-    updateHandle();
-  };
+  // Сохраняем реальное соотношение сторон
+  const aspect = img1.width / img1.height;
+
+  // Убираем атрибуты canvas
+  canvas.removeAttribute('width');
+  canvas.removeAttribute('height');
+
+  // Адаптивные стили
+  canvas.style.width = '100%';
+  canvas.style.height = 'auto';
+  canvas.dataset.aspect = aspect;
+
+  draw();
+  updateHandle();
+};
+
 
   img1.src = img1src;
   img2.src = img2src;
@@ -244,12 +252,15 @@ document.addEventListener('DOMContentLoaded', () => {
 .grid-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
-  margin-bottom: 6px;
+  gap: 2px;
+  margin-bottom: 2px;
   align-items: flex-start;
   width: 100%;
 }
-
+.grid-inner-wrapper {
+  margin: 0; /* убираем непредсказуемые отступы внутри */
+  padding: 0;
+}
 .grid-item {
   position: relative;
   background: #000;
@@ -372,9 +383,9 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .grid-item.curtain-container {
-  position: relative;
+  display: block;
   width: 100%;
-  height: 100%;
+  height: auto;
 }
 
 .before-after-wrapper {
@@ -394,9 +405,9 @@ document.addEventListener('DOMContentLoaded', () => {
   display: block;
   width: 100%;
   height: auto;
+  max-width: 100%;
   object-fit: contain;
 }
-
 
 .curtain-wrapper {
   position: relative;
