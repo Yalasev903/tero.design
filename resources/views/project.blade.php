@@ -219,24 +219,25 @@ document.addEventListener('DOMContentLoaded', () => {
   height: auto;
 }
 
+.grid-item {
+  position: relative;
+  background: #000;
+  overflow: hidden;
+}
+
 .aspect-ratio-spacer {
   display: block;
   width: 100%;
-  pointer-events: none;
-  user-select: none;
-  padding: 0;
+  padding-top: auto; /* можно не трогать, задаётся inline */
 }
-.grid-item {
-  position: relative;
-  overflow: hidden;
-  background: #000;
-}
+
 .grid-item > *:not(.aspect-ratio-spacer) {
   position: absolute;
   top: 0; left: 0;
+  right: 0; bottom: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* не обрезать, а влезать */
 }
 
 .grid-item img,
