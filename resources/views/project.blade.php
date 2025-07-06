@@ -129,7 +129,7 @@
     data-media-width="{{ $img1W }}"
     data-media-height="{{ $img1H }}">
   <div class="grid-inner-wrapper">
-    <canvas class="curtain-canvas" data-aspect="{{ $aspect }}"></canvas>
+    <canvas class="curtain-canvas"></canvas>
     <div class="curtain-handle">
         <span class="curtain-arrow left">←</span>
         <span class="curtain-arrow right">→</span>
@@ -182,9 +182,10 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let divider = 0.5;
   let dragging = false;
 
+  // Основной рендер
   const draw = () => {
     const w = canvas.offsetWidth;
-    const aspect = parseFloat(canvas.dataset.aspect) || (canvas.dataset.aspect = img1.width / img1.height);
+    const aspect = img1.naturalWidth / img1.naturalHeight;
     const h = w / aspect;
 
     canvas.width = w;
@@ -218,6 +219,11 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let ready = 0;
   const finalize = () => {
     if (++ready < 2) return;
+
+    // сохраняем изображения на canvas для ресайза
+    canvas._img1 = img1;
+    canvas._img2 = img2;
+
     requestAnimationFrame(() => {
       canvas.style.width = '100%';
       canvas.style.height = 'auto';
@@ -233,6 +239,7 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   img2.src = img2src;
 }
 
+// Инициализация на всех .curtain-container
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.curtain-container').forEach(container => {
     const canvas = container.querySelector('.curtain-canvas');
@@ -250,6 +257,26 @@ document.addEventListener('DOMContentLoaded', () => {
       share: false
     });
   }
+});
+
+// Адаптация при изменении размера окна
+window.addEventListener('resize', () => {
+  document.querySelectorAll('.curtain-canvas').forEach(canvas => {
+    const img1 = canvas._img1;
+    const img2 = canvas._img2;
+    if (!img1 || !img2) return;
+
+    const ctx = canvas.getContext('2d');
+    const w = canvas.offsetWidth;
+    const h = w / (img1.naturalWidth / img1.naturalHeight);
+
+    canvas.width = w;
+    canvas.height = h;
+
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(img2, 0, 0, w, h);
+    ctx.drawImage(img1, 0, 0, w * 0.5, h, 0, 0, w * 0.5, h);
+  });
 });
 </script>
 
