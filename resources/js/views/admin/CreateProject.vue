@@ -595,33 +595,32 @@ const handleFileSelect = async (items) => {
     showFileManager.value = false
     return
   }
-console.log('>> FILE SELECTED:', JSON.stringify({ selectedCell: selectedCell.value }))
 
-  // 🛠️ Модальное окно (если мы не редактируем существующую колонку напрямую)
+  // 🛠️ Модальное окно вставки (новый файл)
   if (selectedCell.value?.modal && 'rowIdx' in selectedCell.value) {
     modalMediaPreview.value = path
 
     if (isImage) {
-        const img = new Image()
-        img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
-        img.src = `/multimedia/${path}`
-        } else if (isVideo) {
-        const video = document.createElement('video')
-        video.preload = 'metadata'
-        video.src = `/multimedia/${path}`
-        video.onloadedmetadata = () => {
-            modalMediaSize.value = {
-            w: video.videoWidth,
-            h: video.videoHeight
-            }
+      const img = new Image()
+      img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+      img.src = `/multimedia/${path}`
+    } else if (isVideo) {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.src = `/multimedia/${path}`
+      video.onloadedmetadata = () => {
+        modalMediaSize.value = {
+          w: video.videoWidth,
+          h: video.videoHeight
         }
+      }
     }
 
     showFileManager.value = false
     return
   }
 
-  // Редактирование уже существующей ячейки (через иконку "карандаш")
+  // ✏️ Редактирование существующего элемента (через иконку "карандаш")
   if (
     selectedCell.value?.rowIdx !== undefined &&
     selectedCell.value?.colIdx !== undefined
@@ -629,19 +628,32 @@ console.log('>> FILE SELECTED:', JSON.stringify({ selectedCell: selectedCell.val
     const row = gridRows.value[selectedCell.value.rowIdx]
     const col = row.items[selectedCell.value.colIdx]
 
-     if (isVideo) {
-    col.media = {
-        type: 'video',
-        poster: '',
-        links: [{ link: path, mime: file.mime || 'video/mp4' }],
-        __v: Date.now()
-    }
-    } else if (isImage) {
-    col.media = {
-        type: 'img',
-        link: path,
-        __v: Date.now()
-    }
+    if (isImage) {
+      const img = new Image()
+      img.onload = () => {
+        col.media = {
+          type: 'img',
+          link: path,
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          __v: Date.now()
+        }
+      }
+      img.src = `/multimedia/${path}`
+    } else if (isVideo) {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.src = `/multimedia/${path}`
+      video.onloadedmetadata = () => {
+        col.media = {
+          type: 'video',
+          poster: '',
+          links: [{ link: path, mime: file.mime || 'video/mp4' }],
+          width: video.videoWidth,
+          height: video.videoHeight,
+          __v: Date.now()
+        }
+      }
     } else {
       col.media = {}
     }
@@ -653,61 +665,6 @@ console.log('>> FILE SELECTED:', JSON.stringify({ selectedCell: selectedCell.val
   console.warn('⚠ Не удалось определить, куда вставлять файл')
 }
 
-const handleEditClick = (rowIdx, colIdx, type) => {
-  selectedCell.value = { rowIdx, colIdx }
-
-  if (type === 'img' || type === 'video') {
-    mediaType.value = type
-    isEditingMedia.value = true
-    showMediaModal.value = true
-
-    const col = gridRows.value[rowIdx].items[colIdx]
-    modalMediaTitle.value = col.title || ''
-
-    if (type === 'img') {
-      modalMediaPreview.value = col.media.link
-      const img = new Image()
-      img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
-      img.src = `/multimedia/${modalMediaPreview.value}`
-    } else if (type === 'video') {
-      modalMediaPreview.value = col.media.links?.[0]?.link || ''
-    }
-
-    return
-  }
-
-  if (type === 'vr') {
-    const col = gridRows.value[rowIdx].items[colIdx]
-    pendingVrRowIdx.value = rowIdx
-    vrIframeCode.value = col.media.link || ''
-    vrWidth.value = col.media.width || 1920
-    vrHeight.value = col.media.height || 1080
-    showVrModal.value = true
-  }
-
-  if (type === 'curtain') {
-    const col = gridRows.value[rowIdx].items[colIdx]
-    pendingCurtainRowIdx.value = rowIdx
-    curtainImage1.value = col.media.images?.[0] || ''
-    curtainImage2.value = col.media.images?.[1] || ''
-    curtainTitle1.value = col.media.titles?.[0] || form.value.meta_title || ''
-    curtainTitle2.value = col.media.titles?.[1] || form.value.meta_title || ''
-    showCurtainModal.value = true
-
-    if (curtainImage1.value) {
-      const img1 = new Image()
-      img1.onload = () => (curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight })
-      img1.src = `/multimedia/${curtainImage1.value}`
-    }
-
-    if (curtainImage2.value) {
-      const img2 = new Image()
-      img2.onload = () => (curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight })
-      img2.src = `/multimedia/${curtainImage2.value}`
-    }
-  }
-}
-
 const confirmMediaInsert = () => {
   const rowIdx = selectedCell.value?.rowIdx ?? null
   const colIdx = selectedCell.value?.colIdx ?? null
@@ -717,11 +674,23 @@ const confirmMediaInsert = () => {
     return
   }
 
+  // Проверка перед вставкой
+  if (!modalMediaPreview.value || !modalMediaSize.value.w || !modalMediaSize.value.h) {
+    ElNotification({
+      title: 'Ошибка',
+      message: 'Файл не выбран или не удалось определить размеры',
+      type: 'warning'
+    })
+    return
+  }
+
   const media =
     mediaType.value === 'img'
       ? {
           type: 'img',
           link: modalMediaPreview.value,
+          width: modalMediaSize.value.w,
+          height: modalMediaSize.value.h,
           __v: Date.now()
         }
       : mediaType.value === 'video'
@@ -732,6 +701,8 @@ const confirmMediaInsert = () => {
             link: modalMediaPreview.value,
             mime: 'video/mp4'
           }],
+          width: modalMediaSize.value.w,
+          height: modalMediaSize.value.h,
           __v: Date.now()
         }
       : {}
