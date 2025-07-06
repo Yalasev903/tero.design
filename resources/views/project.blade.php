@@ -184,15 +184,16 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let divider = 0.5;
   let dragging = false;
 
-const draw = () => {
-  const w = canvas.offsetWidth;
-  const h = w / (canvas.dataset.aspect || 1.777);
-  canvas.width = w;
-  canvas.height = h;
-  ctx.clearRect(0, 0, w, h);
-  ctx.drawImage(img2, 0, 0, w, h);
-  ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
-};
+  const draw = () => {
+    const w = canvas.offsetWidth;
+    const aspect = parseFloat(canvas.dataset.aspect) || 1.777;
+    const h = w / aspect;
+    canvas.width = w;
+    canvas.height = h;
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(img2, 0, 0, w, h);
+    ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
+  };
 
   const updateHandle = () => {
     handle.style.left = `${divider * 100}%`;
@@ -218,22 +219,24 @@ const draw = () => {
   img2.onload = () => img1.complete && finalize();
 
   const finalize = () => {
-  // Сохраняем реальное соотношение сторон
-  const aspect = img1.width / img1.height;
+    const aspect = img1.width / img1.height;
 
-  // Убираем атрибуты canvas
-  canvas.removeAttribute('width');
-  canvas.removeAttribute('height');
+    // Ждём, пока canvas будет отрендерен
+    requestAnimationFrame(() => {
+      const w = canvas.offsetWidth;
+      const h = w / aspect;
 
-  // Адаптивные стили
-  canvas.style.width = '100%';
-  canvas.style.height = 'auto';
-  canvas.dataset.aspect = aspect;
+      canvas.width = w;
+      canvas.height = h;
 
-  draw();
-  updateHandle();
-};
+      canvas.style.width = '100%';
+      canvas.style.height = 'auto';
+      canvas.dataset.aspect = aspect;
 
+      draw();
+      updateHandle();
+    });
+  };
 
   img1.src = img1src;
   img2.src = img2src;
@@ -241,15 +244,12 @@ const draw = () => {
 
 // ✅ Один раз при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-  // Инициализация всех curtain
   document.querySelectorAll('.curtain-container').forEach(container => {
     const canvas = container.querySelector('.curtain-canvas');
     const img1 = container.getAttribute('data-img1');
     const img2 = container.getAttribute('data-img2');
-    const w = parseFloat(container.getAttribute('data-media-width')) || 1920;
-    const h = parseFloat(container.getAttribute('data-media-height')) || 1080;
-    canvas.width = w;
-    canvas.height = h;
+
+    // НЕ задаём canvas.width / height здесь вручную!
     initCurtainCanvas(canvas, img1, img2);
   });
 
@@ -270,8 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
 .grid-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
-  margin-bottom: 3px;
+  gap: 1px;
+  margin-bottom: 6px;
   align-items: flex-start;
   width: 100%;
 }
