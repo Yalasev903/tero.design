@@ -1,97 +1,101 @@
 @extends('layouts.app')
 
 @section('content')
-    <div class="contact">
-        <div class="contact-map" id="js-map"></div>
+<div class="contact">
+    <div id="js-map" style="width: 100%; height: 500px;"></div>
 
-        {{-- Города в одну линию --}}
-        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 40px; margin-top: 20px;">
-            {{-- Левая колонка --}}
-            <div class="contact-left" style="flex: 1;">
-                <div class="contact-top">
-                    <div class="contact-location">{{ $footer_left ?? 'POLAND, Kraków' }}</div>
-                    <div class="contact-time">Current date:
-                        <span id="js-time" data-time="{{ now()->timestamp }}">
-                            {{ now()->format('F j, H:i:s') }}
-                        </span>
-                    </div>
+    {{-- Блок с контактами --}}
+    <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 40px; margin-top: 20px;">
+        {{-- Левая колонка --}}
+        <div class="contact-left" style="flex: 1;">
+            <div class="contact-top">
+                <div class="contact-location">{{ $footer_left ?? 'POLAND, Kraków' }}</div>
+                <div class="contact-time">
+                    Current date:
+                    <span id="js-time" data-time="{{ now()->timestamp }}">
+                        {{ now()->format('F j, H:i:s') }}
+                    </span>
                 </div>
-                <ul class="contact-list">
-                    @if(!empty($contact_data['email']))
-                        <li><a href="mailto:{{ $contact_data['email'] }}">{{ $contact_data['email'] }}</a></li>
-                    @endif
-                    {{-- Если нужен телефон из админки — раскомментируй --}}
-                    {{-- @if(!empty($contact_data['phone']))
-                        <li><a href="tel:{{ preg_replace('/\s+/', '', $contact_data['phone']) }}">{{ $contact_data['phone'] }}</a></li>
-                    @endif --}}
-                </ul>
             </div>
+            <ul class="contact-list">
+                @if(!empty($contact_data['email']))
+                    <li><a href="mailto:{{ $contact_data['email'] }}">{{ $contact_data['email'] }}</a></li>
+                @endif
+            </ul>
+        </div>
 
-            {{-- Правая колонка --}}
-            <div class="contact-left" style="flex: 1;">
-                <div class="contact-top">
-                    <div class="contact-location">{{ $footer_right ?? 'SWITZERLAND, Geneve' }}</div>
-                        @if(!empty($footer_right_note))
-                        <div class="contact-time">{{ $footer_right_note }}</div>
-                    @endif
-                </div>
-                <ul class="contact-list">
-                    {{-- <li><a href="tel:+41227003794">+41 22 700 37 94</a></li> --}}
-                </ul>
+        {{-- Правая колонка --}}
+        <div class="contact-left" style="flex: 1;">
+            <div class="contact-top">
+                <div class="contact-location">{{ $footer_right ?? 'SWITZERLAND, Geneva' }}</div>
+                @if(!empty($footer_right_note))
+                    <div class="contact-time">{{ $footer_right_note }}</div>
+                @endif
             </div>
+            <ul class="contact-list">
+                {{-- можно добавить телефон или соцсети --}}
+            </ul>
         </div>
     </div>
+</div>
 @endsection
 
 @section('scripts')
-    {{-- GOOGLE MAP --}}
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCu2s5XjqkNw97bLeZflhZoZZycZlQbJk&callback=googleMapInit" async defer></script>
-    <script>
-        function googleMapInit() {
-            let mapLng = new google.maps.LatLng({{ $map_data['lat'] }}, {{ $map_data['lng'] }});
-            let mapOptions = {
-                zoom: {{ $map_data['zoom'] }},
-                zoomControl: false,
-                scrollwheel: false,
-                scaleControl: false,
-                rotateControl: false,
-                panControl: false,
-                mapMaker: false,
-                fullscreenControl: false,
-                disableDefaultUI: false,
-                streetViewControl: false,
-                signInControl: false,
-                mapTypeControl: false,
-                center: mapLng,
-                styles: [{"featureType":"all","elementType":"labels.text.fill","stylers":[{"saturation":36},{"color":"#000000"},{"lightness":40}]},{"featureType":"all","elementType":"labels.text.stroke","stylers":[{"visibility":"on"},{"color":"#000000"},{"lightness":16}]},{"featureType":"all","elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"administrative","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"administrative","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":17},{"weight":1.2}]},{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":20}]},{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":21}]},{"featureType":"road.highway","elementType":"geometry.fill","stylers":[{"color":"#000000"},{"lightness":17}]},{"featureType":"road.highway","elementType":"geometry.stroke","stylers":[{"color":"#000000"},{"lightness":29},{"weight":0.2}]},{"featureType":"road.arterial","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":18}]},{"featureType":"road.local","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":16}]},{"featureType":"transit","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":19}]},{"featureType":"water","elementType":"geometry","stylers":[{"color":"#000000"},{"lightness":17}]}]
-            };
-            let mapElement = document.getElementById('js-map');
-            let map = new google.maps.Map(mapElement, mapOptions);
-            new google.maps.Marker({
-                position: mapLng,
-                map: map,
-                icon: '/multimedia/{{ $map_data['marker']['link'] }}'
-            });
-            map.addListener('click', function() {
-                map.setOptions({ scrollwheel: true });
-            });
-            map.addListener('drag', function() {
-                map.setOptions({ scrollwheel: true });
-            });
-            map.addListener('mouseout', function() {
-                map.setOptions({ scrollwheel: false });
-            });
-        }
-        document.addEventListener('DOMContentLoaded', function () {
-            let timeEl = document.getElementById('js-time');
-            if (timeEl) {
-                setInterval(function () {
-                    let date = new Date();
-                    timeEl.textContent = date.toLocaleString('en-US', { month: 'long', day: 'numeric' }) + ', ' +
-                        date.toLocaleTimeString('en-GB');
-                }, 1000);
-            }
-        });
-    </script>
-@endsection
+{{-- Подключение Google Maps --}}
+<script async defer
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCu2s5XjqkNw97bLeZflhZoZZycZlQbJk&callback=googleMapInit">
+</script>
 
+<script>
+    function googleMapInit() {
+        const mapCenter = { lat: {{ $map_data['lat'] ?? 50.4501 }}, lng: {{ $map_data['lng'] ?? 30.5234 }} };
+
+        const map = new google.maps.Map(document.getElementById("js-map"), {
+            center: mapCenter,
+            zoom: {{ $map_data['zoom'] ?? 14 }},
+            disableDefaultUI: true,
+            scrollwheel: false,
+            styles: {!! json_encode([
+                ["featureType" => "all", "elementType" => "labels.text.fill", "stylers" => [["saturation" => 36], ["color" => "#000000"], ["lightness" => 40]]],
+                ["featureType" => "all", "elementType" => "labels.text.stroke", "stylers" => [["visibility" => "on"], ["color" => "#000000"], ["lightness" => 16]]],
+                ["featureType" => "all", "elementType" => "labels.icon", "stylers" => [["visibility" => "off"]]],
+                ["featureType" => "administrative", "elementType" => "geometry.fill", "stylers" => [["color" => "#000000"], ["lightness" => 20]]],
+                ["featureType" => "administrative", "elementType" => "geometry.stroke", "stylers" => [["color" => "#000000"], ["lightness" => 17], ["weight" => 1.2]]],
+                ["featureType" => "landscape", "elementType" => "geometry", "stylers" => [["color" => "#000000"], ["lightness" => 20]]],
+                ["featureType" => "poi", "elementType" => "geometry", "stylers" => [["color" => "#000000"], ["lightness" => 21]]],
+                ["featureType" => "road.highway", "elementType" => "geometry.fill", "stylers" => [["color" => "#000000"], ["lightness" => 17]]],
+                ["featureType" => "road.highway", "elementType" => "geometry.stroke", "stylers" => [["color" => "#000000"], ["lightness" => 29], ["weight" => 0.2]]],
+                ["featureType" => "road.arterial", "elementType" => "geometry", "stylers" => [["color" => "#000000"], ["lightness" => 18]]],
+                ["featureType" => "road.local", "elementType" => "geometry", "stylers" => [["color" => "#000000"], ["lightness" => 16]]],
+                ["featureType" => "transit", "elementType" => "geometry", "stylers" => [["color" => "#000000"], ["lightness" => 19]]],
+                ["featureType" => "water", "elementType" => "geometry", "stylers" => [["color" => "#000000"], ["lightness" => 17]]]
+            ]) !!}
+        });
+
+        new google.maps.Marker({
+            position: mapCenter,
+            map: map,
+            icon: '{{ asset("multimedia/" . ($map_data["marker"]["link"] ?? "marker.png")) }}'
+        });
+
+        // Поведение при взаимодействии
+        map.addListener('click', () => map.setOptions({ scrollwheel: true }));
+        map.addListener('drag', () => map.setOptions({ scrollwheel: true }));
+        map.addListener('mouseout', () => map.setOptions({ scrollwheel: false }));
+    }
+
+    // Обновление времени
+    document.addEventListener('DOMContentLoaded', () => {
+        const timeEl = document.getElementById('js-time');
+        if (timeEl) {
+            setInterval(() => {
+                const now = new Date();
+                timeEl.textContent = now.toLocaleString('en-US', {
+                    month: 'long',
+                    day: 'numeric'
+                }) + ', ' + now.toLocaleTimeString('en-GB');
+            }, 1000);
+        }
+    });
+</script>
+@endsection
