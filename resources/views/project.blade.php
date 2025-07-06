@@ -36,17 +36,20 @@
       $w = $col['width'] ?? null;
       $h = $col['height'] ?? null;
 
-      // Если размеров нет — пробуем получить их через getimagesize
-      if (!$w || !$h) {
-          $localPath = public_path('multimedia/' . ltrim($col['link'] ?? '', '/'));
-          if (file_exists($localPath)) {
+      // Попытка получить размеры через getimagesize, только если нет и это IMG
+      if ((!$w || !$h) && isset($col['type']) && $col['type'] === 'img' && !empty($col['link'])) {
+          $localPath = public_path('multimedia/' . ltrim($col['link'], '/'));
+          if (file_exists($localPath) && is_file($localPath)) {
               [$imgW, $imgH] = getimagesize($localPath);
               $w = $imgW;
               $h = $imgH;
-          } else {
-              $w = 1920;
-              $h = 1080;
           }
+      }
+
+      // Fallback если всё равно пусто
+      if (!$w || !$h) {
+          $w = 1920;
+          $h = 1080;
       }
 
       $ratio = $w / $h;
@@ -119,20 +122,23 @@
         @break
 
       @case('vr')
-        @php
-          $iframeSrc = $col['link'];
-          if (!str_starts_with($iframeSrc, '<iframe')) {
-            $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style="width:100%;height:100%"></iframe>';
-          }
-        @endphp
-        <div class="grid-item"
-             style="width: {{ $widthPercent }}%;"
-             data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-          <div class="grid-inner-wrapper">
-            {!! $iframeSrc !!}
-          </div>
-        </div>
-        @break
+  @php
+    $iframeSrc = $col['link'];
+    $paddingTop = 100 / ($w / $h); // пропорциональный контейнер
+    if (!str_starts_with($iframeSrc, '<iframe')) {
+      $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style=\"width:100%;height:100%\"></iframe>';
+    }
+  @endphp
+  <div class="grid-item"
+       style="width: {{ $widthPercent }}%;"
+       data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+    <div class="grid-inner-wrapper vr-wrapper" style="position: relative; padding-top: {{ $paddingTop }}%;">
+      <div style="position: absolute; top:0; left:0; width:100%; height:100%;">
+        {!! $iframeSrc !!}
+      </div>
+    </div>
+  </div>
+  @break
 
       @default
         <div class="grid-item"
@@ -276,7 +282,12 @@ document.addEventListener('DOMContentLoaded', () => {
   align-items: flex-start;
   padding-right: 60px;
 }
-
+.vr-wrapper iframe {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  border: none;
+}
 
 .img-popup {
   position: fixed;
