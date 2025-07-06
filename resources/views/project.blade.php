@@ -212,13 +212,11 @@ document.addEventListener('DOMContentLoaded', () => {
   display: flex;
   align-items: stretch;
   height: auto;
-  min-height: 550px;
   margin-bottom: 5px;
 }
 
 .grid-row.is-compact {
   height: auto;
-  min-height: unset;
 }
 
 .aspect-ratio-spacer {
@@ -369,7 +367,6 @@ document.addEventListener('DOMContentLoaded', () => {
 .curtain-wrapper {
   position: relative;
   width: 100%;
-  height: 550px;
   background: #000;
   overflow: hidden;
 }
