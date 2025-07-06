@@ -41,84 +41,87 @@
       }
     @endphp
 
-    <div class="grid-row" data-row-index="{{ $rowIndex }}">
-      @foreach ($preparedCols as $entry)
+<div class="grid-row" data-row-index="{{ $rowIndex }}">
+  @foreach ($preparedCols as $entry)
+    @php
+      $col = $entry['col'];
+      $w = $entry['w'];
+      $h = $entry['h'];
+      $ratio = $entry['ratio'];
+      $widthPercent = ($ratio / $totalRatio) * 100;
+    @endphp
+
+    @switch($col['type'])
+
+      @case('img')
+        <a href="{{ $mediaPath($col['link']) }}"
+           class="grid-item grid-item-img js-img"
+           data-media-width="{{ $w }}" data-media-height="{{ $h }}"
+           style="width: {{ $widthPercent }}%;">
+          <img src="{{ $mediaPath($col['link']) }}"
+               alt="{{ $col['description'] ?? '' }}"
+               width="{{ $w }}" height="{{ $h }}"
+               class="js-grid-item-media lazyload" />
+        </a>
+        @break
+
+      @case('video')
+        <div class="grid-item"
+             style="width: {{ $widthPercent }}%;"
+             data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+          <video preload="metadata" playsinline muted loop autoplay
+                 width="{{ $w }}" height="{{ $h }}"
+                 class="js-grid-item-media lazyload">
+            @foreach ($col['links'] ?? [] as $source)
+              <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+            @endforeach
+          </video>
+        </div>
+        @break
+
+      @case('curtain')
         @php
-          $col = $entry['col'];
-          $w = $entry['w'];
-          $h = $entry['h'];
-          $ratio = $entry['ratio'];
-          $widthPercent = ($ratio / $totalRatio) * 100;
+          $isNewFormat = isset($col['images']);
+          $img1 = $mediaPath($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
+          $img2 = $mediaPath($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
         @endphp
+        <div class="grid-item curtain-container"
+             style="width: {{ $widthPercent }}%;"
+             data-img1="{{ asset(ltrim($img1, '/')) }}"
+             data-img2="{{ asset(ltrim($img2, '/')) }}"
+             data-media-width="{{ $w }}"
+             data-media-height="{{ $h }}">
+          <canvas class="curtain-canvas"></canvas>
+          <div class="curtain-handle">
+            <span class="curtain-arrow left">←</span>
+            <span class="curtain-arrow right">→</span>
+          </div>
+        </div>
+        @break
 
-        @switch($col['type'])
-          @case('img')
-            <a href="{{ $mediaPath($col['link']) }}" class="grid-item grid-item-img js-img"
-               data-media-width="{{ $w }}" data-media-height="{{ $h }}"
-               style="width: {{ $widthPercent }}%">
-              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
-              <img data-src="{{ $mediaPath($col['link']) }}" alt="{{ $col['description'] ?? '' }}"
-                   class="js-grid-item-media tero-lazy-load" loading="lazy">
-            </a>
-            @break
+      @case('vr')
+        @php
+          $iframeSrc = $col['link'];
+          if (!str_starts_with($iframeSrc, '<iframe')) {
+            $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style="width:100%;height:100%"></iframe>';
+          }
+        @endphp
+        <div class="grid-item"
+             style="width: {{ $widthPercent }}%;"
+             data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+          {!! $iframeSrc !!}
+        </div>
+        @break
 
-          @case('video')
-            <div class="grid-item" style="width: {{ $widthPercent }}%"
-                 data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
-              <video preload="metadata" playsinline muted loop autoplay
-                     class="js-grid-item-media tero-lazy-load" loading="lazy">
-                @foreach ($col['links'] ?? [] as $source)
-                  <source data-src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
-                @endforeach
-              </video>
-            </div>
-            @break
-
-          @case('curtain')
-            @php
-              $isNewFormat = isset($col['images']);
-              $img1 = $mediaPath($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
-              $img2 = $mediaPath($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
-            @endphp
-            <div class="grid-item curtain-container"
-                 style="width: {{ $widthPercent }}%"
-                 data-img1="{{ asset(ltrim($img1, '/')) }}"
-                 data-img2="{{ asset(ltrim($img2, '/')) }}"
-                 data-media-width="{{ $w }}"
-                 data-media-height="{{ $h }}">
-              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
-              <canvas class="curtain-canvas"></canvas>
-              <div class="curtain-handle">
-                <span class="curtain-arrow left">←</span>
-                <span class="curtain-arrow right">→</span>
-              </div>
-            </div>
-            @break
-
-          @case('vr')
-            @php
-              $iframeSrc = $col['link'];
-              if (!str_starts_with($iframeSrc, '<iframe')) {
-                $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style="width:100%;height:100%"></iframe>';
-              }
-            @endphp
-            <div class="grid-item" style="width: {{ $widthPercent }}%"
-                 data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
-              {!! $iframeSrc !!}
-            </div>
-            @break
-
-          @default
-            <div class="grid-item" style="width: {{ $widthPercent }}%"
-                 data-media-width="16" data-media-height="9">
-              <div class="aspect-ratio-spacer" style="padding-top: {{ 100 / $ratio }}%;"></div>
-              {{ $col['link'] ?? '' }}
-            </div>
-        @endswitch
-      @endforeach
-    </div>
+      @default
+        <div class="grid-item"
+             style="width: {{ $widthPercent }}%;"
+             data-media-width="16" data-media-height="9">
+          {{ $col['link'] ?? '' }}
+        </div>
+    @endswitch
+  @endforeach
+</div>
   @endforeach
 </div>
 
@@ -210,9 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
 <style>
 .grid-row {
   display: flex;
+  flex-wrap: nowrap;
+  margin-bottom: 0;
+  width: 100%;
   align-items: stretch;
-  height: auto;
-  margin-bottom: 5px;
+  overflow: hidden;
 }
 
 .grid-row.is-compact {
@@ -220,32 +225,19 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 
 .grid-item {
+  display: block;
+  flex-shrink: 0;
   position: relative;
   background: #000;
   overflow: hidden;
-}
-
-.aspect-ratio-spacer {
-  display: block;
-  width: 100%;
-  padding-top: auto; /* можно не трогать, задаётся inline */
-}
-
-.grid-item > *:not(.aspect-ratio-spacer) {
-  position: absolute;
-  top: 0; left: 0;
-  right: 0; bottom: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain; /* не обрезать, а влезать */
 }
 
 .grid-item img,
 .grid-item video,
 .grid-item iframe {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  object-fit: contain;
   display: block;
 }
 
