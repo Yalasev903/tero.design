@@ -84,22 +84,23 @@
         @break
 
       @case('video')
-        <div class="grid-item"
-             style="width: {{ $widthPercent }}%;"
-             data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-          <div class="grid-inner-wrapper">
-            <video preload="metadata" playsinline muted loop autoplay
-                   width="{{ $w }}" height="{{ $h }}"
-                   class="js-grid-item-media lazyload">
-              @foreach ($col['links'] ?? [] as $source)
-                <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
-              @endforeach
-            </video>
-          </div>
-        </div>
-        @break
+  @php $aspectRatio = $w / $h; @endphp
+  <div class="grid-item"
+       style="width: {{ $widthPercent }}%; aspect-ratio: {{ $w }} / {{ $h }};"
+       data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+    <div class="grid-inner-wrapper">
+      <video preload="metadata" playsinline muted loop autoplay
+             class="js-grid-item-media lazyload"
+             style="width: 100%; height: auto; object-fit: contain;">
+        @foreach ($col['links'] ?? [] as $source)
+          <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+        @endforeach
+      </video>
+    </div>
+  </div>
+  @break
 
-      @case('curtain')
+  @case('curtain')
   @php
     $isNewFormat = isset($col['images']);
     $img1Path = $isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? '');
@@ -538,14 +539,14 @@ window.addEventListener('resize', () => {
 
 /* Mobile */
 @media (max-width: 768px) {
-.grid-row {
+grid-row {
     flex-direction: column;
     height: auto;
   }
 
   .grid-item {
     width: 100% !important;
-    height: auto; /* можно убрать или оставить для fallback */
+    height: auto;
     max-height: 100vh;
   }
 
@@ -553,8 +554,8 @@ window.addEventListener('resize', () => {
   .grid-item video,
   .grid-item iframe {
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    height: auto;
+    object-fit: contain;
   }
 }
 </style>
