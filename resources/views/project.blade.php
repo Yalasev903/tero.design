@@ -173,7 +173,6 @@
 </div>
 
 <script>
-// 🎬 Инициализация canvas-шторки
 function initCurtainCanvas(canvas, img1src, img2src) {
   const ctx = canvas.getContext('2d');
   const handle = canvas.parentElement.querySelector('.curtain-handle');
@@ -185,11 +184,8 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   let dragging = false;
 
   const draw = () => {
-    const w = canvas.offsetWidth;
-    const aspect = parseFloat(canvas.dataset.aspect) || 1.777;
-    const h = w / aspect;
-    canvas.width = w;
-    canvas.height = h;
+    const w = canvas.width;
+    const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(img2, 0, 0, w, h);
     ctx.drawImage(img1, 0, 0, w * divider, h, 0, 0, w * divider, h);
@@ -221,11 +217,13 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   const finalize = () => {
     const aspect = img1.width / img1.height;
 
-    // Ждём, пока canvas будет отрендерен
     requestAnimationFrame(() => {
       const w = canvas.offsetWidth;
       const h = w / aspect;
 
+      // Устанавливаем размеры только ОДИН раз после загрузки изображений
+      canvas.removeAttribute('width');
+      canvas.removeAttribute('height');
       canvas.width = w;
       canvas.height = h;
 
@@ -242,18 +240,15 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   img2.src = img2src;
 }
 
-// ✅ Один раз при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.curtain-container').forEach(container => {
     const canvas = container.querySelector('.curtain-canvas');
     const img1 = container.getAttribute('data-img1');
     const img2 = container.getAttribute('data-img2');
 
-    // НЕ задаём canvas.width / height здесь вручную!
     initCurtainCanvas(canvas, img1, img2);
   });
 
-  // Инициализация LightGallery для изображений
   if (window.lightGallery) {
     lightGallery(document.getElementById('js-gallery'), {
       selector: '.js-img',
