@@ -27,21 +27,33 @@
 
 <div class="grid" id="js-gallery">
   @php $grid = $project->multimedia_grid; @endphp
-<pre style="background:#111; color:#0f0; padding:20px; overflow:auto; font-size:12px;">
-  {!! nl2br(e(json_encode($grid, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) !!}
-</pre>
   @foreach ($grid as $rowIndex => $row)
-    @php
-      $totalRatio = 0;
-      $preparedCols = [];
-      foreach ($row as $col) {
-        $w = $col['width'] ?? $col['first']['width'] ?? 1920;
-        $h = $col['height'] ?? $col['first']['height'] ?? 1080;
-        $ratio = $w / $h;
-        $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
-        $totalRatio += $ratio;
+@php
+  $totalRatio = 0;
+  $preparedCols = [];
+
+  foreach ($row as $col) {
+      $w = $col['width'] ?? null;
+      $h = $col['height'] ?? null;
+
+      // Если размеров нет — пробуем получить их через getimagesize
+      if (!$w || !$h) {
+          $localPath = public_path('multimedia/' . ltrim($col['link'] ?? '', '/'));
+          if (file_exists($localPath)) {
+              [$imgW, $imgH] = getimagesize($localPath);
+              $w = $imgW;
+              $h = $imgH;
+          } else {
+              $w = 1920;
+              $h = 1080;
+          }
       }
-    @endphp
+
+      $ratio = $w / $h;
+      $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
+      $totalRatio += $ratio;
+  }
+@endphp
 <div class="grid-row" data-row-index="{{ $rowIndex }}">
   @foreach ($preparedCols as $entry)
     @php
