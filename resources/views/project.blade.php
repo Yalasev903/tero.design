@@ -221,12 +221,24 @@ document.addEventListener('DOMContentLoaded', () => {
   min-height: unset;
 }
 
+.aspect-ratio-spacer {
+  display: block;
+  width: 100%;
+  pointer-events: none;
+  user-select: none;
+  padding: 0;
+}
 .grid-item {
   position: relative;
   overflow: hidden;
   background: #000;
-  flex-shrink: 0;
+}
+.grid-item > *:not(.aspect-ratio-spacer) {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
   height: 100%;
+  object-fit: cover;
 }
 
 .grid-item img,
