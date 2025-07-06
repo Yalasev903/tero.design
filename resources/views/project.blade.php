@@ -40,7 +40,6 @@
         $totalRatio += $ratio;
       }
     @endphp
-
 <div class="grid-row" data-row-index="{{ $rowIndex }}">
   @foreach ($preparedCols as $entry)
     @php
@@ -56,12 +55,14 @@
       @case('img')
         <a href="{{ $mediaPath($col['link']) }}"
            class="grid-item grid-item-img js-img"
-           data-media-width="{{ $w }}" data-media-height="{{ $h }}"
-           style="width: {{ $widthPercent }}%;">
-          <img src="{{ $mediaPath($col['link']) }}"
-               alt="{{ $col['description'] ?? '' }}"
-               width="{{ $w }}" height="{{ $h }}"
-               class="js-grid-item-media lazyload" />
+           style="width: {{ $widthPercent }}%;"
+           data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+          <div class="grid-inner-wrapper">
+            <img src="{{ $mediaPath($col['link']) }}"
+                 alt="{{ $col['description'] ?? '' }}"
+                 width="{{ $w }}" height="{{ $h }}"
+                 class="js-grid-item-media lazyload" />
+          </div>
         </a>
         @break
 
@@ -69,13 +70,15 @@
         <div class="grid-item"
              style="width: {{ $widthPercent }}%;"
              data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-          <video preload="metadata" playsinline muted loop autoplay
-                 width="{{ $w }}" height="{{ $h }}"
-                 class="js-grid-item-media lazyload">
-            @foreach ($col['links'] ?? [] as $source)
-              <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
-            @endforeach
-          </video>
+          <div class="grid-inner-wrapper">
+            <video preload="metadata" playsinline muted loop autoplay
+                   width="{{ $w }}" height="{{ $h }}"
+                   class="js-grid-item-media lazyload">
+              @foreach ($col['links'] ?? [] as $source)
+                <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+              @endforeach
+            </video>
+          </div>
         </div>
         @break
 
@@ -91,10 +94,12 @@
              data-img2="{{ asset(ltrim($img2, '/')) }}"
              data-media-width="{{ $w }}"
              data-media-height="{{ $h }}">
-          <canvas class="curtain-canvas"></canvas>
-          <div class="curtain-handle">
-            <span class="curtain-arrow left">←</span>
-            <span class="curtain-arrow right">→</span>
+          <div class="grid-inner-wrapper">
+            <canvas class="curtain-canvas"></canvas>
+            <div class="curtain-handle">
+              <span class="curtain-arrow left">←</span>
+              <span class="curtain-arrow right">→</span>
+            </div>
           </div>
         </div>
         @break
@@ -109,7 +114,9 @@
         <div class="grid-item"
              style="width: {{ $widthPercent }}%;"
              data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-          {!! $iframeSrc !!}
+          <div class="grid-inner-wrapper">
+            {!! $iframeSrc !!}
+          </div>
         </div>
         @break
 
@@ -117,7 +124,9 @@
         <div class="grid-item"
              style="width: {{ $widthPercent }}%;"
              data-media-width="16" data-media-height="9">
-          {{ $col['link'] ?? '' }}
+          <div class="grid-inner-wrapper">
+            {{ $col['link'] ?? '' }}
+          </div>
         </div>
     @endswitch
   @endforeach
@@ -171,10 +180,11 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   const finalize = () => {
     const w = Math.min(img1.width, img2.width);
     const h = Math.min(img1.height, img2.height);
-    canvas.width = w;
-    canvas.height = h;
+    canvas.removeAttribute('width');
+    canvas.removeAttribute('height');
     canvas.style.width = '100%';
     canvas.style.height = 'auto';
+    canvas.style.aspectRatio = `${w}/${h}`;
     draw();
     updateHandle();
   };
@@ -214,31 +224,35 @@ document.addEventListener('DOMContentLoaded', () => {
 .grid-row {
   display: flex;
   flex-wrap: nowrap;
-  margin-bottom: 0;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: flex-start;
   width: 100%;
-  align-items: stretch;
-  overflow: hidden;
-}
-
-.grid-row.is-compact {
-  height: auto;
 }
 
 .grid-item {
-  display: block;
-  flex-shrink: 0;
   position: relative;
   background: #000;
-  overflow: hidden;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  width: auto;
+  height: auto;
+  aspect-ratio: unset; /* по умолчанию */
 }
 
 .grid-item img,
 .grid-item video,
-.grid-item iframe {
+.grid-item iframe,
+.grid-item canvas {
   width: 100%;
   height: auto;
   object-fit: contain;
   display: block;
+}
+
+.grid-row.is-compact {
+  height: auto;
 }
 
 .project-head {
@@ -353,9 +367,11 @@ document.addEventListener('DOMContentLoaded', () => {
 }
 .curtain-canvas {
   display: block;
-   max-width: 100%;
-  height: 100%;
+  width: 100%;
+  height: auto;
+  object-fit: contain;
 }
+
 
 .curtain-wrapper {
   position: relative;
@@ -445,7 +461,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   .grid-item {
     width: 100% !important;
-    aspect-ratio: 16 / 9 !important;
     height: auto; /* можно убрать или оставить для fallback */
     max-height: 100vh;
   }
