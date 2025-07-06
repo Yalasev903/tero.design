@@ -100,26 +100,44 @@
         @break
 
       @case('curtain')
-        @php
-          $isNewFormat = isset($col['images']);
-          $img1 = $mediaPath($isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? ''));
-          $img2 = $mediaPath($isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? ''));
-        @endphp
-        <div class="grid-item curtain-container"
-             style="width: {{ $widthPercent }}%;"
-             data-img1="{{ asset(ltrim($img1, '/')) }}"
-             data-img2="{{ asset(ltrim($img2, '/')) }}"
-             data-media-width="{{ $w }}"
-             data-media-height="{{ $h }}">
-          <div class="grid-inner-wrapper">
-            <canvas class="curtain-canvas"></canvas>
-            <div class="curtain-handle">
-              <span class="curtain-arrow left">←</span>
-              <span class="curtain-arrow right">→</span>
-            </div>
-          </div>
+  @php
+    $isNewFormat = isset($col['images']);
+    $img1Path = $isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? '');
+    $img2Path = $isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? '');
+
+    $img1 = $mediaPath($img1Path);
+    $img2 = $mediaPath($img2Path);
+
+    // Попробуем получить размеры
+    $aspect = 1.777; // fallback
+    $img1W = 1920;
+    $img1H = 1080;
+
+    if (!empty($img1Path)) {
+        $img1FullPath = public_path('multimedia/' . ltrim($img1Path, '/'));
+        if (file_exists($img1FullPath) && is_file($img1FullPath)) {
+            [$img1W, $img1H] = getimagesize($img1FullPath);
+            $aspect = $img1W / $img1H;
+        }
+    }
+    @endphp
+
+    <div class="grid-item curtain-container"
+        style="width: {{ $widthPercent }}%;"
+        data-img1="{{ asset(ltrim($img1, '/')) }}"
+        data-img2="{{ asset(ltrim($img2, '/')) }}"
+        data-media-width="{{ $img1W }}"
+        data-media-height="{{ $img1H }}"
+        data-aspect="{{ $aspect }}">
+        <div class="grid-inner-wrapper">
+        <canvas class="curtain-canvas" data-aspect="{{ $aspect }}"></canvas>
+        <div class="curtain-handle">
+            <span class="curtain-arrow left">←</span>
+            <span class="curtain-arrow right">→</span>
         </div>
-        @break
+        </div>
+    </div>
+    @break
 
       @case('vr')
   @php
@@ -252,8 +270,8 @@ document.addEventListener('DOMContentLoaded', () => {
 .grid-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 2px;
-  margin-bottom: 2px;
+  gap: 6px;
+  margin-bottom: 3px;
   align-items: flex-start;
   width: 100%;
 }
