@@ -174,7 +174,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
+            // Добавляем в нужном порядке: сначала ссылка, потом иконка
+            buttonContainer.appendChild(link);
             buttonContainer.appendChild(infoIcon);
+
             popupInner.appendChild(buttonContainer);
 
             // Заголовок (если нужно оставить)
