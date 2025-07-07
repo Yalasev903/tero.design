@@ -70,6 +70,9 @@ body {
   font-size: 20px;
   line-height: 1;
 }
+.header-nav {
+    margin-right: 16px !important;
+}
 .showreel {
     pointer-events: auto;
     position: fixed;
