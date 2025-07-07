@@ -84,7 +84,7 @@ body {
     align-items: center;
     justify-content: center;
     background-color: rgba(0, 0, 0, 0.72);
-    overflow: auto;
+    overflow: hidden; /* ✅ убрали скролл */
 }
 .showreel.open {
     display: flex !important;
@@ -93,16 +93,16 @@ body {
 .showreel-center {
     position: relative;
     z-index: 2;
-    width: 90vw; /* ✅ 90% ширины */
+    width: 90vw;
     max-width: 1920px;
-    padding: 30px 60px; /* ✅ отступ сверху/снизу и по бокам */
+    padding: 30px 60px;
     box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Контейнер постера и видео */
+/* Уменьшенный контейнер постера и видео */
 .showreel-poster-block,
 .showreel-player-video {
     position: relative;
@@ -114,6 +114,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    max-height: calc(100vh - 100px); /* ✅ немного меньше, чем весь экран */
 }
 
 /* Постер */
