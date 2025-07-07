@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 popupInner.appendChild(video);
             }
 
-            // 🔧 Контейнер с кнопками в правом верхнем углу
+            // 🔧 Контейнер с кнопками
             const buttonContainer = document.createElement('div');
             buttonContainer.style.position = 'absolute';
             buttonContainer.style.top = '-20px';
@@ -145,7 +145,7 @@ document.addEventListener('DOMContentLoaded', function () {
             buttonContainer.style.gap = '10px';
             buttonContainer.style.zIndex = '2';
 
-            // Кнопка "View Full Project"
+            // 🔗 Кнопка "View Full Project" (если есть)
             if (projectLink) {
                 const link = document.createElement('a');
                 link.href = projectLink;
@@ -156,7 +156,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 buttonContainer.appendChild(link);
             }
 
-            // Кнопка info (i)
+            // ℹ️ Кнопка info (i)
             const infoIcon = document.createElement('span');
             infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
             infoIcon.classList.add('info-button');
@@ -174,13 +174,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // Добавляем в нужном порядке: сначала ссылка, потом иконка
-            buttonContainer.appendChild(link);
+            // ⏬ Порядок: сначала кнопка, потом "i"
             buttonContainer.appendChild(infoIcon);
-
             popupInner.appendChild(buttonContainer);
 
-            // Заголовок (если нужно оставить)
+            // Заголовок проекта
             const titleElement = document.createElement('h3');
             titleElement.innerText = title;
             titleElement.classList.add('project-title');
