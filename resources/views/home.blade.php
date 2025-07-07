@@ -165,7 +165,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.rel = 'noopener';
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
-                buttonContainer.appendChild(link); // 🟢 ссылка первой
+                link.style.position = 'relative';
+                link.style.top = '-4px'; // ⬆️ приподнимаем на 4px
+                buttonContainer.appendChild(link); // 🥇 ссылка первой
             }
 
             // ℹ️ Кнопка info (i)
@@ -186,14 +188,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            buttonContainer.appendChild(infoIcon); // 🟢 иконка после ссылки
+            buttonContainer.appendChild(infoIcon); // 🥈 иконка второй
 
-            // 🧩 Финальный верхний блок
+            // Финальная сборка topBar
             topBar.appendChild(titleElement);       // слева
-            topBar.appendChild(buttonContainer);    // справа
             popupInner.appendChild(topBar);
+            topBar.appendChild(buttonContainer);    // справа
 
-            // 💡 Очистить и показать popup
+
+            // Очистка и показ popup
             popup.innerHTML = '';
             popup.appendChild(popupInner);
             popup.classList.add('active');
@@ -216,6 +219,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
