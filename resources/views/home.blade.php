@@ -50,8 +50,6 @@
     }
 
     .project-link-text {
-    background: #ccc;
-    color: #000;
     text-decoration: none;
     font-size: 14px;
     padding: 4px 10px;
