@@ -65,8 +65,10 @@
 
     @stack('styles')
     <style>
-        body {
-    font-family: 'Montserrat', sans-serif;
+body {
+  font-family: 'AvenirNextCyr-Light', sans-serif;
+  font-size: 20px;
+  line-height: 1;
 }
 .showreel {
     pointer-events: auto;
