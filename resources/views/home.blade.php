@@ -140,9 +140,6 @@ document.addEventListener('DOMContentLoaded', function () {
             topBar.style.top = '-35px';
             topBar.style.left = '10px';
             topBar.style.right = '10px';
-            topBar.style.display = 'flex';
-            topBar.style.justifyContent = 'space-between';
-            topBar.style.alignItems = 'center';
             topBar.style.zIndex = '2';
 
             // Заголовок проекта
@@ -151,11 +148,15 @@ document.addEventListener('DOMContentLoaded', function () {
             titleElement.style.color = '#fff';
             titleElement.style.margin = '0';
             titleElement.style.fontSize = '20px';
+            titleElement.style.display = 'inline-block';
 
-            // Контейнер кнопок
+            // Контейнер кнопок — без flex
             const buttonContainer = document.createElement('div');
-            buttonContainer.style.display = 'flex';
-            buttonContainer.style.gap = '10px';
+            buttonContainer.style.cssText = `
+                position: absolute;
+                right: 0;
+                top: 0;
+            `;
 
             // 🔗 Кнопка "View Full Project"
             if (projectLink) {
@@ -166,8 +167,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
                 link.style.position = 'relative';
-                link.style.top = '-4px'; // ⬆️ приподнимаем на 4px
-                buttonContainer.appendChild(link); // 🥇 ссылка первой
+                link.style.top = '-4px'; // ⬆️ приподнимаем
+                link.style.marginRight = '10px'; // отступ перед иконкой
+                buttonContainer.appendChild(link); // 🥇 сначала ссылка
             }
 
             // ℹ️ Кнопка info (i)
@@ -188,15 +190,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            buttonContainer.appendChild(infoIcon); // 🥈 иконка второй
+            buttonContainer.appendChild(infoIcon); // 🥈 потом иконка
 
-            // Финальная сборка topBar
-            topBar.appendChild(titleElement);       // слева
+            topBar.appendChild(titleElement);     // заголовок слева
+            topBar.appendChild(buttonContainer);  // кнопки справа
             popupInner.appendChild(topBar);
-            topBar.appendChild(buttonContainer);    // справа
 
-
-            // Очистка и показ popup
+            // Отображаем popup
             popup.innerHTML = '';
             popup.appendChild(popupInner);
             popup.classList.add('active');
@@ -219,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
