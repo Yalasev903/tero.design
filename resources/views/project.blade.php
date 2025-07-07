@@ -303,13 +303,19 @@ window.addEventListener('resize', () => {
   flex-wrap: nowrap;
   gap: 1px;
   margin-bottom: 6px;
-  align-items: flex-start;
+  align-items: stretch; /* 🔧 Важно для подстройки высоты */
   width: 100%;
 }
+
 .grid-inner-wrapper {
-  margin: 0; /* убираем непредсказуемые отступы внутри */
+  margin: 0;
   padding: 0;
+  height: 100%; /* 🔧 Растягиваем по родителю */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
+
 .grid-item {
   position: relative;
   background: #000;
@@ -318,7 +324,7 @@ window.addEventListener('resize', () => {
   flex-direction: column;
   width: auto;
   height: auto;
-  aspect-ratio: unset; /* по умолчанию */
+  aspect-ratio: unset;
 }
 
 .grid-item img,
@@ -329,6 +335,7 @@ window.addEventListener('resize', () => {
   height: auto;
   object-fit: contain;
   display: block;
+  max-height: 100%; /* 🔧 Подстраивается под высоту */
 }
 
 .grid-row.is-compact {
@@ -539,7 +546,7 @@ window.addEventListener('resize', () => {
 
 /* Mobile */
 @media (max-width: 768px) {
-grid-row {
+  .grid-row {
     flex-direction: column;
     height: auto;
   }
@@ -547,7 +554,7 @@ grid-row {
   .grid-item {
     width: 100% !important;
     height: auto;
-    max-height: 100vh;
+    max-height: none;
   }
 
   .grid-item img,
