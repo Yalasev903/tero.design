@@ -93,30 +93,27 @@ body {
 .showreel-center {
     position: relative;
     z-index: 2;
-    width: 90vw;                /* ✅ занимает 90% ширины */
-    height: 90vh;               /* ✅ занимает 90% высоты */
+    width: 90vw; /* ✅ 90% ширины */
     max-width: 1920px;
-    max-height: 1080px;
+    padding: 30px 60px; /* ✅ отступ сверху/снизу и по бокам */
+    box-sizing: border-box;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0;                 /* отступы учтены в размерах */
-    box-sizing: border-box;
 }
 
-/* Общий контейнер видео/постера */
+/* Контейнер постера и видео */
 .showreel-poster-block,
 .showreel-player-video {
     position: relative;
     width: 100%;
-    height: 100%;
+    aspect-ratio: 16 / 9;
     background: #000;
     box-shadow: 0 2px 38px rgba(0, 0, 0, 0.38);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 16 / 9;
 }
 
 /* Постер */
@@ -187,8 +184,8 @@ body {
 /* Адаптив */
 @media (max-width: 1250px) {
     .showreel-center {
-        width: calc(100vw - 60px);   /* отступы по 30px */
-        height: calc(100vh - 60px);
+        width: calc(100vw - 60px);
+        padding: 30px;
     }
     .showreel-title {
         font-size: 1.5rem;
@@ -197,7 +194,7 @@ body {
 @media (max-width: 900px) {
     .showreel-center {
         width: calc(100vw - 40px);
-        height: calc(100vh - 40px);
+        padding: 20px;
     }
     .showreel-title {
         font-size: 1.15rem;
@@ -206,7 +203,7 @@ body {
 @media (max-width: 700px) {
     .showreel-center {
         width: calc(100vw - 20px);
-        height: calc(100vh - 20px);
+        padding: 10px;
     }
     .showreel-title {
         font-size: 1.02rem;
