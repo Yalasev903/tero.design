@@ -180,11 +180,11 @@ html.light-theme .header-link:hover::after {
     transform: scaleX(1);
 }
 
-/* Соцсети */
+/* ✅ Соцсети — полностью переписано */
 .footer-social-link {
     display: inline-block;
-    width: 24px;
-    height: 24px;
+    width: 36px;
+    height: 36px;
     margin: 0 6px;
     position: relative;
 }
@@ -196,36 +196,38 @@ html.light-theme .header-link:hover::after {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    padding: 6px;
-    transition: all 0.3s ease;
+    padding: 0;
+    transition: background-color 0.3s ease;
 }
 
-.footer-social-link .icon-wrapper svg {
+.footer-social-link svg {
     width: 100%;
     height: 100%;
+    object-fit: contain;
     display: block;
 }
 
-/* ☀️ СВЕТЛАЯ ТЕМА — белая иконка (на чёрном фоне) */
-html.light-theme .footer-social-link .icon-wrapper:not(.white) {
-    display: none;
-}
-html.light-theme .footer-social-link .icon-wrapper.white {
-    display: flex;
-    background-color: #000;
-    color: #fff; /* Важно! Это работает с fill="currentColor" */
-}
-
-/* 🌙 ТЁМНАЯ ТЕМА — чёрная иконка (на белом фоне) */
- .footer-social-link .icon-wrapper.white {
-    display: none;
-}
-.footer-social-link .icon-wrapper:not(.white) {
+/* 🌙 Тёмная тема: белый фон, чёрная иконка */
+.footer-social-link .icon-wrapper.icon-dark {
     display: flex;
     background-color: #fff;
-    color: #000; /* Тоже важно! */
+    color: #000;
 }
+.footer-social-link .icon-wrapper.icon-light {
+    display: none;
+}
+
+/* ☀️ Светлая тема: чёрный фон, белая иконка */
+html.light-theme .footer-social-link .icon-wrapper.icon-dark {
+    display: none;
+}
+html.light-theme .footer-social-link .icon-wrapper.icon-light {
+    display: flex;
+    background-color: #000;
+    color: #fff;
+}
+
+/* Остальное */
 html.light-theme .info-block {
     color: #fff !important;
 }
-
