@@ -102,14 +102,14 @@ body {
     pointer-events: auto;
 }
 
-/* Центровка блока + отступы по требованию */
+/* Центровка блока + отступы */
 .showreel-center {
     width: 100vw;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 30px 50px; /* 🔹 отступы по бокам и вертикали */
+    padding: 30px 50px;
     box-sizing: border-box;
     position: relative;
     z-index: 2;
@@ -120,29 +120,31 @@ body {
 .showreel-player-video {
     position: relative;
     width: 100%;
-    height: 100%;
+    max-width: 1920px;
+    aspect-ratio: 16 / 9;
+    max-height: calc(100vh - 120px);
+    height: auto;
+    background: #000;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #000;
-    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
     z-index: 2;
+    overflow: hidden;
+    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
 }
 
 /* Постер внутри */
 .showreel-poster-block img {
     width: 100%;
-    height: 100%;
-    object-fit: contain;
+    height: auto;
     display: block;
-    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
-    transition: box-shadow 0.2s;
 }
 
 /* Кнопка Play */
 .showreel-play {
     position: absolute;
-    left: 50%; top: 50%;
+    left: 50%;
+    top: 50%;
     transform: translate(-50%, -50%);
     background: none;
     border: none;
@@ -173,6 +175,8 @@ body {
 /* Видео */
 .showreel-player-video {
     display: none;
+    width: 100%;
+    height: auto;
 }
 
 /* Кнопка закрытия */
@@ -195,7 +199,7 @@ body {
 /* Адаптив */
 @media (max-width: 1250px) {
     .showreel-center {
-        padding: 30px 30px;
+        padding: 30px;
     }
     .showreel-title {
         font-size: 1.5rem;
@@ -203,7 +207,7 @@ body {
 }
 @media (max-width: 900px) {
     .showreel-center {
-        padding: 20px 20px;
+        padding: 20px;
     }
     .showreel-title {
         font-size: 1.15rem;
