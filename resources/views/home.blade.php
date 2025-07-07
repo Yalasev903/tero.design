@@ -136,10 +136,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 popupInner.appendChild(video);
             }
 
-            // 🔧 Заголовок и кнопки (flex-контейнер)
+            // 🔧 Верхний блок: заголовок + кнопки
             const topBar = document.createElement('div');
             topBar.style.position = 'absolute';
-            topBar.style.top = '10px';
+            topBar.style.top = '-35px';
             topBar.style.left = '10px';
             topBar.style.right = '10px';
             topBar.style.display = 'flex';
@@ -159,7 +159,7 @@ document.addEventListener('DOMContentLoaded', function () {
             buttonContainer.style.display = 'flex';
             buttonContainer.style.gap = '10px';
 
-            // 🔗 Кнопка "View Full Project" (если есть)
+            // 🔗 Кнопка "View Full Project"
             if (projectLink) {
                 const link = document.createElement('a');
                 link.href = projectLink;
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.rel = 'noopener';
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
-                buttonContainer.appendChild(link);
+                buttonContainer.appendChild(link); // 🟢 ссылка первой
             }
 
             // ℹ️ Кнопка info (i)
@@ -188,11 +188,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            buttonContainer.appendChild(infoIcon);
-            topBar.appendChild(titleElement);
-            topBar.appendChild(buttonContainer);
+            buttonContainer.appendChild(infoIcon); // 🟢 иконка после ссылки
+
+            // 🧩 Финальный верхний блок
+            topBar.appendChild(titleElement);       // слева
+            topBar.appendChild(buttonContainer);    // справа
             popupInner.appendChild(topBar);
 
+            // 💡 Очистить и показать popup
             popup.innerHTML = '';
             popup.appendChild(popupInner);
             popup.classList.add('active');
