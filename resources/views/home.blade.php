@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
                 link.style.position = 'relative';
-                link.style.top = '-10px';
+                link.style.top = '-12px';
                 link.style.marginRight = '10px';
                 buttonContainer.appendChild(link);
             }
