@@ -89,38 +89,41 @@ body {
 .showreel.open {
     display: flex !important;
 }
+
 .showreel-center {
     position: relative;
     z-index: 2;
-    width: 100%;
+    width: 90vw;                /* ✅ занимает 90% ширины */
+    height: 90vh;               /* ✅ занимает 90% высоты */
     max-width: 1920px;
-    height: calc(100vh - 120px); /* фиксированная высота как ты просил */
+    max-height: 1080px;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 30px;
+    padding: 0;                 /* отступы учтены в размерах */
     box-sizing: border-box;
 }
 
-/* Общий контейнер */
+/* Общий контейнер видео/постера */
 .showreel-poster-block,
 .showreel-player-video {
     position: relative;
     width: 100%;
     height: 100%;
     background: #000;
-    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
+    box-shadow: 0 2px 38px rgba(0, 0, 0, 0.38);
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
+    aspect-ratio: 16 / 9;
 }
 
 /* Постер */
 .showreel-poster-block img {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 🔄 заменено с contain */
+    object-fit: cover;
     display: block;
 }
 
@@ -129,7 +132,7 @@ body {
     display: none;
     width: 100%;
     height: 100%;
-    object-fit: cover; /* 🔄 заменено */
+    object-fit: cover;
 }
 
 /* Кнопка Play */
@@ -164,7 +167,7 @@ body {
     width: 100%;
 }
 
-/* Закрытие */
+/* Кнопка закрытия */
 .showreel-close {
     position: absolute;
     top: 16px;
@@ -183,13 +186,18 @@ body {
 
 /* Адаптив */
 @media (max-width: 1250px) {
+    .showreel-center {
+        width: calc(100vw - 60px);   /* отступы по 30px */
+        height: calc(100vh - 60px);
+    }
     .showreel-title {
         font-size: 1.5rem;
     }
 }
 @media (max-width: 900px) {
     .showreel-center {
-        padding: 0 20px;
+        width: calc(100vw - 40px);
+        height: calc(100vh - 40px);
     }
     .showreel-title {
         font-size: 1.15rem;
@@ -197,7 +205,8 @@ body {
 }
 @media (max-width: 700px) {
     .showreel-center {
-        padding: 0 10px;
+        width: calc(100vw - 20px);
+        height: calc(100vh - 20px);
     }
     .showreel-title {
         font-size: 1.02rem;
