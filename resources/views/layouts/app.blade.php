@@ -90,6 +90,12 @@ body {
     display: flex !important;
 }
 
+/* Переопределение top */
+.mobile-menu.open,
+.showreel.open {
+    top: 5px !important;
+}
+
 .showreel-center {
     position: relative;
     z-index: 2;
