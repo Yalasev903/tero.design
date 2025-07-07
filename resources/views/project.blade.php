@@ -91,7 +91,7 @@
     <div class="grid-inner-wrapper">
       <video preload="metadata" playsinline muted loop autoplay
              class="js-grid-item-media lazyload"
-             style="width: 100%; height: auto; object-fit: contain;">
+             style="width: 100%; height: auto;">
         @foreach ($col['links'] ?? [] as $source)
           <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
         @endforeach
@@ -328,7 +328,6 @@ window.addEventListener('resize', () => {
 }
 
 .grid-item img,
-.grid-item video,
 .grid-item iframe,
 .grid-item canvas {
   width: 100%;
@@ -336,6 +335,13 @@ window.addEventListener('resize', () => {
   object-fit: contain;
   display: block;
   max-height: 100%; /* 🔧 Подстраивается под высоту */
+}
+
+.grid-item video {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover; /* либо убери совсем */
 }
 
 .grid-row.is-compact {
@@ -558,12 +564,17 @@ window.addEventListener('resize', () => {
   }
 
   .grid-item img,
-  .grid-item video,
   .grid-item iframe {
     width: 100%;
     height: auto;
     object-fit: contain;
   }
+  .grid-item video {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover; /* либо убери совсем */
+}
 }
 </style>
 @endsection
