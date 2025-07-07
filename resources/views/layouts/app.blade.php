@@ -76,68 +76,60 @@ body {
 .showreel {
     pointer-events: auto;
     position: fixed;
-    left: 0; top: 0;
+    inset: 0;
     width: 100vw;
     height: 100vh;
     z-index: 9999;
     display: none;
     align-items: center;
     justify-content: center;
+    background-color: rgba(0, 0, 0, 0.72);
     overflow: auto;
-    transition: none;
 }
 .showreel.open {
     display: flex !important;
 }
-.showreel::before {
-    content: "";
-    position: fixed;
-    left: 0; top: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.72);
-    z-index: 1;
-    opacity: 1;
-    transition: opacity 0.3s ease;
-    pointer-events: auto;
-}
-
-/* Центровка блока + отступы */
 .showreel-center {
-    width: 100vw;
-    height: 100vh;
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    max-width: 1920px;
+    height: calc(100vh - 120px); /* фиксированная высота как ты просил */
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 30px 50px;
+    padding: 0 30px;
     box-sizing: border-box;
-    position: relative;
-    z-index: 2;
 }
 
-/* Обёртка постера и видео */
+/* Общий контейнер */
 .showreel-poster-block,
 .showreel-player-video {
     position: relative;
     width: 100%;
-    max-width: 1920px;
-    aspect-ratio: 16 / 9;
-    max-height: calc(100vh - 120px);
-    height: auto;
+    height: 100%;
     background: #000;
+    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
+    overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 2;
-    overflow: hidden;
-    box-shadow: 0 2px 38px rgba(0,0,0,0.38);
 }
 
-/* Постер внутри */
+/* Постер */
 .showreel-poster-block img {
     width: 100%;
-    height: auto;
+    height: 100%;
+    object-fit: cover; /* 🔄 заменено с contain */
     display: block;
+}
+
+/* Видео */
+.showreel-player-video {
+    display: none;
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* 🔄 заменено */
 }
 
 /* Кнопка Play */
@@ -172,14 +164,7 @@ body {
     width: 100%;
 }
 
-/* Видео */
-.showreel-player-video {
-    display: none;
-    width: 100%;
-    height: auto;
-}
-
-/* Кнопка закрытия */
+/* Закрытие */
 .showreel-close {
     position: absolute;
     top: 16px;
@@ -198,16 +183,13 @@ body {
 
 /* Адаптив */
 @media (max-width: 1250px) {
-    .showreel-center {
-        padding: 30px;
-    }
     .showreel-title {
         font-size: 1.5rem;
     }
 }
 @media (max-width: 900px) {
     .showreel-center {
-        padding: 20px;
+        padding: 0 20px;
     }
     .showreel-title {
         font-size: 1.15rem;
@@ -215,7 +197,7 @@ body {
 }
 @media (max-width: 700px) {
     .showreel-center {
-        padding: 15px 10px;
+        padding: 0 10px;
     }
     .showreel-title {
         font-size: 1.02rem;
