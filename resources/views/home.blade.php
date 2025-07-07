@@ -134,29 +134,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 popupInner.appendChild(video);
             }
 
-            // 🔧 Верхний блок: заголовок + кнопки
+            // 🔧 Верхняя строка: заголовок + кнопки
             const topBar = document.createElement('div');
             topBar.style.position = 'absolute';
             topBar.style.top = '-35px';
             topBar.style.left = '10px';
             topBar.style.right = '10px';
             topBar.style.zIndex = '2';
+            topBar.style.height = '30px'; // для контроля высоты
 
-            // Заголовок проекта
+            // Заголовок проекта — теперь абсолютно слева
             const titleElement = document.createElement('h3');
             titleElement.innerText = title;
             titleElement.style.color = '#fff';
             titleElement.style.margin = '0';
             titleElement.style.fontSize = '20px';
-            titleElement.style.display = 'inline-block';
+            titleElement.style.position = 'absolute';
+            titleElement.style.left = '0';
+            titleElement.style.top = '0';
 
-            // Контейнер кнопок — без flex
+            // Контейнер кнопок справа
             const buttonContainer = document.createElement('div');
-            buttonContainer.style.cssText = `
-                position: absolute;
-                right: 0;
-                top: 0;
-            `;
+            buttonContainer.style.position = 'absolute';
+            buttonContainer.style.right = '0';
+            buttonContainer.style.top = '-5px';
 
             // 🔗 Кнопка "View Full Project"
             if (projectLink) {
@@ -167,12 +168,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
                 link.style.position = 'relative';
-                link.style.top = '-4px'; // ⬆️ приподнимаем
-                link.style.marginRight = '10px'; // отступ перед иконкой
-                buttonContainer.appendChild(link); // 🥇 сначала ссылка
+                link.style.top = '-10px';
+                link.style.marginRight = '10px';
+                buttonContainer.appendChild(link);
             }
 
-            // ℹ️ Кнопка info (i)
+            // ℹ️ Кнопка info
             const infoIcon = document.createElement('span');
             infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
             infoIcon.classList.add('info-button');
@@ -190,13 +191,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            buttonContainer.appendChild(infoIcon); // 🥈 потом иконка
+            buttonContainer.appendChild(infoIcon);
 
-            topBar.appendChild(titleElement);     // заголовок слева
-            topBar.appendChild(buttonContainer);  // кнопки справа
+            topBar.appendChild(titleElement);
+            topBar.appendChild(buttonContainer);
             popupInner.appendChild(topBar);
 
-            // Отображаем popup
+            // Отобразить popup
             popup.innerHTML = '';
             popup.appendChild(popupInner);
             popup.classList.add('active');
