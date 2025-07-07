@@ -43,7 +43,7 @@
 @section('scripts')
 {{-- Подключение Google Maps --}}
 <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCCu2s5XjqkNw97bLeZflhZoZZycZlQbJk&callback=googleMapInit">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_qC_DS2JJQgtWKRH21DDJ7l6Uqpq6aNo&callback=googleMapInit">
 </script>
 
 <script>
