@@ -101,26 +101,26 @@ body {
     transition: opacity 0.3s ease;
     pointer-events: auto;
 }
+
+/* Центровка блока + отступы по требованию */
 .showreel-center {
     width: 100vw;
     height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 30px 50px; /* 🔹 отступы по бокам и вертикали */
+    box-sizing: border-box;
     position: relative;
-    padding-top: 0;
     z-index: 2;
 }
 
-/* Постер и видео обёртка */
+/* Обёртка постера и видео */
 .showreel-poster-block,
 .showreel-player-video {
     position: relative;
-    width: 80vw;
-    height: 80vh;
-    max-width: 1200px;
-    max-height: 90vh;
-    aspect-ratio: 16/9;
+    width: 100%;
+    height: 100%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -160,7 +160,7 @@ body {
     transform: translate(-50%, 0);
     color: #fff;
     font-size: 2.3rem;
-    font-family: Montserrat,sans-serif;
+    font-family: Montserrat, sans-serif;
     font-weight: 300;
     letter-spacing: .18em;
     text-shadow: 0 1px 18px #000;
@@ -194,30 +194,24 @@ body {
 
 /* Адаптив */
 @media (max-width: 1250px) {
-    .showreel-poster-block,
-    .showreel-player-video {
-        width: 90vw;
-        height: 60vh;
+    .showreel-center {
+        padding: 30px 30px;
     }
     .showreel-title {
         font-size: 1.5rem;
     }
 }
 @media (max-width: 900px) {
-    .showreel-poster-block,
-    .showreel-player-video {
-        width: 96vw;
-        height: 58vh;
+    .showreel-center {
+        padding: 20px 20px;
     }
     .showreel-title {
         font-size: 1.15rem;
     }
 }
 @media (max-width: 700px) {
-    .showreel-poster-block,
-    .showreel-player-video {
-        width: 100vw;
-        height: 56vh;
+    .showreel-center {
+        padding: 15px 10px;
     }
     .showreel-title {
         font-size: 1.02rem;
