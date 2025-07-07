@@ -136,14 +136,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 popupInner.appendChild(video);
             }
 
-            // 🔧 Контейнер с кнопками
+            // 🔧 Заголовок и кнопки (flex-контейнер)
+            const topBar = document.createElement('div');
+            topBar.style.position = 'absolute';
+            topBar.style.top = '10px';
+            topBar.style.left = '10px';
+            topBar.style.right = '10px';
+            topBar.style.display = 'flex';
+            topBar.style.justifyContent = 'space-between';
+            topBar.style.alignItems = 'center';
+            topBar.style.zIndex = '2';
+
+            // Заголовок проекта
+            const titleElement = document.createElement('h3');
+            titleElement.innerText = title;
+            titleElement.style.color = '#fff';
+            titleElement.style.margin = '0';
+            titleElement.style.fontSize = '20px';
+
+            // Контейнер кнопок
             const buttonContainer = document.createElement('div');
-            buttonContainer.style.position = 'absolute';
-            buttonContainer.style.top = '-20px';
-            buttonContainer.style.right = '10px';
             buttonContainer.style.display = 'flex';
             buttonContainer.style.gap = '10px';
-            buttonContainer.style.zIndex = '2';
 
             // 🔗 Кнопка "View Full Project" (если есть)
             if (projectLink) {
@@ -174,17 +188,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // ⏬ Порядок: сначала кнопка, потом "i"
             buttonContainer.appendChild(infoIcon);
-            popupInner.appendChild(buttonContainer);
-
-            // Заголовок проекта
-            const titleElement = document.createElement('h3');
-            titleElement.innerText = title;
-            titleElement.classList.add('project-title');
-            titleElement.style.color = '#fff';
-            titleElement.style.marginTop = '10px';
-            popupInner.appendChild(titleElement);
+            topBar.appendChild(titleElement);
+            topBar.appendChild(buttonContainer);
+            popupInner.appendChild(topBar);
 
             popup.innerHTML = '';
             popup.appendChild(popupInner);
@@ -209,7 +216,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-    {{-- / JS для popup --}}
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         const scrollBtn = document.getElementById('scroll-to-top');
