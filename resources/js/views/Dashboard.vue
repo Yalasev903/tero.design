@@ -352,36 +352,27 @@ function switchTab(tab) {
 }
 
 function generateTabKey(tab) {
-  if (tab.key) return tab.key
-
-  if (tab.path.startsWith('/projects/edit/')) {
-    return tab.path + '-' + (tab.timestamp || Date.now())
-  }
-  if (tab.path === '/projects/create') {
-    return tab.path + '-' + Date.now()
-  }
-  return tab.path
+  return tab.key || tab.path
 }
 
 function openTab(item) {
-  // Устанавливаем уникальный ключ для вкладок создания и редактирования проекта
+  // Всегда создаём новый key, если это /projects/create или /projects/edit/:id
   if (item.path.startsWith('/projects/edit/')) {
     const timestamp = Date.now()
     item.timestamp = timestamp
     item.key = item.path + '-' + timestamp
   } else if (item.path === '/projects/create') {
     item.key = item.path + '-' + Date.now()
+  } else {
+    item.key = item.path // у обычных страниц key = path
   }
 
-  // Проверяем, есть ли уже вкладка с таким ключом (а не только path!)
-  let tab = tabs.value.find(t => t.key === item.key || t.path === item.path)
+  let tab = tabs.value.find(t => t.key === item.key)
 
   if (!tab) {
     tab = { ...item }
     tabs.value.push(tab)
     sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
-  } else if (item.label) {
-    tab.label = item.label
   }
 
   activeTab.value = tab
@@ -519,7 +510,7 @@ function toggleFullScreen() {
 }
 
 onMounted(() => {
-    const savedSize = localStorage.getItem('input-size')
+  const savedSize = localStorage.getItem('input-size')
   if (savedSize) inputSize.value = savedSize
 
   // 1. Восстановление порядка вкладок
@@ -527,19 +518,22 @@ onMounted(() => {
   if (savedTabs) {
     try {
       const parsedTabs = JSON.parse(savedTabs)
-
-      // Восстанавливаем компонент в каждой вкладке вручную
       const flatItems = menuItems.flatMap(item => item.children ?? [item])
 
       tabs.value = parsedTabs.map(savedTab => {
         const original = flatItems.find(m => m.path === savedTab.path)
-        if (original) {
-          return {
-            ...savedTab,
-            component: original.component // Восстанавливаем ссылку на компонент
-          }
+
+        return {
+          ...savedTab,
+          component: savedTab.component || original?.component,
+          key: savedTab.key || (
+            original?.path?.startsWith('/projects/edit/')
+              ? original.path + '-' + (savedTab.timestamp || Date.now())
+              : original?.path === '/projects/create'
+              ? original.path + '-' + Date.now()
+              : original?.path
+          )
         }
-        return savedTab
       })
     } catch (e) {
       console.error('Ошибка парсинга сохранённых вкладок:', e)
