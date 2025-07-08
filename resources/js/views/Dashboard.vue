@@ -134,7 +134,7 @@
                 <keep-alive :include="cachedComponentNames">
                 <component
                     :is="activeTab.component"
-                    :key="generateTabKey(activeTab)"
+                    :key="activeTab.key || generateTabKey(activeTab)"
                     />
                 </keep-alive>
             </div>
@@ -352,6 +352,8 @@ function switchTab(tab) {
 }
 
 function generateTabKey(tab) {
+  if (tab.key) return tab.key
+
   if (tab.path.startsWith('/projects/edit/')) {
     return tab.path + '-' + (tab.timestamp || Date.now())
   }
@@ -361,18 +363,23 @@ function generateTabKey(tab) {
   return tab.path
 }
 
-
 function openTab(item) {
-  // если это редактирование проекта — добавляем уникальный timestamp
+  // Устанавливаем уникальный ключ для вкладок создания и редактирования проекта
   if (item.path.startsWith('/projects/edit/')) {
-    item.timestamp = Date.now()
+    const timestamp = Date.now()
+    item.timestamp = timestamp
+    item.key = item.path + '-' + timestamp
+  } else if (item.path === '/projects/create') {
+    item.key = item.path + '-' + Date.now()
   }
 
-  let tab = tabs.value.find(t => t.path === item.path)
+  // Проверяем, есть ли уже вкладка с таким ключом (а не только path!)
+  let tab = tabs.value.find(t => t.key === item.key || t.path === item.path)
+
   if (!tab) {
     tab = { ...item }
     tabs.value.push(tab)
-    sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value)) // 💾
+    sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
   } else if (item.label) {
     tab.label = item.label
   }

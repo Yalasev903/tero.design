@@ -1214,6 +1214,22 @@ onActivated(() => {
   }
 })
 
+
+watch(
+  () => route.fullPath,
+  () => {
+    const isEdit = route.name === 'EditProject' || !!route.params.id || !!route.query.id
+
+    if (isEdit) {
+      loadProject()
+    } else {
+      resetForm()
+      sessionStorage.removeItem('create-project-form')
+      sessionStorage.setItem('was-create-opened', 'true')
+    }
+  }
+)
+
 </script>
 
 <style scoped>
