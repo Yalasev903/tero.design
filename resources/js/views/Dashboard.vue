@@ -356,26 +356,28 @@ function generateTabKey(tab) {
 }
 
 function openTab(item) {
-  // Всегда создаём новый key, если это /projects/create или /projects/edit/:id
-  if (item.path.startsWith('/projects/edit/')) {
-    const timestamp = Date.now()
-    item.timestamp = timestamp
-    item.key = item.path + '-' + timestamp
-  } else if (item.path === '/projects/create') {
-    item.key = item.path + '-' + Date.now()
-  } else {
-    item.key = item.path // у обычных страниц key = path
-  }
+  const isDynamic = item.path.startsWith('/projects/edit/') || item.path === '/projects/create'
 
-  let tab = tabs.value.find(t => t.key === item.key)
+  // Стабильный key для кеша и <keep-alive>
+  item.key = isDynamic ? `${item.path}-${Date.now()}` : item.path
 
-  if (!tab) {
+  let tab
+
+  if (isDynamic) {
+    // Для dynamic — всегда новый tab
     tab = { ...item }
     tabs.value.push(tab)
-    sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
+  } else {
+    // Для обычных путей — не создавать дубли
+    tab = tabs.value.find(t => t.path === item.path)
+    if (!tab) {
+      tab = { ...item }
+      tabs.value.push(tab)
+    }
   }
 
   activeTab.value = tab
+  sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
   sessionStorage.setItem('active-tab-path', tab.path)
 
   if (!tabsMode.value) {
@@ -410,14 +412,26 @@ function toggleSidebar() {
 function toggleSubmenu(path) {
   openSubmenus.value[path] = !openSubmenus.value[path]
 }
+
 router.afterEach((to) => {
+  // Пропускаем системные маршруты
+  if (to.path === '/login') return
+
   const flatItems = menuItems.flatMap(item => item.children ?? [item])
+  const existingTab = tabs.value.find(t => t.path === to.path)
+
+  // Если таб уже есть, не нужно заново открывать
+  if (existingTab) {
+    activeTab.value = existingTab
+    sessionStorage.setItem('active-tab-path', to.path)
+    return
+  }
+
   const item = flatItems.find(m => m.path === to.path)
 
   if (item) {
     openTab(item)
   } else if (to.name === 'EditProject') {
-    // Открываем вкладку вручную с заголовком
     openTab({
       path: to.path,
       label: 'Редактирование проекта',
