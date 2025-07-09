@@ -188,12 +188,11 @@
     :value="p.id"
   />
 </el-select>
+    </el-form-item>
 
-<el-form-item label="Показывать ссылку на проект">
+    <el-form-item label="Показывать ссылку на проект">
   <el-switch v-model="selectedHasLink" active-text="Да" inactive-text="Нет" />
 </el-form-item>
-
-    </el-form-item>
 
     <el-form-item v-if="mediaType === 'img'" label="Изображение">
       <el-button @click="openFileManagerForModal">Выбрать изображение</el-button>
