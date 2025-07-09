@@ -333,7 +333,10 @@ import { ElMessageBox } from 'element-plus'
 
 // --- Переменные ---
 const inputSize = inject('inputSize')
-
+const showMediaModal = ref(false)
+const mediaType = ref('img')
+const selectedProjectId = ref(null)
+const selectedPath = ref('')
 const gridRows = ref([])
 const saving = ref(false)
 const form = ref({ seo_title: '', seo_description: '', seo_keywords: [] })
@@ -653,10 +656,7 @@ const getVideoSize = (rowIdx, colIdx) =>
 
 
 //col
-const showMediaModal = ref(false)
-const mediaType = ref('img')
-const selectedProjectId = ref(null)
-const selectedPath = ref('')
+
 const targetRowIdx = ref(0) // по умолчанию 0 строка
 const projects = ref([])
 
