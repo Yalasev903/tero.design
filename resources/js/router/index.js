@@ -8,6 +8,7 @@ import CreateProject from '../views/admin/CreateProject.vue'
 import Workflow from '../views/admin/Workflow.vue'
 import Services from '../views/admin/Services.vue'
 import ForgotPassword from '../views/ForgotPassword.vue'
+import ResetPassword from '../views/ResetPassword.vue'
 import axios from 'axios'
 
 const routes = [
@@ -18,6 +19,10 @@ const routes = [
   {
   path: '/forgot-password',
   component: ForgotPassword
+  },
+  {
+  path: '/reset-password',
+  component: ResetPassword
   },
   {
     path: '/',
