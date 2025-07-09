@@ -188,6 +188,11 @@
     :value="p.id"
   />
 </el-select>
+
+<el-form-item label="Показывать ссылку на проект">
+  <el-switch v-model="selectedHasLink" active-text="Да" inactive-text="Нет" />
+</el-form-item>
+
     </el-form-item>
 
     <el-form-item v-if="mediaType === 'img'" label="Изображение">
@@ -341,6 +346,8 @@ const showFileManager = ref(false)
 const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
 const modalMediaSize = ref({ w: null, h: null })
 
+const selectedHasLink = ref(true)
+
 const imgSizes = ref({})
 const videoSizes = ref({})
 const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
@@ -366,6 +373,8 @@ const openEditModal = (rowIdx, colIdx) => {
 
   mediaType.value = cell.media?.type || 'img'
   modalMediaSize.value = { w: null, h: null }
+
+  selectedHasLink.value = typeof cell.has_link === 'undefined' ? true : cell.has_link
 
   editingTarget.value = { rowIdx, colIdx }
   isEditingModal.value = true
@@ -511,7 +520,8 @@ const saveGrid = async () => {
           media: item.media || {},
           is_mobile: item.is_mobile || false,
           title: item.title || '',
-          text2: item.text2 || ''
+          text2: item.text2 || '',
+          has_link: typeof item.has_link === 'undefined' ? true : item.has_link
         })
       })
     })
@@ -789,6 +799,7 @@ const insertMedia = async () => {
     cell.project_id = selectedProjectId.value ?? null
     cell.title = project?.title || 'No project'
     cell.media = { ...JSON.parse(JSON.stringify(media)), __v: Date.now() }
+    cell.has_link = selectedHasLink.value
 
     ElNotification({ title: 'Обновлено', message: 'Контент обновлён', type: 'success' })
   } else {
@@ -798,7 +809,8 @@ const insertMedia = async () => {
       project_id: selectedProjectId.value ?? null,
       title: project?.title || 'No project',
       media: { ...JSON.parse(JSON.stringify(media)), __v: Date.now() },
-      is_mobile: false
+      is_mobile: false,
+      has_link: selectedHasLink.value
     }
 
     gridRows.value[rowIdx].items.push(newCol)

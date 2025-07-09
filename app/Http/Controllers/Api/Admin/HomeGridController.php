@@ -33,6 +33,7 @@ class HomeGridController extends Controller
                 'project_id' => $item->project_id,
                 'media' => $mediaArr,
                 'is_mobile' => $item->is_mobile ?? false,
+                'has_link' => $item->has_link ?? true,
                 'title' => $item->project_title,
                 'text2' => $item->project_text2,
             ];
@@ -70,6 +71,7 @@ class HomeGridController extends Controller
                         'project_id' => $col['project_id'] ?? null,
                         'media' => json_encode($media, JSON_UNESCAPED_UNICODE),
                         'is_mobile' => $col['is_mobile'] ?? false,
+                        'has_link' => $col['has_link'] ?? true,
                         'updated_at' => now(),
                     ]
                 );

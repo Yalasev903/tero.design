@@ -44,7 +44,7 @@
 
             @if(!$isMobile || ($isMobile && $showOnMobile))
                 <a
-                    @if($hasProject)
+                    @if($hasProject && ($col['has_link'] ?? true))
                         href="{{ route('projects.show', ['id' => $col['project_id']]) }}"
                         data-project-link="{{ route('projects.show', ['id' => $col['project_id']]) }}"
                     @else

@@ -39,6 +39,7 @@ public function index(Request $request)
                 'project_id' => $item->project_id,
                 'media' => $media,
                 'is_mobile' => (bool)$item->is_mobile,
+                'has_link' => isset($item->has_link) ? (bool)$item->has_link : true,
                 'title' => $item->project_title ?? '',
                 'text2' => $item->project_text2 ?? '',
             ];
