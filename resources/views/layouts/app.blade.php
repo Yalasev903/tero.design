@@ -84,7 +84,7 @@ body {
     align-items: center;
     justify-content: center;
     background-color: rgba(0, 0, 0, 0.72);
-    overflow: hidden; /* ✅ убрали скролл */
+    overflow: hidden;
 }
 .showreel.open {
     display: flex !important;
@@ -93,7 +93,7 @@ body {
 /* Переопределение top */
 .mobile-menu.open,
 .showreel.open {
-    top: 5px !important;
+    top: 0px !important;
 }
 
 .showreel-center {
@@ -108,7 +108,7 @@ body {
     justify-content: center;
 }
 
-/* Уменьшенный контейнер постера и видео */
+/* Контейнер с постером и видео */
 .showreel-poster-block,
 .showreel-player-video {
     position: relative;
@@ -120,7 +120,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    max-height: calc(100vh - 100px); /* ✅ немного меньше, чем весь экран */
+    max-height: calc(100vh - 100px);
 }
 
 /* Постер */
@@ -171,12 +171,12 @@ body {
     width: 100%;
 }
 
-/* Кнопка закрытия */
+/* Кнопка закрытия (внутри .showreel-center) */
 .showreel-close {
     position: absolute;
-    top: 16px;
-    right: 24px;
-    z-index: 100;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
     background: none;
     border: none;
     cursor: pointer;
@@ -188,7 +188,7 @@ body {
     filter: drop-shadow(0 2px 14px #000);
 }
 
-/* Адаптив */
+/* Адаптивность */
 @media (max-width: 1250px) {
     .showreel-center {
         width: calc(100vw - 60px);
@@ -221,7 +221,7 @@ body {
     }
     .showreel-close {
         top: 12px;
-        right: 16px;
+        right: 12px;
     }
 }
         </style>
