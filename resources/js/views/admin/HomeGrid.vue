@@ -190,9 +190,9 @@
 </el-select>
     </el-form-item>
 
-<!--     <el-form-item label="Показывать ссылку на проект">
+    <el-form-item label="Показывать ссылку на проект">
   <el-switch v-model="selectedHasLink" active-text="Да" inactive-text="Нет" />
-</el-form-item>  -->
+</el-form-item>
 
     <el-form-item v-if="mediaType === 'img'" label="Изображение">
       <el-button @click="openFileManagerForModal">Выбрать изображение</el-button>
@@ -418,12 +418,13 @@ const loadGrid = async () => {
         id: `cell_${rowIdx}_${colIdx}_${item.project_id ?? 'null'}_${Math.random().toString(36).substring(2, 8)}`,
         project_id: item.project_id,
         media: typeof item.media === 'string'
-          ? JSON.parse(item.media || '{}')
-          : (item.media || {}),
+            ? JSON.parse(item.media || '{}')
+            : (item.media || {}),
         is_mobile: item.is_mobile || false,
+        has_link: item.has_link !== false,
         title: item.title || 'Без названия',
         text2: item.text2 || ''
-      }
+        }
     }) // ← закрыли forEach ✅
 
     // Теперь правильно инициализируем gridRows
