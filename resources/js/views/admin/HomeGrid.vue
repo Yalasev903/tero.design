@@ -190,9 +190,9 @@
 </el-select>
     </el-form-item>
 
-    <el-form-item label="Показывать ссылку на проект">
+<!--     <el-form-item label="Показывать ссылку на проект">
   <el-switch v-model="selectedHasLink" active-text="Да" inactive-text="Нет" />
-</el-form-item>
+</el-form-item>  -->
 
     <el-form-item v-if="mediaType === 'img'" label="Изображение">
       <el-button @click="openFileManagerForModal">Выбрать изображение</el-button>
@@ -349,7 +349,7 @@ const selectedCell = ref({ rowIdx: 0, colIdx: 0 })
 const modalMediaSize = ref({ w: null, h: null })
 
 const selectedHasLink = ref(true)
-
+console.log('INIT selectedHasLink =', selectedHasLink.value)
 const imgSizes = ref({})
 const videoSizes = ref({})
 const makeKey = (rowIdx, colIdx) => `${rowIdx}_${colIdx}`
@@ -377,7 +377,7 @@ const openEditModal = (rowIdx, colIdx) => {
   modalMediaSize.value = { w: null, h: null }
 
   selectedHasLink.value = typeof cell.has_link === 'undefined' ? true : cell.has_link
-
+console.log('MODAL selectedHasLink =', selectedHasLink.value)
   editingTarget.value = { rowIdx, colIdx }
   isEditingModal.value = true
   showMediaModal.value = true
