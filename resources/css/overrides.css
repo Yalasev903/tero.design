@@ -231,3 +231,16 @@ html.light-theme .footer-social-link .icon-wrapper.icon-light {
 html.light-theme .info-block {
     color: #fff !important;
 }
+.faq-question-icon {
+	position: absolute;
+	top: 4px;
+	left: 0;
+	width: 22px;
+	fill: #fff;
+	-webkit-transition: 0.3s;
+	transition: 0.3s;
+}
+/* Светлая тема: чёрная иконка */
+html.light-theme .faq-question-icon {
+    fill: #000;
+}
