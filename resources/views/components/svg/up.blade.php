@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg"
-     viewBox="9620 13400 1000 1000"
+     viewBox="9400 13400 2400 2400"
      width="30"
      height="30"
      fill="currentColor"
