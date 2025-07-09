@@ -190,8 +190,14 @@
 </el-select>
     </el-form-item>
 
-    <el-form-item label="Показывать ссылку на проект">
-  <el-switch v-model="selectedHasLink" active-text="Да" inactive-text="Нет" />
+    <el-form-item v-if="showMediaModal" label="Показывать ссылку на проект">
+  <el-switch
+    v-model="selectedHasLink"
+    :active-value="true"
+    :inactive-value="false"
+    active-text="Да"
+    inactive-text="Нет"
+  />
 </el-form-item>
 
     <el-form-item v-if="mediaType === 'img'" label="Изображение">
@@ -363,6 +369,10 @@ const editingTarget = ref({ rowIdx: null, colIdx: null })
 
 const openEditModal = (rowIdx, colIdx) => {
   const cell = gridRows.value[rowIdx].items[colIdx]
+if (!cell) {
+  console.warn('❌ cell не найден при openEditModal', rowIdx, colIdx)
+  return
+}
 
   selectedProjectId.value = cell.project_id ?? null
   if (cell.media?.type === 'img') {
@@ -485,6 +495,7 @@ const addCol = (rowIdx) => {
     project_id: null,
     media: {},
     is_mobile: false,
+    has_link: true,
     title: 'Без названия',
     text2: '',
   })
