@@ -10,8 +10,8 @@
     </div>
 
     <div id="scroll-to-top">
-        {!! file_get_contents(resource_path('views/components/svg/up.svg')) !!}
-    </div>
+    @include('components.svg.up')
+        </div>
 
     {{-- Внутренние стили главной --}}
     <style>
@@ -63,7 +63,7 @@
     }
 
 /* Повышаем специфичность и применяем !important */
-body #scroll-to-top {
+#scroll-to-top {
     position: fixed !important;
     bottom: 30px !important;
     right: 30px !important;
@@ -72,6 +72,7 @@ body #scroll-to-top {
     display: none !important;
     transition: opacity 0.3s ease !important;
     background-color: #ccc !important;
+    color: #000 !important; /* теперь цвет влияет на SVG */
     border-radius: 50% !important;
     width: 60px !important;
     height: 60px !important;
@@ -81,15 +82,16 @@ body #scroll-to-top {
     box-shadow: 0 0 8px #0005 !important;
 }
 
-body #scroll-to-top svg {
+#scroll-to-top svg {
     width: 30px !important;
     height: 30px !important;
-    fill: #000 !important;
     transition: fill 0.2s ease !important;
+    display: block;
+    /* fill теперь управляется через currentColor → color родителя */
 }
 
-body #scroll-to-top:hover svg {
-    fill: #fff !important;
+#scroll-to-top:hover {
+    color: white !important; /* при hover → цвет SVG меняется */
 }
     </style>
     {{-- / Внутренние стили главной --}}
