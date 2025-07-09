@@ -10,7 +10,7 @@
     </div>
 
     <div id="scroll-to-top">
-   <img src="data:image/svg+xml;base64,PHN2ZyBmaWxsPSIjMDAwMDAwIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBkPSJNMTIgOC4zN2w2LjI5IDYuMjktMS40MSAxLjQxTDExLjk5IDEwLjgzbC02Ljg3IDYuODcgLTEuNDItMS40MUwxMiA4LjM3eiIvPjwvc3ZnPg==" alt="↑">
+        {!! file_get_contents(resource_path('views/components/svg/up.svg')) !!}
     </div>
 
     {{-- Внутренние стили главной --}}
