@@ -14,10 +14,14 @@ use App\Http\Controllers\Api\Admin\WorkflowController;
 use App\Http\Controllers\Api\Admin\FaqController;
 use App\Http\Controllers\Api\Admin\ProjectController;
 use App\Http\Controllers\Admin\CleanupController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
+use App\Http\Controllers\Auth\NewPasswordController;
 
 Route::post('/admin/login', [AuthenticatedSessionController::class, 'store']);
 Route::post('/admin/logout', [AuthenticatedSessionController::class, 'destroy']);
 Route::any('/vuefinder', VueFinderController::class);
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store']);
+Route::post('/reset-password', [NewPasswordController::class, 'store']);
 
 Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::get('/me', fn (Request $request) => $request->user());

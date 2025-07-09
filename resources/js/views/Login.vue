@@ -41,6 +41,9 @@
       <p v-if="error" class="text-red-400 mt-4 text-sm text-center">
         {{ error }}
       </p>
+      <p class="mt-4 text-sm text-center">
+  <RouterLink to="/forgot-password" class="text-blue-400 hover:underline">Забыли пароль?</RouterLink>
+</p>
     </div>
   </div>
 </template>

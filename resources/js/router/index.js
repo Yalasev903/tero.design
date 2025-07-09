@@ -7,12 +7,17 @@ import ProjectsList from '../views/admin/Projects.vue'
 import CreateProject from '../views/admin/CreateProject.vue'
 import Workflow from '../views/admin/Workflow.vue'
 import Services from '../views/admin/Services.vue'
+import ForgotPassword from '../views/ForgotPassword.vue'
 import axios from 'axios'
 
 const routes = [
   {
     path: '/',
     redirect: '/dashboard'
+  },
+  {
+  path: '/forgot-password',
+  component: ForgotPassword
   },
   {
     path: '/',
