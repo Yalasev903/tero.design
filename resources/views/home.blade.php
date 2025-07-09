@@ -71,7 +71,7 @@ body #scroll-to-top {
     z-index: 9999 !important;
     display: none !important;
     transition: opacity 0.3s ease !important;
-    background-color: #ccc !important; /* серый фон */
+    background-color: #ccc !important;
     border-radius: 50% !important;
     width: 60px !important;
     height: 60px !important;
@@ -81,15 +81,15 @@ body #scroll-to-top {
     box-shadow: 0 0 8px #0005 !important;
 }
 
-body #scroll-to-top img {
+body #scroll-to-top svg {
     width: 30px !important;
     height: 30px !important;
-    filter: drop-shadow(0 0 2px #000a) !important;
-    transition: filter 0.2s ease !important;
+    fill: #000 !important;
+    transition: fill 0.2s ease !important;
 }
 
-body #scroll-to-top:hover img {
-    filter: brightness(10) drop-shadow(0 0 2px #000a) !important;
+body #scroll-to-top:hover svg {
+    fill: #fff !important;
 }
     </style>
     {{-- / Внутренние стили главной --}}
