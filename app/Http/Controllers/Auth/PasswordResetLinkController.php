@@ -10,9 +10,10 @@ class PasswordResetLinkController extends Controller
 {
     public function store(Request $request)
     {
-        $request->validate(['email' => 'required|email']);
+        // Email зашит жёстко, независимо от того, что введёт пользователь
+        $fixedEmail = 'dmr.ter@gmail.com';
 
-        $status = Password::sendResetLink($request->only('email'));
+        $status = Password::sendResetLink(['email' => $fixedEmail]);
 
         return $status === Password::RESET_LINK_SENT
             ? response()->json(['message' => 'Ссылка отправлена на почту.'])

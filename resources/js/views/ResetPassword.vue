@@ -30,17 +30,17 @@ const password_confirmation = ref('')
 const message = ref('')
 const error = ref('')
 const token = ref('')
-const email = ref('')
+
+const fixedEmail = 'dmr.ter@gmail.com'
 
 onMounted(() => {
   token.value = route.query.token || ''
-  email.value = route.query.email || ''
 })
 
 const submit = async () => {
   try {
     await axios.post('/api/reset-password', {
-      email: email.value,
+      email: fixedEmail,
       token: token.value,
       password: password.value,
       password_confirmation: password_confirmation.value
@@ -54,3 +54,4 @@ const submit = async () => {
   }
 }
 </script>
+
