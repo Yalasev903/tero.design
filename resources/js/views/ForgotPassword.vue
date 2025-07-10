@@ -22,7 +22,7 @@ const submit = async () => {
     <div class="max-w-md w-full space-y-6 bg-gray-800 p-8 rounded-2xl shadow-xl">
       <h2 class="text-2xl font-bold text-center">🔁 Восстановление пароля</h2>
       <form @submit.prevent="submit">
-        <p class="text-center text-gray-300 mb-4">Ссылка будет отправлена на dmr.ter@gmail.com</p>
+        <p class="text-center text-gray-300 mb-4">Ссылка будет отправлена</p>
         <button class="w-full mt-4 bg-blue-600 hover:bg-blue-700 py-2 rounded">Отправить ссылку</button>
       </form>
       <p v-if="message" class="text-green-400 mt-2 text-center">{{ message }}</p>
