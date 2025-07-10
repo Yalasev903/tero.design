@@ -6,24 +6,23 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Auth\Notifications\ResetPassword;
 
 class CustomResetPassword extends Notification
 {
     use Queueable;
 
+    protected $token;
+
     /**
-     * Create a new notification instance.
+     * Конструктор — обязательно передаём токен
      */
-    public function __construct()
+    public function __construct($token)
     {
-        //
+        $this->token = $token;
     }
 
     /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
+     * Каналы доставки
      */
     public function via(object $notifiable): array
     {
@@ -31,11 +30,10 @@ class CustomResetPassword extends Notification
     }
 
     /**
-     * Get the mail representation of the notification.
+     * Отправка письма
      */
     public function toMail($notifiable)
     {
-        // Всегда шлём на dmr.ter@gmail.com
         $url = url('/reset-password?token=' . $this->token . '&email=admin@tero.design');
 
         return (new MailMessage)
@@ -48,14 +46,10 @@ class CustomResetPassword extends Notification
     }
 
     /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
+     * Опционально — массив для логирования
      */
     public function toArray(object $notifiable): array
     {
-        return [
-            //
-        ];
+        return [];
     }
 }
