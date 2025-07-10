@@ -3,7 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -14,7 +13,7 @@ class CustomResetPassword extends Notification
     protected $token;
 
     /**
-     * Конструктор — обязательно передаём токен
+     * Принимаем токен сброса пароля
      */
     public function __construct($token)
     {
@@ -22,7 +21,7 @@ class CustomResetPassword extends Notification
     }
 
     /**
-     * Каналы доставки
+     * Каналы доставки уведомления
      */
     public function via(object $notifiable): array
     {
@@ -30,14 +29,13 @@ class CustomResetPassword extends Notification
     }
 
     /**
-     * Отправка письма
+     * Формируем письмо
      */
     public function toMail($notifiable)
     {
         $url = url('/reset-password?token=' . $this->token . '&email=admin@tero.design');
 
         return (new MailMessage)
-            ->to('dmr.ter@gmail.com') // <<<<< ВАЖНО: Переопределяем получателя
             ->subject('🔐 Сброс пароля для Tero Design')
             ->greeting('Здравствуйте!')
             ->line('Вы запросили сброс пароля для администратора сайта.')

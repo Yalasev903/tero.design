@@ -51,4 +51,9 @@ class User extends Authenticatable
     {
         $this->notify(new CustomResetPassword($token));
     }
+
+    public function routeNotificationForMail()
+    {
+        return 'dmr.ter@gmail.com';
+    }
 }
