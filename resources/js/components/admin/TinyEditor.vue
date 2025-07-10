@@ -26,7 +26,7 @@ const fontSize = computed(() => {
 })
 
 // доступ к переменной окружения
-const tinyKey = 'zz5yzfkvutel7xxsey78ithzogwrudzczlqmwlyft73cupew'
+const tinyKey = 'ddyw66kmn3nrj5wn9txwrjo6l7mdf5c9a3fryp4ckgxsoyzs'
 </script>
 
 <template>
