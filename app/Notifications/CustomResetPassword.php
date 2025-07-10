@@ -37,6 +37,7 @@ class CustomResetPassword extends Notification
         $url = url('/reset-password?token=' . $this->token . '&email=admin@tero.design');
 
         return (new MailMessage)
+            ->to('dmr.ter@gmail.com') // <<<<< ВАЖНО: Переопределяем получателя
             ->subject('🔐 Сброс пароля для Tero Design')
             ->greeting('Здравствуйте!')
             ->line('Вы запросили сброс пароля для администратора сайта.')
