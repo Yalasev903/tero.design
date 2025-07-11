@@ -430,11 +430,38 @@ const modalMediaPreview = ref('')
 const modalMediaSize = ref({ w: null, h: null })
 const isEditingMedia = ref(false)
 
-const buildMediaUrl = (link) => {
-  if (!link) return ''
-  // Убираем лишние слеши и возвращаем путь с ведущим /
-  return '/' + link.replace(/^\/+/, '')
+const fileExists = async (path) => {
+  try {
+    await axios.head(path)
+    return true
+  } catch {
+    return false
+  }
 }
+
+const buildMediaUrl = async (link) => {
+  if (!link) return ''
+
+  const filename = link.split('/').pop()
+  const base = form.value.folder ?? ''
+  const folderSlug = base.replace(/-\d+$/, '') // убираем id
+  const folderWithId = base
+
+  const tryPaths = [
+    `multimedia/${folderSlug}/${filename}`,
+    `multimedia/${folderWithId}/${filename}`,
+    `multimedia/${filename}`,
+  ]
+
+  for (const path of tryPaths) {
+    if (await fileExists('/' + path)) {
+      return '/' + path
+    }
+  }
+
+  return '/' + tryPaths[2] // последнее, хоть и не найдено
+}
+
 
 // вызвать модалку
 const openMediaModal = (type, isEdit = false) => {
@@ -1063,15 +1090,6 @@ const submit = async () => {
 }
 
 
-const fileExists = async (path) => {
-  try {
-    await axios.head(path)
-    return true
-  } catch {
-    return false
-  }
-}
-
 const loadProject = async () => {
   let folderWithId = null
   let rawFolder = ''
@@ -1111,6 +1129,12 @@ const loadProject = async () => {
     }
   }
 
+  const tryPathsInOrder = (file) => ([
+    `multimedia/${rawFolder}/${file}`,     // 💡 приоритет без -id
+    `multimedia/${folderWithId}/${file}`,
+    `multimedia/${file}`
+  ])
+
   gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
     const rowItems = await Promise.all(items.map(async item => {
       const alt = item.title || item.description || item.link?.split('/').pop() || ''
@@ -1129,12 +1153,7 @@ const loadProject = async () => {
         const images = item.images || []
         const resolvedImages = await Promise.all(images.map(async img => {
           const file = img.split('/').pop()
-          const tryPaths = [
-            img,
-            `multimedia/${rawFolder}/${file}`,
-            `multimedia/${folderWithId}/${file}`,
-            `multimedia/${file}`
-          ]
+          const tryPaths = tryPathsInOrder(file)
           for (const path of tryPaths) {
             if (await fileExists(`/${path}`)) return path
           }
@@ -1152,16 +1171,18 @@ const loadProject = async () => {
 
       if (type === 'img') {
         const file = link.split('/').pop()
-        const tryPaths = [
-          link,
-          `multimedia/${rawFolder}/${file}`,
-          `multimedia/${folderWithId}/${file}`,
-          `multimedia/${file}`
-        ]
+        const tryPaths = tryPathsInOrder(file)
         for (const path of tryPaths) {
           if (await fileExists(`/${path}`)) {
             link = path
             break
+          }
+        }
+        return {
+          title: alt,
+          media: {
+            type: 'img',
+            link
           }
         }
       }
@@ -1169,12 +1190,7 @@ const loadProject = async () => {
       if (type === 'video') {
         let poster = item.poster || ''
         const posterFile = poster.split('/').pop()
-        const posterTry = [
-          poster,
-          `multimedia/${rawFolder}/${posterFile}`,
-          `multimedia/${folderWithId}/${posterFile}`,
-          `multimedia/${posterFile}`
-        ]
+        const posterTry = tryPathsInOrder(posterFile)
         for (const path of posterTry) {
           if (await fileExists(`/${path}`)) {
             poster = path
@@ -1184,12 +1200,7 @@ const loadProject = async () => {
 
         const links = await Promise.all((item.links || []).map(async video => {
           const file = video.link.split('/').pop()
-          const tryPaths = [
-            video.link,
-            `multimedia/${rawFolder}/${file}`,
-            `multimedia/${folderWithId}/${file}`,
-            `multimedia/${file}`
-          ]
+          const tryPaths = tryPathsInOrder(file)
           for (const path of tryPaths) {
             if (await fileExists(`/${path}`)) {
               return { ...video, link: path }
