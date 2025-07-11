@@ -1161,115 +1161,131 @@ const tryPathsInOrder = async (file) => {
   return ''
 }
 
-  gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
-    const rowItems = await Promise.all(items.map(async item => {
-      const alt = item.title || item.description || item.link?.split('/').pop() || ''
-      let type = item.type
-      let link = item.link || ''
+ gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
+  const rowItems = await Promise.all(items.map(async item => {
+    const alt = item.title || item.description || item.link?.split('/').pop() || ''
+    let type = item.type
+    let link = item.link || ''
 
-      if (type === 'iframe') {
-        type = 'vr'
-        if (typeof link === 'string' && link.includes('<iframe')) {
-          const match = link.match(/src=["']([^"']+)["']/)
-          link = match ? match[1] : ''
-        }
+    if (type === 'iframe') {
+      type = 'vr'
+      if (typeof link === 'string' && link.includes('<iframe')) {
+        const match = link.match(/src=["']([^"']+)["']/)
+        link = match ? match[1] : ''
+      }
+    }
+
+    if (type === 'curtain') {
+      const images = item.images || []
+      const resolvedImages = []
+      const debugPaths = []
+
+      for (const img of images) {
+        const file = getFilename(img)
+        const path = await tryPathsInOrder(file)
+        resolvedImages.push(path)
+        debugPaths.push(path)
       }
 
-      if (type === 'curtain') {
-        const images = item.images || []
-        const resolvedImages = []
-        const debugPaths = []
-
-        for (const img of images) {
-          const file = getFilename(img)
-          const path = await tryPathsInOrder(file)
-          resolvedImages.push(path)
-          debugPaths.push(path)
-        }
-
-        return {
-          title: alt,
-          media: {
-            type: 'curtain',
-            images: resolvedImages,
-            titles: item.titles || [],
-            debug_path: debugPaths
-          }
-        }
-      }
-
-      if (type === 'img') {
-        const file = getFilename(link)
-        const resolvedLink = await tryPathsInOrder(file)
-        return {
-          title: alt,
-          media: {
-            type: 'img',
-            link: resolvedLink,
-            debug_path: resolvedLink
-          }
-        }
-      }
-
-      if (type === 'video') {
-        const posterFile = getFilename(item.poster)
-        const resolvedPoster = await tryPathsInOrder(posterFile)
-
-        const links = []
-        const debugPaths = []
-
-        for (const video of item.links || []) {
-          const file = getFilename(video.link)
-          const resolved = await tryPathsInOrder(file)
-          links.push({ ...video, link: resolved })
-          debugPaths.push(resolved)
-        }
-
-        return {
-          title: alt,
-          media: {
-            type: 'video',
-            poster: resolvedPoster,
-            links,
-            debug_path: {
-              poster: resolvedPoster,
-              links: debugPaths
-            }
-          }
-        }
-      }
-
-      if (type === 'vr') {
-        return {
-          title: alt,
-          media: {
-            type: 'vr',
-            link,
-            width: item.width || null,
-            height: item.height || null,
-            debug_path: link
-          }
-        }
-      }
-
-      // fallback
-      const fallback = getFilename(link)
       return {
         title: alt,
         media: {
-          type,
-          link: fallback,
-          debug_path: fallback
+          type: 'curtain',
+          images: resolvedImages,
+          titles: item.titles || [],
+          debug_path: debugPaths
         }
       }
-    }))
+    }
 
+    if (type === 'img') {
+      const file = getFilename(link)
+      const resolvedLink = await tryPathsInOrder(file)
+      return {
+        title: alt,
+        media: {
+          type: 'img',
+          link: resolvedLink,
+          debug_path: resolvedLink
+        }
+      }
+    }
+
+    if (type === 'video') {
+      const posterFile = getFilename(item.poster)
+      const resolvedPoster = await tryPathsInOrder(posterFile)
+
+      const links = []
+      const debugPaths = []
+
+      for (const video of item.links || []) {
+        const file = getFilename(video.link)
+        const resolved = await tryPathsInOrder(file)
+        links.push({ ...video, link: resolved })
+        debugPaths.push(resolved)
+      }
+
+      return {
+        title: alt,
+        media: {
+          type: 'video',
+          poster: resolvedPoster,
+          links,
+          debug_path: {
+            poster: resolvedPoster,
+            links: debugPaths
+          }
+        }
+      }
+    }
+
+    if (type === 'vr') {
+      return {
+        title: alt,
+        media: {
+          type: 'vr',
+          link,
+          width: item.width || null,
+          height: item.height || null,
+          debug_path: link
+        }
+      }
+    }
+
+    // fallback
+    const fallback = getFilename(link)
     return {
-      id: Date.now() + Math.random(),
-      items: rowItems.filter(i => i.media?.link || i.media?.type === 'curtain' || i.media?.type === 'vr')
+      title: alt,
+      media: {
+        type,
+        link: fallback,
+        debug_path: fallback
+      }
     }
   }))
-}
+
+  return {
+    id: Date.now() + Math.random(),
+    items: rowItems.filter(i => i.media?.link || i.media?.type === 'curtain' || i.media?.type === 'vr')
+  }
+}))
+
+// 🐛 DEBUG: выводим итоговую структуру с типами
+console.log('%c[GRID DEBUG]', 'color: #2e86de; font-weight: bold')
+gridRows.value.forEach((row, i) => {
+  console.group(`Row ${i}`)
+  row.items.forEach((item, j) => {
+    const link = item.media?.link
+    const debug = item.media?.debug_path
+    console.log(
+      `📌 [${item.media?.type}] "${item.title}"`,
+      `link:`, typeof link, link,
+      `debug:`, debug
+    )
+  })
+  console.groupEnd()
+})
+
 
 watch(form, (newVal) => {
   sessionStorage.setItem('create-project-form', JSON.stringify(newVal))
