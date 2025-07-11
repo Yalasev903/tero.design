@@ -575,39 +575,42 @@ const openFileManager = (r, c) => {
 
 const handleFileSelect = async (items) => {
   if (!items.length) return
+
   const file = items[0]
-  const path = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
-  const ext = path.split('.').pop()?.toLowerCase()
+  const rawPath = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
+  const fullPath = `multimedia/${rawPath}`
+
+  const ext = rawPath.split('.').pop()?.toLowerCase()
   const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
   const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
 
-  // Шторка
+  // 🧩 Шторка
   if (selectingCurtainIndex.value) {
     const target = selectingCurtainIndex.value === 1 ? curtainImage1 : curtainImage2
     const size = selectingCurtainIndex.value === 1 ? curtainSize1 : curtainSize2
 
-    target.value = path
+    target.value = rawPath
     await nextTick()
     const img = new Image()
     img.onload = () => size.value = { w: img.naturalWidth, h: img.naturalHeight }
-    img.src = `/multimedia/${path}`
+    img.src = '/' + fullPath
     selectingCurtainIndex.value = null
     showFileManager.value = false
     return
   }
 
-  // 🛠️ Модальное окно вставки (новый файл)
+  // 📦 Модалка вставки нового файла
   if (selectedCell.value?.modal && 'rowIdx' in selectedCell.value) {
-    modalMediaPreview.value = path
+    modalMediaPreview.value = fullPath
 
     if (isImage) {
       const img = new Image()
       img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
-      img.src = `/multimedia/${path}`
+      img.src = '/' + fullPath
     } else if (isVideo) {
       const video = document.createElement('video')
       video.preload = 'metadata'
-      video.src = `/multimedia/${path}`
+      video.src = '/' + fullPath
       video.onloadedmetadata = () => {
         modalMediaSize.value = {
           w: video.videoWidth,
@@ -620,7 +623,7 @@ const handleFileSelect = async (items) => {
     return
   }
 
-  // ✏️ Редактирование существующего элемента (через иконку "карандаш")
+  // ✏️ Редактирование существующего элемента (иконка карандаша)
   if (
     selectedCell.value?.rowIdx !== undefined &&
     selectedCell.value?.colIdx !== undefined
@@ -633,22 +636,22 @@ const handleFileSelect = async (items) => {
       img.onload = () => {
         col.media = {
           type: 'img',
-          link: path,
+          link: fullPath,
           width: img.naturalWidth,
           height: img.naturalHeight,
           __v: Date.now()
         }
       }
-      img.src = `/multimedia/${path}`
+      img.src = '/' + fullPath
     } else if (isVideo) {
       const video = document.createElement('video')
       video.preload = 'metadata'
-      video.src = `/multimedia/${path}`
+      video.src = '/' + fullPath
       video.onloadedmetadata = () => {
         col.media = {
           type: 'video',
           poster: '',
-          links: [{ link: path, mime: file.mime || 'video/mp4' }],
+          links: [{ link: fullPath, mime: file.mime || 'video/mp4' }],
           width: video.videoWidth,
           height: video.videoHeight,
           __v: Date.now()
@@ -663,6 +666,47 @@ const handleFileSelect = async (items) => {
   }
 
   console.warn('⚠ Не удалось определить, куда вставлять файл')
+}
+
+const handleEditClick = async (rowIdx, colIdx, type) => {
+  const row = gridRows.value[rowIdx]
+  const col = row?.items?.[colIdx]
+
+  if (!col || !col.media) {
+    console.warn('❌ Элемент не найден для редактирования')
+    return
+  }
+
+  selectedCell.value = { rowIdx, colIdx }
+  isEditingMedia.value = true
+  mediaType.value = col.media.type || type || null
+  modalMediaTitle.value = col.title || ''
+
+  // Превью
+  if (mediaType.value === 'img') {
+    modalMediaPreview.value = col.media.link
+    const img = new Image()
+    img.onload = () => {
+      modalMediaSize.value = {
+        w: img.naturalWidth,
+        h: img.naturalHeight
+      }
+    }
+    img.src = `/multimedia/${modalMediaPreview.value}`
+  } else if (mediaType.value === 'video') {
+    modalMediaPreview.value = col.media?.links?.[0]?.link || ''
+    const video = document.createElement('video')
+    video.preload = 'metadata'
+    video.src = `/multimedia/${modalMediaPreview.value}`
+    video.onloadedmetadata = () => {
+      modalMediaSize.value = {
+        w: video.videoWidth,
+        h: video.videoHeight
+      }
+    }
+  }
+
+  showMediaModal.value = true
 }
 
 const confirmMediaInsert = () => {
