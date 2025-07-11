@@ -439,28 +439,10 @@ const fileExists = async (path) => {
   }
 }
 
-const buildMediaUrlSync = (link) => {
+const buildMediaUrl = (link) => {
   if (!link) return ''
-
-  const filename = link.split('/').pop()
-
-  const allPaths = window.vuefinderPaths || []
-
-  const validFolders = new Set(
-    allPaths
-      .map(path => path.replace(/^multimedia\//, '').split('/')[0])
-      .filter(folder => /^[a-z0-9_]+$/.test(folder))
-  )
-
-  for (const folder of validFolders) {
-    const fullPath = `multimedia/${folder}/${filename}`
-    if (allPaths.includes(fullPath)) {
-      return '/' + fullPath
-    }
-  }
-
-  const fallback = `multimedia/${filename}`
-  return allPaths.includes(fallback) ? '/' + fallback : '/' + fallback
+  if (link.startsWith('http')) return link
+  return '/' + link.replace(/^\/+/, '')
 }
 
 // вызвать модалку
@@ -1125,24 +1107,23 @@ const loadProject = async () => {
     return path.split('/').pop()?.trim() || ''
   }
 
-  // ✅ исправленный метод — ищет по полной вложенности
+  // 🔍 расширенный метод поиска по приоритету
   const tryPathsInOrder = async (filename) => {
     if (!filename) return ''
-
     const allPaths = window.vuefinderPaths || []
+    const projectFolder = sessionStorage.getItem('project-folder')?.replace(/^multimedia\//, '').replace(/\/$/, '')
 
-    // Фильтруем все пути, которые заканчиваются на нужный файл
-    const matches = allPaths.filter(p => p.endsWith('/' + filename))
+    const possiblePaths = [
+      projectFolder ? `multimedia/${projectFolder}/${filename}` : null,
+      ...allPaths.filter(p => p.endsWith('/' + filename)),
+      `multimedia/${filename}`
+    ].filter(Boolean)
 
-    for (const fullPath of matches) {
-      const exists = await fileExists('/' + fullPath)
-      if (exists) return fullPath
+    for (const fullPath of possiblePaths) {
+      if (await fileExists('/' + fullPath)) return fullPath
     }
 
-    // Последний шанс — искать в корне multimedia/
-    const fallback = `multimedia/${filename}`
-    const existsFallback = await fileExists('/' + fallback)
-    return existsFallback ? fallback : ''
+    return '' // не найдено
   }
 
   // 🧩 обработка мультимедиа-строк
@@ -1162,15 +1143,10 @@ const loadProject = async () => {
 
       if (type === 'curtain') {
         const images = item.images || []
-        const resolvedImages = []
-        const debugPaths = []
-
-        for (const img of images) {
+        const resolvedImages = await Promise.all(images.map(async img => {
           const file = getFilename(img)
-          const path = await tryPathsInOrder(file)
-          resolvedImages.push(path)
-          debugPaths.push(path)
-        }
+          return await tryPathsInOrder(file)
+        }))
 
         return {
           title: alt,
@@ -1178,7 +1154,7 @@ const loadProject = async () => {
             type: 'curtain',
             images: resolvedImages,
             titles: item.titles || [],
-            debug_path: debugPaths
+            debug_path: resolvedImages
           }
         }
       }
@@ -1200,15 +1176,11 @@ const loadProject = async () => {
         const posterFile = getFilename(item.poster)
         const resolvedPoster = await tryPathsInOrder(posterFile)
 
-        const links = []
-        const debugPaths = []
-
-        for (const video of item.links || []) {
+        const links = await Promise.all((item.links || []).map(async video => {
           const file = getFilename(video.link)
           const resolved = await tryPathsInOrder(file)
-          links.push({ ...video, link: resolved })
-          debugPaths.push(resolved)
-        }
+          return { ...video, link: resolved }
+        }))
 
         return {
           title: alt,
@@ -1218,7 +1190,7 @@ const loadProject = async () => {
             links,
             debug_path: {
               poster: resolvedPoster,
-              links: debugPaths
+              links: links.map(v => v.link)
             }
           }
         }
@@ -1255,7 +1227,7 @@ const loadProject = async () => {
     }
   }))
 
-  // 🐛 DEBUG
+  // 🔍 DEBUG
   console.log('%c[GRID DEBUG]', 'color: #2e86de; font-weight: bold')
   gridRows.value.forEach((row, i) => {
     console.group(`Row ${i}`)
