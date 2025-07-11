@@ -593,7 +593,7 @@ const handleFileSelect = async (items) => {
     await nextTick()
     const img = new Image()
     img.onload = () => size.value = { w: img.naturalWidth, h: img.naturalHeight }
-    img.src = '/' + fullPath
+    img.src = buildMediaUrl(fullPath)
     selectingCurtainIndex.value = null
     showFileManager.value = false
     return
@@ -606,11 +606,11 @@ const handleFileSelect = async (items) => {
     if (isImage) {
       const img = new Image()
       img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
-      img.src = '/' + fullPath
+      img.src = buildMediaUrl(fullPath)
     } else if (isVideo) {
       const video = document.createElement('video')
       video.preload = 'metadata'
-      video.src = '/' + fullPath
+      video.src = buildMediaUrl(fullPath)
       video.onloadedmetadata = () => {
         modalMediaSize.value = {
           w: video.videoWidth,
@@ -623,7 +623,7 @@ const handleFileSelect = async (items) => {
     return
   }
 
-  // ✏️ Редактирование существующего элемента (иконка карандаша)
+  // ✏️ Редактирование существующего элемента
   if (
     selectedCell.value?.rowIdx !== undefined &&
     selectedCell.value?.colIdx !== undefined
@@ -642,11 +642,11 @@ const handleFileSelect = async (items) => {
           __v: Date.now()
         }
       }
-      img.src = '/' + fullPath
+      img.src = buildMediaUrl(fullPath)
     } else if (isVideo) {
       const video = document.createElement('video')
       video.preload = 'metadata'
-      video.src = '/' + fullPath
+      video.src = buildMediaUrl(fullPath)
       video.onloadedmetadata = () => {
         col.media = {
           type: 'video',
@@ -682,7 +682,6 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
   mediaType.value = col.media.type || type || null
   modalMediaTitle.value = col.title || ''
 
-  // Превью
   if (mediaType.value === 'img') {
     modalMediaPreview.value = col.media.link
     const img = new Image()
@@ -692,12 +691,12 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
         h: img.naturalHeight
       }
     }
-    img.src = `/multimedia/${modalMediaPreview.value}`
+    img.src = buildMediaUrl(modalMediaPreview.value)
   } else if (mediaType.value === 'video') {
     modalMediaPreview.value = col.media?.links?.[0]?.link || ''
     const video = document.createElement('video')
     video.preload = 'metadata'
-    video.src = `/multimedia/${modalMediaPreview.value}`
+    video.src = buildMediaUrl(modalMediaPreview.value)
     video.onloadedmetadata = () => {
       modalMediaSize.value = {
         w: video.videoWidth,
@@ -1087,7 +1086,6 @@ const loadProject = async () => {
       multimedia_grid: data.multimedia_grid || []
     }
 
-    // ✅ Используем folder из БД
     rawFolder = form.value.folder ?? ''
     folderWithId = form.value.folder ?? `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
   } else {
@@ -1107,7 +1105,7 @@ const loadProject = async () => {
     const folderFromStorage = sessionStorage.getItem('project-folder')
     if (folderFromStorage) {
       folderWithId = folderFromStorage.replace(/^multimedia\//, '')
-      rawFolder = folderWithId.replace(/-\d+$/, '') // fallback
+      rawFolder = folderWithId.replace(/-\d+$/, '')
     } else {
       return
     }
@@ -1132,10 +1130,10 @@ const loadProject = async () => {
         const resolvedImages = await Promise.all(images.map(async img => {
           const file = img.split('/').pop()
           const tryPaths = [
+            img,
             `multimedia/${rawFolder}/${file}`,
             `multimedia/${folderWithId}/${file}`,
-            `multimedia/${file}`,
-            img
+            `multimedia/${file}`
           ]
           for (const path of tryPaths) {
             if (await fileExists(`/${path}`)) return path
@@ -1155,10 +1153,10 @@ const loadProject = async () => {
       if (type === 'img') {
         const file = link.split('/').pop()
         const tryPaths = [
+          link,
           `multimedia/${rawFolder}/${file}`,
           `multimedia/${folderWithId}/${file}`,
-          `multimedia/${file}`,
-          link
+          `multimedia/${file}`
         ]
         for (const path of tryPaths) {
           if (await fileExists(`/${path}`)) {
@@ -1172,10 +1170,10 @@ const loadProject = async () => {
         let poster = item.poster || ''
         const posterFile = poster.split('/').pop()
         const posterTry = [
+          poster,
           `multimedia/${rawFolder}/${posterFile}`,
           `multimedia/${folderWithId}/${posterFile}`,
-          `multimedia/${posterFile}`,
-          poster
+          `multimedia/${posterFile}`
         ]
         for (const path of posterTry) {
           if (await fileExists(`/${path}`)) {
@@ -1187,10 +1185,10 @@ const loadProject = async () => {
         const links = await Promise.all((item.links || []).map(async video => {
           const file = video.link.split('/').pop()
           const tryPaths = [
+            video.link,
             `multimedia/${rawFolder}/${file}`,
             `multimedia/${folderWithId}/${file}`,
-            `multimedia/${file}`,
-            video.link
+            `multimedia/${file}`
           ]
           for (const path of tryPaths) {
             if (await fileExists(`/${path}`)) {

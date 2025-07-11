@@ -215,58 +215,74 @@ class ProjectController extends Controller
         }
     }
 
-    private function moveMediaToFolder(array $col, string $folderPath, array &$movedFiles = []): array
-    {
-        $move = function ($path) use ($folderPath, &$movedFiles) {
-            $path = ltrim($path, '/');
-            if (Str::startsWith($path, $folderPath)) return $path;
+private function moveMediaToFolder(array $col, string $folderPath, array &$movedFiles = []): array
+{
+    $move = function ($path) use ($folderPath, &$movedFiles) {
+        $path = ltrim($path, '/');
 
-            $oldPath = public_path("multimedia/$path");
-            $filename = basename($path);
-            $newPath = "$folderPath/$filename";
-            $newFullPath = public_path($newPath);
+        // Если файл уже находится в нужной папке — возвращаем как есть
+        if (Str::startsWith($path, $folderPath)) return $path;
 
-            if (!file_exists($oldPath)) {
-                throw new \Exception("Файл не найден: $oldPath");
-            }
+        $oldPath = public_path("multimedia/$path");
+        $filename = basename($path);
+        $newPath = "$folderPath/$filename";
+        $newFullPath = public_path($newPath);
 
-            if ($oldPath === $newFullPath || file_exists($newFullPath)) {
+        // Если файл уже лежит в public и существует — не трогаем
+        if (!file_exists($oldPath)) {
+            // Если новый путь уже существует — не нужно двигать
+            if (file_exists($newFullPath)) {
                 return $newPath;
             }
+            // Во всех остальных случаях — оставляем путь как есть
+            return $path;
+        }
 
-            if (!File::move($oldPath, $newFullPath)) {
-                throw new \Exception("Ошибка при перемещении: $oldPath → $newFullPath");
-            }
-
-            $movedFiles[] = "$oldPath → $newPath";
+        // Если файл уже находится на новом месте — возвращаем
+        if ($oldPath === $newFullPath || file_exists($newFullPath)) {
             return $newPath;
-        };
+        }
 
-        switch ($col['type']) {
-            case 'img':
+        // Перемещаем
+        if (!File::move($oldPath, $newFullPath)) {
+            throw new \Exception("Ошибка при перемещении: $oldPath → $newFullPath");
+        }
+
+        $movedFiles[] = "$oldPath → $newPath";
+        return $newPath;
+    };
+
+    switch ($col['type']) {
+        case 'img':
+            if (!empty($col['link'])) {
                 $col['link'] = $move($col['link']);
-                break;
-            case 'video':
-                if (!empty($col['poster'])) {
-                    $col['poster'] = $move($col['poster']);
-                }
-                if (!empty($col['links']) && is_array($col['links'])) {
-                    foreach ($col['links'] as &$link) {
+            }
+            break;
+
+        case 'video':
+            if (!empty($col['poster'])) {
+                $col['poster'] = $move($col['poster']);
+            }
+            if (!empty($col['links']) && is_array($col['links'])) {
+                foreach ($col['links'] as &$link) {
+                    if (!empty($link['link'])) {
                         $link['link'] = $move($link['link']);
                     }
                 }
-                break;
-            case 'curtain':
-                if (!empty($col['images']) && is_array($col['images'])) {
-                    foreach ($col['images'] as &$img) {
-                        $img = $move($img);
-                    }
-                }
-                break;
-        }
+            }
+            break;
 
-        return $col;
+        case 'curtain':
+            if (!empty($col['images']) && is_array($col['images'])) {
+                foreach ($col['images'] as &$img) {
+                    $img = $move($img);
+                }
+            }
+            break;
     }
+
+    return $col;
+}
 
     public function show($id)
     {
