@@ -1135,24 +1135,31 @@ const loadProject = async () => {
     return path.split('/').pop()?.trim() || ''
   }
 
-  const tryPathsInOrder = async (file) => {
-    if (!file) return ''
-    const cleanFile = file.trim()
-    const paths = [
-      rawFolder ? `multimedia/${rawFolder}/${cleanFile}` : null,
-      folderWithId ? `multimedia/${folderWithId}/${cleanFile}` : null,
-      `multimedia/${cleanFile}`
-    ].filter(Boolean)
+const tryPathsInOrder = async (file) => {
+  if (!file) return ''
 
-    for (const path of paths) {
-      const exists = await fileExists('/' + path)
-      console.log(`[🔍 CHECK] ${path} → ${exists ? '✅' : '❌'}`)
-      if (exists) return path
-    }
+  const folderVariants = Array.from(
+    new Set([
+      rawFolder,
+      folderWithId,
+      rawFolder.replace(/-/g, '_'),
+      folderWithId.replace(/-/g, '_'),
+      ''
+    ])
+  ).filter(Boolean)
 
-    console.warn(`[❌ NOT FOUND] ${cleanFile} — fallback to ''`)
-    return ''
+  const paths = folderVariants.map(folder => `multimedia/${folder}/${file}`)
+  paths.push(`multimedia/${file}`) // fallback
+
+  for (const path of paths) {
+    const exists = await fileExists('/' + path)
+    console.log(`[🔍 CHECK] ${path} → ${exists ? '✅' : '❌'}`)
+    if (exists) return path
   }
+
+  console.warn(`[❌ NOT FOUND] ${file} — fallback to ''`)
+  return ''
+}
 
   gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
     const rowItems = await Promise.all(items.map(async item => {
