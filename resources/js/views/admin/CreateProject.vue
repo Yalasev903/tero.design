@@ -1031,6 +1031,7 @@ const fileExists = async (path) => {
 
 const loadProject = async () => {
   let folderWithId = null
+  let rawFolder = ''
 
   if (route.name === 'EditProject') {
     isEditing.value = true
@@ -1042,7 +1043,7 @@ const loadProject = async () => {
       multimedia_grid: data.multimedia_grid || []
     }
 
-    const rawFolder = form.value.title
+    rawFolder = form.value.title
       ? form.value.title.trim().replace(/\s+/g, '-').toLowerCase()
       : ''
     folderWithId = `${rawFolder}-${projectId.value}`
@@ -1063,6 +1064,7 @@ const loadProject = async () => {
     const folderFromStorage = sessionStorage.getItem('project-folder')
     if (folderFromStorage) {
       folderWithId = folderFromStorage.replace(/^multimedia\//, '')
+      rawFolder = folderWithId.replace(/-\d+$/, '') // убрать -ID
     } else {
       return
     }
@@ -1074,7 +1076,6 @@ const loadProject = async () => {
       let type = item.type
       let link = item.link || ''
 
-      // Поддержка старого типа
       if (type === 'iframe') {
         type = 'vr'
         if (typeof link === 'string' && link.includes('<iframe')) {
@@ -1089,6 +1090,7 @@ const loadProject = async () => {
         const resolvedImages = await Promise.all(images.map(async img => {
           const file = img.split('/').pop()
           const tryPaths = [
+            `multimedia/${rawFolder}/${file}`,
             `multimedia/${folderWithId}/${file}`,
             `multimedia/${file}`,
             img
@@ -1112,6 +1114,7 @@ const loadProject = async () => {
       if (type === 'img') {
         const file = link.split('/').pop()
         const tryPaths = [
+          `multimedia/${rawFolder}/${file}`,
           `multimedia/${folderWithId}/${file}`,
           `multimedia/${file}`,
           link
@@ -1129,6 +1132,7 @@ const loadProject = async () => {
         let poster = item.poster || ''
         const posterFile = poster.split('/').pop()
         const posterTry = [
+          `multimedia/${rawFolder}/${posterFile}`,
           `multimedia/${folderWithId}/${posterFile}`,
           `multimedia/${posterFile}`,
           poster
@@ -1143,6 +1147,7 @@ const loadProject = async () => {
         const links = await Promise.all((item.links || []).map(async video => {
           const file = video.link.split('/').pop()
           const tryPaths = [
+            `multimedia/${rawFolder}/${file}`,
             `multimedia/${folderWithId}/${file}`,
             `multimedia/${file}`,
             video.link
@@ -1152,7 +1157,7 @@ const loadProject = async () => {
               return { ...video, link: path }
             }
           }
-          return { ...video, link: '' } // пустой путь если не найден
+          return { ...video, link: '' }
         }))
 
         return {
@@ -1178,7 +1183,7 @@ const loadProject = async () => {
         }
       }
 
-      // FALLBACK (если ни один не подошёл)
+      // FALLBACK
       return {
         title: alt,
         media: {
