@@ -1128,15 +1128,25 @@ const loadProject = async () => {
     }
   }
 
+  const getFilename = (path) => {
+    if (!path || typeof path !== 'string') return ''
+    return path.split('/').pop()?.trim() || ''
+  }
+
   const tryPathsInOrder = async (file) => {
+    if (!file) return ''
     const paths = [
       `multimedia/${rawFolder}/${file}`,
       `multimedia/${folderWithId}/${file}`,
       `multimedia/${file}`
     ]
     for (const path of paths) {
-      if (await fileExists('/' + path)) return path
+      if (await fileExists('/' + path)) {
+        console.log(`[✅ FOUND] ${file} → ${path}`)
+        return path
+      }
     }
+    console.warn(`[❌ NOT FOUND] ${file} — fallback to ''`)
     return ''
   }
 
@@ -1159,7 +1169,7 @@ const loadProject = async () => {
         const resolvedImages = []
         const debugPaths = []
         for (const img of images) {
-          const file = img.split('/').pop()
+          const file = getFilename(img)
           const path = await tryPathsInOrder(file)
           resolvedImages.push(path)
           debugPaths.push(path)
@@ -1176,7 +1186,7 @@ const loadProject = async () => {
       }
 
       if (type === 'img') {
-        const file = link.split('/').pop()
+        const file = getFilename(link)
         const resolvedLink = await tryPathsInOrder(file)
         return {
           title: alt,
@@ -1189,14 +1199,13 @@ const loadProject = async () => {
       }
 
       if (type === 'video') {
-        let poster = item.poster || ''
-        const posterFile = poster.split('/').pop()
+        const posterFile = getFilename(item.poster)
         const resolvedPoster = await tryPathsInOrder(posterFile)
 
         const links = []
         const debugPaths = []
         for (const video of item.links || []) {
-          const file = video.link?.split('/').pop() || ''
+          const file = getFilename(video.link)
           const resolved = await tryPathsInOrder(file)
           links.push({ ...video, link: resolved })
           debugPaths.push(resolved)
@@ -1229,12 +1238,13 @@ const loadProject = async () => {
         }
       }
 
+      const fallback = getFilename(link)
       return {
         title: alt,
         media: {
           type,
-          link,
-          debug_path: link
+          link: fallback,
+          debug_path: fallback
         }
       }
     }))
