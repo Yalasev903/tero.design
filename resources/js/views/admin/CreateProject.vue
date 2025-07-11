@@ -439,25 +439,28 @@ const fileExists = async (path) => {
   }
 }
 
-const buildMediaUrl = async (link) => {
+const buildMediaUrlSync = (link) => {
   if (!link) return ''
 
   const filename = link.split('/').pop()
-  const base = form.value.folder ?? ''
-  const folderSlug = base.replace(/[-\s]+/g, '_').toLowerCase()
 
-  const tryPaths = [
-    `multimedia/${folderSlug}/${filename}`,
-    `multimedia/${filename}` // fallback
-  ]
+  const allPaths = window.vuefinderPaths || []
 
-  for (const path of tryPaths) {
-    if (await fileExists('/' + path)) {
-      return '/' + path
+  const validFolders = new Set(
+    allPaths
+      .map(path => path.replace(/^multimedia\//, '').split('/')[0])
+      .filter(folder => /^[a-z0-9_]+$/.test(folder))
+  )
+
+  for (const folder of validFolders) {
+    const fullPath = `multimedia/${folder}/${filename}`
+    if (allPaths.includes(fullPath)) {
+      return '/' + fullPath
     }
   }
 
-  return '/' + tryPaths[1] // fallback
+  const fallback = `multimedia/${filename}`
+  return allPaths.includes(fallback) ? '/' + fallback : '/' + fallback
 }
 
 // вызвать модалку
@@ -1087,9 +1090,6 @@ const submit = async () => {
 }
 
 const loadProject = async () => {
-  let folderWithId = ''
-  let rawFolder = ''
-
   if (route.name === 'EditProject') {
     isEditing.value = true
     projectId.value = route.params.id
@@ -1099,10 +1099,6 @@ const loadProject = async () => {
       ...data,
       multimedia_grid: data.multimedia_grid || []
     }
-
-    const originalFolder = form.value.folder?.replace(/^multimedia\//, '') || ''
-    folderWithId = originalFolder || `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
-    rawFolder = folderWithId.replace(/-\d+$/, '') || folderWithId
   } else {
     isEditing.value = false
     projectId.value = null
@@ -1117,11 +1113,8 @@ const loadProject = async () => {
     }
     gridRows.value = []
 
-    const folderFromStorage = sessionStorage.getItem('project-folder')?.replace(/^multimedia\//, '') || ''
-    folderWithId = folderFromStorage
-    rawFolder = folderFromStorage.replace(/-\d+$/, '') || folderFromStorage
-
-    if (!folderWithId) {
+    const folderFromStorage = sessionStorage.getItem('project-folder')?.replace(/^multimedia\//, '')
+    if (!folderFromStorage) {
       console.warn('[❗ Папка проекта не определена — прерываем загрузку]')
       return
     }
@@ -1132,158 +1125,148 @@ const loadProject = async () => {
     return path.split('/').pop()?.trim() || ''
   }
 
-const tryPathsInOrder = async (file) => {
-  if (!file) return ''
+  const tryPathsInOrder = async (file) => {
+    if (!file) return ''
 
-  // slugify -> под нижнее подчёркивание + нижний регистр
-  const slugify = (text) => text.toLowerCase().replace(/[-\s]+/g, '_')
+    const allPaths = window.vuefinderPaths || []
 
-  const variants = Array.from(new Set([
-    rawFolder,
-    folderWithId,
-    slugify(rawFolder),
-    slugify(folderWithId),
-    ''
-  ])).filter(Boolean)
+    const validFolders = new Set(
+      allPaths
+        .map(p => p.replace(/^multimedia\//, '').split('/')[0])
+        .filter(folder => /^[a-z0-9_]+$/.test(folder))
+    )
 
-  const paths = variants.map(folder => `multimedia/${folder}/${file}`)
-  paths.push(`multimedia/${file}`) // fallback
+    for (const folder of validFolders) {
+      const testPath = `multimedia/${folder}/${file}`
+      const exists = await fileExists('/' + testPath)
+      if (exists) return testPath
+    }
 
-  for (const path of paths) {
-    const exists = await fileExists('/' + path)
-    console.log(`[🔍 CHECK] ${path} → ${exists ? '✅' : '❌'}`)
-    if (exists) return path
+    const fallback = `multimedia/${file}`
+    const existsFallback = await fileExists('/' + fallback)
+    return existsFallback ? fallback : ''
   }
 
-  console.warn(`[❌ NOT FOUND] ${file} — fallback to ''`)
-  return ''
-}
+  gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
+    const rowItems = await Promise.all(items.map(async item => {
+      const alt = item.title || item.description || item.link?.split('/').pop() || ''
+      let type = item.type
+      let link = item.link || ''
 
- gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
-  const rowItems = await Promise.all(items.map(async item => {
-    const alt = item.title || item.description || item.link?.split('/').pop() || ''
-    let type = item.type
-    let link = item.link || ''
-
-    if (type === 'iframe') {
-      type = 'vr'
-      if (typeof link === 'string' && link.includes('<iframe')) {
-        const match = link.match(/src=["']([^"']+)["']/)
-        link = match ? match[1] : ''
-      }
-    }
-
-    if (type === 'curtain') {
-      const images = item.images || []
-      const resolvedImages = []
-      const debugPaths = []
-
-      for (const img of images) {
-        const file = getFilename(img)
-        const path = await tryPathsInOrder(file)
-        resolvedImages.push(path)
-        debugPaths.push(path)
-      }
-
-      return {
-        title: alt,
-        media: {
-          type: 'curtain',
-          images: resolvedImages,
-          titles: item.titles || [],
-          debug_path: debugPaths
+      if (type === 'iframe') {
+        type = 'vr'
+        if (typeof link === 'string' && link.includes('<iframe')) {
+          const match = link.match(/src=["']([^"']+)["']/)
+          link = match ? match[1] : ''
         }
       }
-    }
 
-    if (type === 'img') {
-      const file = getFilename(link)
-      const resolvedLink = await tryPathsInOrder(file)
-      return {
-        title: alt,
-        media: {
-          type: 'img',
-          link: resolvedLink,
-          debug_path: resolvedLink
+      if (type === 'curtain') {
+        const images = item.images || []
+        const resolvedImages = []
+        const debugPaths = []
+
+        for (const img of images) {
+          const file = getFilename(img)
+          const path = await tryPathsInOrder(file)
+          resolvedImages.push(path)
+          debugPaths.push(path)
         }
-      }
-    }
 
-    if (type === 'video') {
-      const posterFile = getFilename(item.poster)
-      const resolvedPoster = await tryPathsInOrder(posterFile)
-
-      const links = []
-      const debugPaths = []
-
-      for (const video of item.links || []) {
-        const file = getFilename(video.link)
-        const resolved = await tryPathsInOrder(file)
-        links.push({ ...video, link: resolved })
-        debugPaths.push(resolved)
-      }
-
-      return {
-        title: alt,
-        media: {
-          type: 'video',
-          poster: resolvedPoster,
-          links,
-          debug_path: {
-            poster: resolvedPoster,
-            links: debugPaths
+        return {
+          title: alt,
+          media: {
+            type: 'curtain',
+            images: resolvedImages,
+            titles: item.titles || [],
+            debug_path: debugPaths
           }
         }
       }
-    }
 
-    if (type === 'vr') {
+      if (type === 'img') {
+        const file = getFilename(link)
+        const resolvedLink = await tryPathsInOrder(file)
+        return {
+          title: alt,
+          media: {
+            type: 'img',
+            link: resolvedLink,
+            debug_path: resolvedLink
+          }
+        }
+      }
+
+      if (type === 'video') {
+        const posterFile = getFilename(item.poster)
+        const resolvedPoster = await tryPathsInOrder(posterFile)
+
+        const links = []
+        const debugPaths = []
+
+        for (const video of item.links || []) {
+          const file = getFilename(video.link)
+          const resolved = await tryPathsInOrder(file)
+          links.push({ ...video, link: resolved })
+          debugPaths.push(resolved)
+        }
+
+        return {
+          title: alt,
+          media: {
+            type: 'video',
+            poster: resolvedPoster,
+            links,
+            debug_path: {
+              poster: resolvedPoster,
+              links: debugPaths
+            }
+          }
+        }
+      }
+
+      if (type === 'vr') {
+        return {
+          title: alt,
+          media: {
+            type: 'vr',
+            link,
+            width: item.width || null,
+            height: item.height || null,
+            debug_path: link
+          }
+        }
+      }
+
+      const fallback = getFilename(link)
       return {
         title: alt,
         media: {
-          type: 'vr',
-          link,
-          width: item.width || null,
-          height: item.height || null,
-          debug_path: link
+          type,
+          link: fallback,
+          debug_path: fallback
         }
       }
-    }
+    }))
 
-    // fallback
-    const fallback = getFilename(link)
     return {
-      title: alt,
-      media: {
-        type,
-        link: fallback,
-        debug_path: fallback
-      }
+      id: Date.now() + Math.random(),
+      items: rowItems.filter(i => i.media?.link || i.media?.type === 'curtain' || i.media?.type === 'vr')
     }
   }))
 
-  return {
-    id: Date.now() + Math.random(),
-    items: rowItems.filter(i => i.media?.link || i.media?.type === 'curtain' || i.media?.type === 'vr')
-  }
-}))
-
-// 🐛 DEBUG: выводим итоговую структуру с типами
-console.log('%c[GRID DEBUG]', 'color: #2e86de; font-weight: bold')
-gridRows.value.forEach((row, i) => {
-  console.group(`Row ${i}`)
-  row.items.forEach((item, j) => {
-    const link = item.media?.link
-    const debug = item.media?.debug_path
-    console.log(
-      `📌 [${item.media?.type}] "${item.title}"`,
-      `link:`, typeof link, link,
-      `debug:`, debug
-    )
+  // 🐛 DEBUG
+  console.log('%c[GRID DEBUG]', 'color: #2e86de; font-weight: bold')
+  gridRows.value.forEach((row, i) => {
+    console.group(`Row ${i}`)
+    row.items.forEach((item, j) => {
+      const link = item.media?.link
+      const debug = item.media?.debug_path
+      console.log(`📌 [${item.media?.type}] "${item.title}" link:`, link, `debug:`, debug)
+    })
+    console.groupEnd()
   })
-  console.groupEnd()
-})
-
+}
 
 watch(form, (newVal) => {
   sessionStorage.setItem('create-project-form', JSON.stringify(newVal))
