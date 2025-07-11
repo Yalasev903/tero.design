@@ -1089,7 +1089,6 @@ const submit = async () => {
   }
 }
 
-
 const loadProject = async () => {
   let folderWithId = null
   let rawFolder = ''
@@ -1129,11 +1128,17 @@ const loadProject = async () => {
     }
   }
 
-  const tryPathsInOrder = (file) => ([
-    `multimedia/${rawFolder}/${file}`,     // 💡 приоритет без -id
-    `multimedia/${folderWithId}/${file}`,
-    `multimedia/${file}`
-  ])
+  const tryPathsInOrder = async (file) => {
+    const paths = [
+      `multimedia/${rawFolder}/${file}`,
+      `multimedia/${folderWithId}/${file}`,
+      `multimedia/${file}`
+    ]
+    for (const path of paths) {
+      if (await fileExists('/' + path)) return path
+    }
+    return ''
+  }
 
   gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
     const rowItems = await Promise.all(items.map(async item => {
@@ -1151,38 +1156,34 @@ const loadProject = async () => {
 
       if (type === 'curtain') {
         const images = item.images || []
-        const resolvedImages = await Promise.all(images.map(async img => {
+        const resolvedImages = []
+        const debugPaths = []
+        for (const img of images) {
           const file = img.split('/').pop()
-          const tryPaths = tryPathsInOrder(file)
-          for (const path of tryPaths) {
-            if (await fileExists(`/${path}`)) return path
-          }
-          return ''
-        }))
+          const path = await tryPathsInOrder(file)
+          resolvedImages.push(path)
+          debugPaths.push(path)
+        }
         return {
           title: alt,
           media: {
             type: 'curtain',
             images: resolvedImages,
-            titles: item.titles || []
+            titles: item.titles || [],
+            debug_path: debugPaths
           }
         }
       }
 
       if (type === 'img') {
         const file = link.split('/').pop()
-        const tryPaths = tryPathsInOrder(file)
-        for (const path of tryPaths) {
-          if (await fileExists(`/${path}`)) {
-            link = path
-            break
-          }
-        }
+        const resolvedLink = await tryPathsInOrder(file)
         return {
           title: alt,
           media: {
             type: 'img',
-            link
+            link: resolvedLink,
+            debug_path: resolvedLink
           }
         }
       }
@@ -1190,31 +1191,27 @@ const loadProject = async () => {
       if (type === 'video') {
         let poster = item.poster || ''
         const posterFile = poster.split('/').pop()
-        const posterTry = tryPathsInOrder(posterFile)
-        for (const path of posterTry) {
-          if (await fileExists(`/${path}`)) {
-            poster = path
-            break
-          }
-        }
+        const resolvedPoster = await tryPathsInOrder(posterFile)
 
-        const links = await Promise.all((item.links || []).map(async video => {
-          const file = video.link.split('/').pop()
-          const tryPaths = tryPathsInOrder(file)
-          for (const path of tryPaths) {
-            if (await fileExists(`/${path}`)) {
-              return { ...video, link: path }
-            }
-          }
-          return { ...video, link: '' }
-        }))
+        const links = []
+        const debugPaths = []
+        for (const video of item.links || []) {
+          const file = video.link?.split('/').pop() || ''
+          const resolved = await tryPathsInOrder(file)
+          links.push({ ...video, link: resolved })
+          debugPaths.push(resolved)
+        }
 
         return {
           title: alt,
           media: {
             type: 'video',
-            poster,
-            links
+            poster: resolvedPoster,
+            links,
+            debug_path: {
+              poster: resolvedPoster,
+              links: debugPaths
+            }
           }
         }
       }
@@ -1226,7 +1223,8 @@ const loadProject = async () => {
             type: 'vr',
             link,
             width: item.width || null,
-            height: item.height || null
+            height: item.height || null,
+            debug_path: link
           }
         }
       }
@@ -1235,7 +1233,8 @@ const loadProject = async () => {
         title: alt,
         media: {
           type,
-          link
+          link,
+          debug_path: link
         }
       }
     }))
