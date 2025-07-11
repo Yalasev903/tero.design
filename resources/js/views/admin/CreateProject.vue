@@ -1125,31 +1125,30 @@ const loadProject = async () => {
     return path.split('/').pop()?.trim() || ''
   }
 
-  const tryPathsInOrder = async (file) => {
-    if (!file) return ''
+  // ✅ исправленный метод — ищет по полной вложенности
+  const tryPathsInOrder = async (filename) => {
+    if (!filename) return ''
 
     const allPaths = window.vuefinderPaths || []
 
-    const validFolders = new Set(
-      allPaths
-        .map(p => p.replace(/^multimedia\//, '').split('/')[0])
-        .filter(folder => /^[a-z0-9_]+$/.test(folder))
-    )
+    // Фильтруем все пути, которые заканчиваются на нужный файл
+    const matches = allPaths.filter(p => p.endsWith('/' + filename))
 
-    for (const folder of validFolders) {
-      const testPath = `multimedia/${folder}/${file}`
-      const exists = await fileExists('/' + testPath)
-      if (exists) return testPath
+    for (const fullPath of matches) {
+      const exists = await fileExists('/' + fullPath)
+      if (exists) return fullPath
     }
 
-    const fallback = `multimedia/${file}`
+    // Последний шанс — искать в корне multimedia/
+    const fallback = `multimedia/${filename}`
     const existsFallback = await fileExists('/' + fallback)
     return existsFallback ? fallback : ''
   }
 
+  // 🧩 обработка мультимедиа-строк
   gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
     const rowItems = await Promise.all(items.map(async item => {
-      const alt = item.title || item.description || item.link?.split('/').pop() || ''
+      const alt = item.title || item.description || getFilename(item.link) || ''
       let type = item.type
       let link = item.link || ''
 
@@ -1238,6 +1237,7 @@ const loadProject = async () => {
         }
       }
 
+      // fallback
       const fallback = getFilename(link)
       return {
         title: alt,
