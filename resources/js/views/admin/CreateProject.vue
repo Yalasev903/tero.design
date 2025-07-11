@@ -1087,10 +1087,9 @@ const loadProject = async () => {
       multimedia_grid: data.multimedia_grid || []
     }
 
-    rawFolder = form.value.title
-      ? form.value.title.trim().replace(/\s+/g, '-').toLowerCase()
-      : ''
-    folderWithId = `${rawFolder}-${projectId.value}`
+    // ✅ Используем folder из БД
+    rawFolder = form.value.folder ?? ''
+    folderWithId = form.value.folder ?? `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
   } else {
     isEditing.value = false
     projectId.value = null
@@ -1108,7 +1107,7 @@ const loadProject = async () => {
     const folderFromStorage = sessionStorage.getItem('project-folder')
     if (folderFromStorage) {
       folderWithId = folderFromStorage.replace(/^multimedia\//, '')
-      rawFolder = folderWithId.replace(/-\d+$/, '') // убрать -ID
+      rawFolder = folderWithId.replace(/-\d+$/, '') // fallback
     } else {
       return
     }
@@ -1128,7 +1127,6 @@ const loadProject = async () => {
         }
       }
 
-      // CURTAIN
       if (type === 'curtain') {
         const images = item.images || []
         const resolvedImages = await Promise.all(images.map(async img => {
@@ -1154,7 +1152,6 @@ const loadProject = async () => {
         }
       }
 
-      // IMAGE
       if (type === 'img') {
         const file = link.split('/').pop()
         const tryPaths = [
@@ -1171,7 +1168,6 @@ const loadProject = async () => {
         }
       }
 
-      // VIDEO
       if (type === 'video') {
         let poster = item.poster || ''
         const posterFile = poster.split('/').pop()
@@ -1214,7 +1210,6 @@ const loadProject = async () => {
         }
       }
 
-      // VR
       if (type === 'vr') {
         return {
           title: alt,
@@ -1227,7 +1222,6 @@ const loadProject = async () => {
         }
       }
 
-      // FALLBACK
       return {
         title: alt,
         media: {
