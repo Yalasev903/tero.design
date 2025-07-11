@@ -432,8 +432,8 @@ const isEditingMedia = ref(false)
 
 const buildMediaUrl = (link) => {
   if (!link) return ''
-  if (link.startsWith('http') || link.startsWith('/')) return link
-  return link.includes('multimedia/') ? `/${link}` : `/multimedia/${link}`
+  // Убираем лишние слеши и возвращаем путь с ведущим /
+  return '/' + link.replace(/^\/+/, '')
 }
 
 // вызвать модалку
@@ -1047,7 +1047,6 @@ const loadProject = async () => {
       : ''
     folderWithId = `${rawFolder}-${projectId.value}`
   } else {
-    // Новый проект
     isEditing.value = false
     projectId.value = null
     form.value = {
@@ -1065,7 +1064,7 @@ const loadProject = async () => {
     if (folderFromStorage) {
       folderWithId = folderFromStorage.replace(/^multimedia\//, '')
     } else {
-      return // нет папки → нечего грузить
+      return
     }
   }
 
@@ -1075,12 +1074,29 @@ const loadProject = async () => {
       let type = item.type
       let link = item.link || ''
 
+      // Поддержка старого типа
+      if (type === 'iframe') {
+        type = 'vr'
+        if (typeof link === 'string' && link.includes('<iframe')) {
+          const match = link.match(/src=["']([^"']+)["']/)
+          link = match ? match[1] : ''
+        }
+      }
+
+      // CURTAIN
       if (type === 'curtain') {
         const images = item.images || []
         const resolvedImages = await Promise.all(images.map(async img => {
-          const base = img.includes('/') ? img : `multimedia/${img}`
-          const withFolder = `multimedia/${folderWithId}/${img.split('/').pop()}`
-          return await fileExists(`/${withFolder}`) ? withFolder : base
+          const file = img.split('/').pop()
+          const tryPaths = [
+            `multimedia/${folderWithId}/${file}`,
+            `multimedia/${file}`,
+            img
+          ]
+          for (const path of tryPaths) {
+            if (await fileExists(`/${path}`)) return path
+          }
+          return ''
         }))
         return {
           title: alt,
@@ -1092,36 +1108,52 @@ const loadProject = async () => {
         }
       }
 
-      if (type === 'iframe') {
-        type = 'vr'
-        if (typeof link === 'string' && link.includes('<iframe')) {
-          const match = link.match(/src=["']([^"']+)["']/)
-          link = match ? match[1] : ''
+      // IMAGE
+      if (type === 'img') {
+        const file = link.split('/').pop()
+        const tryPaths = [
+          `multimedia/${folderWithId}/${file}`,
+          `multimedia/${file}`,
+          link
+        ]
+        for (const path of tryPaths) {
+          if (await fileExists(`/${path}`)) {
+            link = path
+            break
+          }
         }
       }
 
-      if (type === 'img') {
-        const base = link.includes('/') ? link : `multimedia/${link}`
-        const withFolder = `multimedia/${folderWithId}/${link.split('/').pop()}`
-        link = await fileExists(`/${withFolder}`) ? withFolder : base
-      }
-
+      // VIDEO
       if (type === 'video') {
         let poster = item.poster || ''
-        if (poster) {
-          const base = poster.includes('/') ? poster : `multimedia/${poster}`
-          const withFolder = `multimedia/${folderWithId}/${poster.split('/').pop()}`
-          poster = await fileExists(`/${withFolder}`) ? withFolder : base
+        const posterFile = poster.split('/').pop()
+        const posterTry = [
+          `multimedia/${folderWithId}/${posterFile}`,
+          `multimedia/${posterFile}`,
+          poster
+        ]
+        for (const path of posterTry) {
+          if (await fileExists(`/${path}`)) {
+            poster = path
+            break
+          }
         }
 
-        const links = await Promise.all(
-          (item.links || []).map(async video => {
-            const base = video.link.includes('/') ? video.link : `multimedia/${video.link}`
-            const withFolder = `multimedia/${folderWithId}/${video.link.split('/').pop()}`
-            const resolved = await fileExists(`/${withFolder}`) ? withFolder : base
-            return { ...video, link: resolved }
-          })
-        )
+        const links = await Promise.all((item.links || []).map(async video => {
+          const file = video.link.split('/').pop()
+          const tryPaths = [
+            `multimedia/${folderWithId}/${file}`,
+            `multimedia/${file}`,
+            video.link
+          ]
+          for (const path of tryPaths) {
+            if (await fileExists(`/${path}`)) {
+              return { ...video, link: path }
+            }
+          }
+          return { ...video, link: '' } // пустой путь если не найден
+        }))
 
         return {
           title: alt,
@@ -1133,6 +1165,7 @@ const loadProject = async () => {
         }
       }
 
+      // VR
       if (type === 'vr') {
         return {
           title: alt,
@@ -1145,6 +1178,7 @@ const loadProject = async () => {
         }
       }
 
+      // FALLBACK (если ни один не подошёл)
       return {
         title: alt,
         media: {
@@ -1153,9 +1187,10 @@ const loadProject = async () => {
         }
       }
     }))
+
     return {
       id: Date.now() + Math.random(),
-      items: rowItems
+      items: rowItems.filter(i => i.media?.link || i.media?.type === 'curtain' || i.media?.type === 'vr')
     }
   }))
 }
