@@ -1090,7 +1090,7 @@ const submit = async () => {
 }
 
 const loadProject = async () => {
-  let folderWithId = null
+  let folderWithId = ''
   let rawFolder = ''
 
   if (route.name === 'EditProject') {
@@ -1103,8 +1103,9 @@ const loadProject = async () => {
       multimedia_grid: data.multimedia_grid || []
     }
 
-    rawFolder = form.value.folder ?? ''
-    folderWithId = form.value.folder ?? `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
+    const originalFolder = form.value.folder?.replace(/^multimedia\//, '') || ''
+    folderWithId = originalFolder || `${form.value.title.trim().replace(/\s+/g, '-').toLowerCase()}-${projectId.value}`
+    rawFolder = folderWithId.replace(/-\d+$/, '') || folderWithId
   } else {
     isEditing.value = false
     projectId.value = null
@@ -1119,11 +1120,12 @@ const loadProject = async () => {
     }
     gridRows.value = []
 
-    const folderFromStorage = sessionStorage.getItem('project-folder')
-    if (folderFromStorage) {
-      folderWithId = folderFromStorage.replace(/^multimedia\//, '')
-      rawFolder = folderWithId.replace(/-\d+$/, '')
-    } else {
+    const folderFromStorage = sessionStorage.getItem('project-folder')?.replace(/^multimedia\//, '') || ''
+    folderWithId = folderFromStorage
+    rawFolder = folderFromStorage.replace(/-\d+$/, '') || folderFromStorage
+
+    if (!folderWithId) {
+      console.warn('[❗ Папка проекта не определена — прерываем загрузку]')
       return
     }
   }
@@ -1135,18 +1137,20 @@ const loadProject = async () => {
 
   const tryPathsInOrder = async (file) => {
     if (!file) return ''
+    const cleanFile = file.trim()
     const paths = [
-      `multimedia/${rawFolder}/${file}`,
-      `multimedia/${folderWithId}/${file}`,
-      `multimedia/${file}`
-    ]
+      rawFolder ? `multimedia/${rawFolder}/${cleanFile}` : null,
+      folderWithId ? `multimedia/${folderWithId}/${cleanFile}` : null,
+      `multimedia/${cleanFile}`
+    ].filter(Boolean)
+
     for (const path of paths) {
-      if (await fileExists('/' + path)) {
-        console.log(`[✅ FOUND] ${file} → ${path}`)
-        return path
-      }
+      const exists = await fileExists('/' + path)
+      console.log(`[🔍 CHECK] ${path} → ${exists ? '✅' : '❌'}`)
+      if (exists) return path
     }
-    console.warn(`[❌ NOT FOUND] ${file} — fallback to ''`)
+
+    console.warn(`[❌ NOT FOUND] ${cleanFile} — fallback to ''`)
     return ''
   }
 
@@ -1168,12 +1172,14 @@ const loadProject = async () => {
         const images = item.images || []
         const resolvedImages = []
         const debugPaths = []
+
         for (const img of images) {
           const file = getFilename(img)
           const path = await tryPathsInOrder(file)
           resolvedImages.push(path)
           debugPaths.push(path)
         }
+
         return {
           title: alt,
           media: {
@@ -1204,6 +1210,7 @@ const loadProject = async () => {
 
         const links = []
         const debugPaths = []
+
         for (const video of item.links || []) {
           const file = getFilename(video.link)
           const resolved = await tryPathsInOrder(file)
@@ -1238,6 +1245,7 @@ const loadProject = async () => {
         }
       }
 
+      // fallback
       const fallback = getFilename(link)
       return {
         title: alt,
