@@ -444,13 +444,11 @@ const buildMediaUrl = async (link) => {
 
   const filename = link.split('/').pop()
   const base = form.value.folder ?? ''
-  const folderSlug = base.replace(/-\d+$/, '') // убираем id
-  const folderWithId = base
+  const folderSlug = base.replace(/[-\s]+/g, '_').toLowerCase()
 
   const tryPaths = [
     `multimedia/${folderSlug}/${filename}`,
-    `multimedia/${folderWithId}/${filename}`,
-    `multimedia/${filename}`,
+    `multimedia/${filename}` // fallback
   ]
 
   for (const path of tryPaths) {
@@ -459,9 +457,8 @@ const buildMediaUrl = async (link) => {
     }
   }
 
-  return '/' + tryPaths[2] // последнее, хоть и не найдено
+  return '/' + tryPaths[1] // fallback
 }
-
 
 // вызвать модалку
 const openMediaModal = (type, isEdit = false) => {
@@ -1138,17 +1135,18 @@ const loadProject = async () => {
 const tryPathsInOrder = async (file) => {
   if (!file) return ''
 
-  const folderVariants = Array.from(
-    new Set([
-      rawFolder,
-      folderWithId,
-      rawFolder.replace(/-/g, '_'),
-      folderWithId.replace(/-/g, '_'),
-      ''
-    ])
-  ).filter(Boolean)
+  // slugify -> под нижнее подчёркивание + нижний регистр
+  const slugify = (text) => text.toLowerCase().replace(/[-\s]+/g, '_')
 
-  const paths = folderVariants.map(folder => `multimedia/${folder}/${file}`)
+  const variants = Array.from(new Set([
+    rawFolder,
+    folderWithId,
+    slugify(rawFolder),
+    slugify(folderWithId),
+    ''
+  ])).filter(Boolean)
+
+  const paths = variants.map(folder => `multimedia/${folder}/${file}`)
   paths.push(`multimedia/${file}`) // fallback
 
   for (const path of paths) {

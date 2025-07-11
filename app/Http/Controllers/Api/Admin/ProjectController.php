@@ -30,52 +30,11 @@ class ProjectController extends Controller
 
             $project = Project::create($data);
 
-            $folderName = null;
-            $existingMedia = collect($data['multimedia_grid'] ?? [])->flatten(1);
-
-            foreach ($existingMedia as $item) {
-                $link = $item['link'] ?? ($item['poster'] ?? null);
-                if ($link && str_starts_with($link, 'multimedia/')) {
-                    $parts = explode('/', $link);
-                    if (isset($parts[1])) {
-                        $folderName = $parts[1];
-                        break;
-                    }
-                }
-                if (isset($item['images'])) {
-                    foreach ($item['images'] as $img) {
-                        if (str_starts_with($img, 'multimedia/')) {
-                            $parts = explode('/', $img);
-                            if (isset($parts[1])) {
-                                $folderName = $parts[1];
-                                break 2;
-                            }
-                        }
-                    }
-                }
-                if (isset($item['links'])) {
-                    foreach ($item['links'] as $video) {
-                        if (!empty($video['link']) && str_starts_with($video['link'], 'multimedia/')) {
-                            $parts = explode('/', $video['link']);
-                            if (isset($parts[1])) {
-                                $folderName = $parts[1];
-                                break 2;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!$folderName) {
-                $folderName = Str::slug($project->title) . '-' . $project->id;
-            }
-
+            $folderName = Str::slug($project->title, '_'); // normalized
             $folderPath = "multimedia/$folderName";
 
             if (!Storage::disk('multimedia')->exists($folderName)) {
-                if (!Storage::disk('multimedia')->makeDirectory($folderName)) {
-                    throw new \Exception("Ошибка при создании папки '$folderPath'");
-                }
+                Storage::disk('multimedia')->makeDirectory($folderName);
             }
 
             $movedFiles = [];
@@ -89,6 +48,7 @@ class ProjectController extends Controller
 
                 $project->update([
                     'multimedia_grid' => $data['multimedia_grid'],
+                    'folder' => $folderName,
                 ]);
             }
 
@@ -96,9 +56,9 @@ class ProjectController extends Controller
 
             return response()->json([
                 'message' => "Проект '{$project->title}' успешно создан",
-                'project' => array_merge($project->toArray(), ['folder' => $folderName]),
+                'project' => $project,
                 'folder' => $folderPath,
-                'moved_files' => $movedFiles
+                'moved_files' => $movedFiles,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -130,52 +90,11 @@ class ProjectController extends Controller
 
             $project->update($data);
 
-            $existingMedia = collect($project->multimedia_grid)->flatten(1);
-            $folderName = null;
-
-            foreach ($existingMedia as $item) {
-                $link = $item['link'] ?? ($item['poster'] ?? null);
-                if ($link && str_starts_with($link, 'multimedia/')) {
-                    $parts = explode('/', $link);
-                    if (isset($parts[1])) {
-                        $folderName = $parts[1];
-                        break;
-                    }
-                }
-                if (isset($item['images'])) {
-                    foreach ($item['images'] as $img) {
-                        if (str_starts_with($img, 'multimedia/')) {
-                            $parts = explode('/', $img);
-                            if (isset($parts[1])) {
-                                $folderName = $parts[1];
-                                break 2;
-                            }
-                        }
-                    }
-                }
-                if (isset($item['links'])) {
-                    foreach ($item['links'] as $video) {
-                        if (!empty($video['link']) && str_starts_with($video['link'], 'multimedia/')) {
-                            $parts = explode('/', $video['link']);
-                            if (isset($parts[1])) {
-                                $folderName = $parts[1];
-                                break 2;
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (!$folderName) {
-                $folderName = Str::slug($project->title) . '-' . $project->id;
-            }
-
+            $folderName = Str::slug($project->title, '_'); // normalize title
             $folderPath = "multimedia/$folderName";
 
             if (!Storage::disk('multimedia')->exists($folderName)) {
-                if (!Storage::disk('multimedia')->makeDirectory($folderName)) {
-                    throw new \Exception("Ошибка при создании папки '$folderPath'");
-                }
+                Storage::disk('multimedia')->makeDirectory($folderName);
             }
 
             $movedFiles = [];
@@ -193,6 +112,7 @@ class ProjectController extends Controller
 
                 $project->update([
                     'multimedia_grid' => $data['multimedia_grid'],
+                    'folder' => $folderName,
                 ]);
             }
 
@@ -200,9 +120,9 @@ class ProjectController extends Controller
 
             return response()->json([
                 'message' => "Проект '{$project->title}' успешно обновлён",
-                'project' => array_merge($project->toArray(), ['folder' => $folderName]),
+                'project' => $project,
                 'folder' => $folderPath,
-                'moved_files' => $movedFiles
+                'moved_files' => $movedFiles,
             ]);
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -215,87 +135,69 @@ class ProjectController extends Controller
         }
     }
 
-private function moveMediaToFolder(array $col, string $folderPath, array &$movedFiles = []): array
-{
-    $move = function ($path) use ($folderPath, &$movedFiles) {
-        $path = ltrim($path, '/');
+    private function moveMediaToFolder(array $col, string $folderPath, array &$movedFiles = []): array
+    {
+        $move = function ($path) use ($folderPath, &$movedFiles) {
+            $path = ltrim($path, '/');
+            $filename = basename($path);
+            $newPath = "$folderPath/$filename";
+            $newFullPath = public_path($newPath);
+            $oldPath = public_path("multimedia/$path");
 
-        // Если файл уже находится в нужной папке — возвращаем как есть
-        if (Str::startsWith($path, $folderPath)) return $path;
+            // Пропустить если уже перемещён
+            if (Str::startsWith($path, $folderPath)) return $path;
 
-        $oldPath = public_path("multimedia/$path");
-        $filename = basename($path);
-        $newPath = "$folderPath/$filename";
-        $newFullPath = public_path($newPath);
-
-        // Если файл уже лежит в public и существует — не трогаем
-        if (!file_exists($oldPath)) {
-            // Если новый путь уже существует — не нужно двигать
-            if (file_exists($newFullPath)) {
-                return $newPath;
+            if (!file_exists($oldPath)) {
+                return file_exists($newFullPath) ? $newPath : $path;
             }
-            // Во всех остальных случаях — оставляем путь как есть
-            return $path;
-        }
 
-        // Если файл уже находится на новом месте — возвращаем
-        if ($oldPath === $newFullPath || file_exists($newFullPath)) {
+            if (!file_exists(dirname($newFullPath))) {
+                File::makeDirectory(dirname($newFullPath), 0755, true, true);
+            }
+
+            if (!File::move($oldPath, $newFullPath)) {
+                throw new \Exception("Ошибка при перемещении: $oldPath → $newFullPath");
+            }
+
+            $movedFiles[] = "$oldPath → $newPath";
             return $newPath;
-        }
+        };
 
-        // Перемещаем
-        if (!File::move($oldPath, $newFullPath)) {
-            throw new \Exception("Ошибка при перемещении: $oldPath → $newFullPath");
-        }
+        switch ($col['type']) {
+            case 'img':
+                if (!empty($col['link'])) $col['link'] = $move($col['link']);
+                break;
 
-        $movedFiles[] = "$oldPath → $newPath";
-        return $newPath;
-    };
-
-    switch ($col['type']) {
-        case 'img':
-            if (!empty($col['link'])) {
-                $col['link'] = $move($col['link']);
-            }
-            break;
-
-        case 'video':
-            if (!empty($col['poster'])) {
-                $col['poster'] = $move($col['poster']);
-            }
-            if (!empty($col['links']) && is_array($col['links'])) {
-                foreach ($col['links'] as &$link) {
-                    if (!empty($link['link'])) {
-                        $link['link'] = $move($link['link']);
+            case 'video':
+                if (!empty($col['poster'])) $col['poster'] = $move($col['poster']);
+                if (!empty($col['links']) && is_array($col['links'])) {
+                    foreach ($col['links'] as &$link) {
+                        if (!empty($link['link'])) $link['link'] = $move($link['link']);
                     }
                 }
-            }
-            break;
+                break;
 
-        case 'curtain':
-            if (!empty($col['images']) && is_array($col['images'])) {
-                foreach ($col['images'] as &$img) {
-                    $img = $move($img);
+            case 'curtain':
+                if (!empty($col['images']) && is_array($col['images'])) {
+                    foreach ($col['images'] as &$img) {
+                        $img = $move($img);
+                    }
                 }
-            }
-            break;
-    }
+                break;
+        }
 
-    return $col;
-}
+        return $col;
+    }
 
     public function show($id)
     {
         $project = Project::findOrFail($id);
-        return response()->json(array_merge($project->toArray(), [
-            // опционально добавим folder, если нужно
-        ]));
+        return response()->json($project);
     }
 
     public function index()
     {
-        $projects = Project::orderBy('id')->get();
-        return response()->json($projects);
+        return response()->json(Project::orderBy('id')->get());
     }
 
     public function destroy($id)
