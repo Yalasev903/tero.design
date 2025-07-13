@@ -586,10 +586,13 @@ const handleFileSelect = async (items) => {
   if (!items.length) return
 
   const file = items[0]
-  const rawPath = file.path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
-  const fullPath = `multimedia/${rawPath}`
 
-  const ext = rawPath.split('.').pop()?.toLowerCase()
+  // Папка проекта
+  const folder = form.value.folder?.replace(/^multimedia\//, '').replace(/^\/+|\/+$/g, '')
+  const fileName = file.path.split('/').pop()
+  const fullPath = folder ? `multimedia/${folder}/${fileName}` : `multimedia/${fileName}`
+
+  const ext = fileName.split('.').pop()?.toLowerCase()
   const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
   const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
 
@@ -598,7 +601,7 @@ const handleFileSelect = async (items) => {
     const target = selectingCurtainIndex.value === 1 ? curtainImage1 : curtainImage2
     const size = selectingCurtainIndex.value === 1 ? curtainSize1 : curtainSize2
 
-    target.value = rawPath
+    target.value = fileName
     await nextTick()
     const img = new Image()
     img.onload = () => size.value = { w: img.naturalWidth, h: img.naturalHeight }
@@ -720,13 +723,13 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
 const confirmMediaInsert = () => {
   const rowIdx = selectedCell.value?.rowIdx ?? null
   const colIdx = selectedCell.value?.colIdx ?? null
+  const folder = form.value.folder?.replace(/^multimedia\//, '').replace(/^\/+|\/+$/g, '')
 
   if (rowIdx === null || !gridRows.value[rowIdx]) {
     ElNotification({ title: 'Ошибка', message: 'Не выбрана строка для вставки', type: 'warning' })
     return
   }
 
-  // Проверка перед вставкой
   if (!modalMediaPreview.value || !modalMediaSize.value.w || !modalMediaSize.value.h) {
     ElNotification({
       title: 'Ошибка',
@@ -736,11 +739,14 @@ const confirmMediaInsert = () => {
     return
   }
 
+  const fileName = modalMediaPreview.value.split('/').pop()
+  const fullPath = folder ? `multimedia/${folder}/${fileName}` : modalMediaPreview.value
+
   const media =
     mediaType.value === 'img'
       ? {
           type: 'img',
-          link: modalMediaPreview.value,
+          link: fullPath,
           width: modalMediaSize.value.w,
           height: modalMediaSize.value.h,
           __v: Date.now()
@@ -750,7 +756,7 @@ const confirmMediaInsert = () => {
           type: 'video',
           poster: '',
           links: [{
-            link: modalMediaPreview.value,
+            link: fullPath,
             mime: 'video/mp4'
           }],
           width: modalMediaSize.value.w,
@@ -760,9 +766,10 @@ const confirmMediaInsert = () => {
       : {}
 
   if (isEditingMedia.value && typeof colIdx === 'number') {
-    const col = gridRows.value[rowIdx].items[colIdx]
-    col.media = media
-    col.title = modalMediaTitle.value || ''
+    gridRows.value[rowIdx].items[colIdx] = {
+      title: modalMediaTitle.value || '',
+      media
+    }
   } else {
     gridRows.value[rowIdx].items.push({
       title: modalMediaTitle.value || '',
@@ -876,7 +883,10 @@ const col = {
   title: '',
   media: {
     type: 'curtain',
-    images: [curtainImage1.value, curtainImage2.value],
+    images: [
+    `multimedia/${form.value.folder}/${curtainImage1.value.split('/').pop()}`,
+    `multimedia/${form.value.folder}/${curtainImage2.value.split('/').pop()}`
+    ],
     titles: [curtainTitle1.value || form.value.meta_title, curtainTitle2.value || form.value.meta_title]
   }
 }
@@ -1081,6 +1091,11 @@ const loadProject = async () => {
       ...data,
       multimedia_grid: data.multimedia_grid || []
     }
+
+    // ✅ Сохраняем папку проекта
+    if (data.folder) {
+      sessionStorage.setItem('project-folder', data.folder)
+    }
   } else {
     isEditing.value = false
     projectId.value = null
@@ -1107,15 +1122,20 @@ const loadProject = async () => {
     return path.split('/').pop()?.trim() || ''
   }
 
-  // 🔍 расширенный метод поиска по приоритету
-  const tryPathsInOrder = async (filename) => {
-    if (!filename) return ''
-    const allPaths = window.vuefinderPaths || []
-    const projectFolder = sessionStorage.getItem('project-folder')?.replace(/^multimedia\//, '').replace(/\/$/, '')
+  // ✅ Универсальный поиск — учитываем подпапки
+  const tryPathsInOrder = async (rawPath) => {
+    if (!rawPath || typeof rawPath !== 'string') return ''
+
+    const projectFolder = sessionStorage.getItem('project-folder')
+      ?.replace(/^multimedia\//, '')
+      .replace(/\/$/, '')
+
+    const normalizedPath = rawPath.replace(/^multimedia\//, '').replace(/^\/+/, '')
+    const filename = normalizedPath.split('/').pop()
 
     const possiblePaths = [
+      `multimedia/${normalizedPath}`, // путь с подпапкой
       projectFolder ? `multimedia/${projectFolder}/${filename}` : null,
-      ...allPaths.filter(p => p.endsWith('/' + filename)),
       `multimedia/${filename}`
     ].filter(Boolean)
 
@@ -1126,7 +1146,7 @@ const loadProject = async () => {
     return '' // не найдено
   }
 
-  // 🧩 обработка мультимедиа-строк
+  // 🧩 Обработка строк мультимедиа
   gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
     const rowItems = await Promise.all(items.map(async item => {
       const alt = item.title || item.description || getFilename(item.link) || ''
@@ -1144,8 +1164,7 @@ const loadProject = async () => {
       if (type === 'curtain') {
         const images = item.images || []
         const resolvedImages = await Promise.all(images.map(async img => {
-          const file = getFilename(img)
-          return await tryPathsInOrder(file)
+          return await tryPathsInOrder(img)
         }))
 
         return {
@@ -1160,8 +1179,7 @@ const loadProject = async () => {
       }
 
       if (type === 'img') {
-        const file = getFilename(link)
-        const resolvedLink = await tryPathsInOrder(file)
+        const resolvedLink = await tryPathsInOrder(link)
         return {
           title: alt,
           media: {
@@ -1173,12 +1191,10 @@ const loadProject = async () => {
       }
 
       if (type === 'video') {
-        const posterFile = getFilename(item.poster)
-        const resolvedPoster = await tryPathsInOrder(posterFile)
+        const resolvedPoster = await tryPathsInOrder(item.poster)
 
         const links = await Promise.all((item.links || []).map(async video => {
-          const file = getFilename(video.link)
-          const resolved = await tryPathsInOrder(file)
+          const resolved = await tryPathsInOrder(video.link)
           return { ...video, link: resolved }
         }))
 
