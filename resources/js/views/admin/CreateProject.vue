@@ -690,8 +690,8 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
   }
 
   selectedCell.value = { rowIdx, colIdx }
-  isEditingMedia.value = true
   mediaType.value = col.media.type || type || null
+  isEditingMedia.value = true
   modalMediaTitle.value = col.title || ''
 
   if (mediaType.value === 'img') {
@@ -704,6 +704,8 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
       }
     }
     img.src = buildMediaUrl(modalMediaPreview.value)
+    showMediaModal.value = true
+
   } else if (mediaType.value === 'video') {
     modalMediaPreview.value = col.media?.links?.[0]?.link || ''
     const video = document.createElement('video')
@@ -715,9 +717,37 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
         h: video.videoHeight
       }
     }
-  }
+    showMediaModal.value = true
 
-  showMediaModal.value = true
+  } else if (mediaType.value === 'vr') {
+    vrIframeCode.value = col.media.link || ''
+    vrWidth.value = col.media.width || 1920
+    vrHeight.value = col.media.height || 1080
+    selectedCell.value = { rowIdx, colIdx }
+    showVrModal.value = true
+
+  } else if (mediaType.value === 'curtain') {
+    const images = col.media.images || []
+    const titles = col.media.titles || []
+
+    curtainImage1.value = images[0]?.split('/').pop() || ''
+    curtainImage2.value = images[1]?.split('/').pop() || ''
+    curtainTitle1.value = titles[0] || ''
+    curtainTitle2.value = titles[1] || ''
+
+    // определение размеров по первой и второй картинке
+    const img1 = new Image()
+    img1.onload = () => curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight }
+    img1.src = buildMediaUrl(`multimedia/${form.value.folder}/${curtainImage1.value}`)
+
+    const img2 = new Image()
+    img2.onload = () => curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight }
+    img2.src = buildMediaUrl(`multimedia/${form.value.folder}/${curtainImage2.value}`)
+
+    showCurtainModal.value = true
+  } else {
+    console.warn('❗ Неизвестный тип медиа для редактирования:', mediaType.value)
+  }
 }
 
 const confirmMediaInsert = () => {
