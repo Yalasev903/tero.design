@@ -880,7 +880,6 @@ const uploadVrZip = async () => {
     vrUploading.value = true
 
     const { data } = await axios.post(`/api/admin/projects/${projectId.value}/upload-vr`, formData)
-    console.log('[VR RESPONSE]', data)
     vrIframeCode.value = `<iframe src="${data.iframe_src}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`
     detectVrIframeSize()
 
@@ -963,13 +962,35 @@ const cancelVrInsert = () => {
 
 const detectVrIframeSize = () => {
   if (!vrIframeCode.value) return
-  const widthMatch = vrIframeCode.value.match(/width=["']?(\d+)/i)
-  const heightMatch = vrIframeCode.value.match(/height=["']?(\d+)/i)
-  if (widthMatch) vrWidth.value = parseInt(widthMatch[1])
-  if (heightMatch) vrHeight.value = parseInt(heightMatch[1])
-  ElNotification({ title: 'Размер определён', message: `Ширина: ${vrWidth.value}px, Высота: ${vrHeight.value}px`, type: 'success' })
-}
 
+  const widthMatch = vrIframeCode.value.match(/width=["']([^"']+)["']/i)
+  const heightMatch = vrIframeCode.value.match(/height=["']([^"']+)["']/i)
+
+  let parsedWidth = widthMatch ? widthMatch[1].trim() : null
+  let parsedHeight = heightMatch ? heightMatch[1].trim() : null
+
+  // Если указано в %, или не число — ставим дефолт
+  if (!parsedWidth || isNaN(parseInt(parsedWidth)) || parsedWidth.includes('%')) {
+    parsedWidth = 1920
+  } else {
+    parsedWidth = parseInt(parsedWidth)
+  }
+
+  if (!parsedHeight || isNaN(parseInt(parsedHeight)) || parsedHeight.includes('%')) {
+    parsedHeight = 1080
+  } else {
+    parsedHeight = parseInt(parsedHeight)
+  }
+
+  vrWidth.value = parsedWidth
+  vrHeight.value = parsedHeight
+
+  ElNotification({
+    title: 'Размер определён',
+    message: `Ширина: ${vrWidth.value}px, Высота: ${vrHeight.value}px`,
+    type: 'success'
+  })
+}
 // =====================
 // Curtain
 // =====================
