@@ -875,7 +875,11 @@ const confirmMediaInsert = () => {
     }
 
     // Обновляем только media (title внутри него)
-    gridRows.value[rowIdx].items[colIdx].media = media
+    gridRows.value[rowIdx].items[colIdx] = {
+  ...gridRows.value[rowIdx].items[colIdx],
+  media,
+  __v: Date.now() // принудительно заменяем key тоже
+}
   } else {
     gridRows.value[rowIdx].items.push({
       media,
