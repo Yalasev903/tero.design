@@ -651,12 +651,10 @@ const handleFileSelect = async (items) => {
   if (!items.length) return
 
   const file = items[0]
-  const fileName = file.path.split('/').pop()
+  const rawPath = file.path.replace(/^local:\/\//, '').replace(/^\/+/, '')
+  const fullPath = rawPath // Пример: multimedia/folder1/subfolder/image.jpg
 
-  const folder = form.value.folder?.replace(/^multimedia\//, '').replace(/^\/+|\/+$/g, '')
-  const fullPath = folder ? `multimedia/${folder}/${fileName}` : `multimedia/${fileName}`
-
-  const ext = fileName.split('.').pop()?.toLowerCase()
+  const ext = fullPath.split('.').pop()?.toLowerCase()
   const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
   const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
 
@@ -799,7 +797,6 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
 const confirmMediaInsert = () => {
   const rowIdx = selectedCell.value?.rowIdx ?? null
   const colIdx = selectedCell.value?.colIdx ?? null
-  const folder = form.value.folder?.replace(/^multimedia\//, '').replace(/^\/+|\/+$/g, '')
 
   if (rowIdx === null || !gridRows.value[rowIdx]) {
     ElNotification({ title: 'Ошибка', message: 'Не выбрана строка для вставки', type: 'warning' })
@@ -815,8 +812,7 @@ const confirmMediaInsert = () => {
     return
   }
 
-  const fileName = modalMediaPreview.value.split('/').pop()
-  const fullPath = folder ? `multimedia/${folder}/${fileName}` : modalMediaPreview.value
+  const fullPath = modalMediaPreview.value
 
   const media =
     mediaType.value === 'img'
@@ -1000,29 +996,19 @@ const selectCurtainImage = (index) => {
 }
 
 const insertCurtain = () => {
-    console.log('--- CURTAIN INSERT ---')
-    console.log('pendingCurtainRowIdx', pendingCurtainRowIdx.value)
-    console.log('selectedCell', selectedCell.value)
-    console.log('gridRows', JSON.stringify(gridRows.value, null, 2))
-
   if (!curtainImage1.value || !curtainImage2.value) {
     ElNotification({ title: 'Ошибка', message: 'Выберите оба изображения', type: 'warning' })
     return
   }
 
-    const defaultTitle = form.value.meta_title || ''
-
-const col = {
-  title: '',
-  media: {
-    type: 'curtain',
-    images: [
-    `multimedia/${form.value.folder}/${curtainImage1.value.split('/').pop()}`,
-    `multimedia/${form.value.folder}/${curtainImage2.value.split('/').pop()}`
-    ],
-    titles: [curtainTitle1.value || form.value.meta_title, curtainTitle2.value || form.value.meta_title]
+  const col = {
+    title: '',
+    media: {
+      type: 'curtain',
+      images: [curtainImage1.value, curtainImage2.value],
+      titles: [curtainTitle1.value || '', curtainTitle2.value || '']
+    }
   }
-}
 
   const rowIdx = selectedCell.value?.rowIdx ?? null
   const colIdx = selectedCell.value?.colIdx ?? null
@@ -1038,8 +1024,7 @@ const col = {
     gridRows.value[rowIdx].items[colIdx] = col
   } else if (
     pendingCurtainRowIdx.value !== null &&
-    gridRows.value[pendingCurtainRowIdx.value] &&
-    Array.isArray(gridRows.value[pendingCurtainRowIdx.value].items)
+    gridRows.value[pendingCurtainRowIdx.value]
   ) {
     gridRows.value[pendingCurtainRowIdx.value].items.push(col)
   } else {
@@ -1058,10 +1043,6 @@ const col = {
   selectedCell.value = { rowIdx: null, colIdx: null }
 
   ElNotification({ title: 'Успешно', message: 'Шторка сохранена', type: 'success' })
-  nextTick(() => {
-  console.log('ROWS AFTER CURTAIN INSERT:', JSON.stringify(gridRows.value, null, 2))
-})
-
 }
 
 const cancelCurtainInsert = () => {
