@@ -754,22 +754,37 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
   selectedCell.value = { rowIdx, colIdx }
   mediaType.value = col.media.type || type || null
   isEditingMedia.value = true
-  modalMediaTitle.value = col.title || ''
 
   if (mediaType.value === 'img') {
     modalMediaPreview.value = col.media.link
+    modalMediaTitle.value = col.media.title || ''
+
     const img = new Image()
-    img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+    img.onload = () => {
+      modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+      showMediaModal.value = true
+    }
+    img.onerror = () => {
+      console.warn('❌ Не удалось загрузить изображение')
+      showMediaModal.value = true
+    }
     img.src = buildMediaUrl(modalMediaPreview.value)
-    showMediaModal.value = true
 
   } else if (mediaType.value === 'video') {
     modalMediaPreview.value = col.media?.links?.[0]?.link || ''
+    modalMediaTitle.value = col.media.title || ''
+
     const video = document.createElement('video')
     video.preload = 'metadata'
+    video.onloadedmetadata = () => {
+      modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
+      showMediaModal.value = true
+    }
+    video.onerror = () => {
+      console.warn('❌ Не удалось загрузить видео')
+      showMediaModal.value = true
+    }
     video.src = buildMediaUrl(modalMediaPreview.value)
-    video.onloadedmetadata = () => modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
-    showMediaModal.value = true
 
   } else if (mediaType.value === 'vr') {
     vrIframeCode.value = col.media.link || ''
@@ -820,6 +835,7 @@ const confirmMediaInsert = () => {
   }
 
   const fullPath = modalMediaPreview.value
+  const timestamp = Date.now()
 
   const media =
     mediaType.value === 'img'
@@ -828,24 +844,32 @@ const confirmMediaInsert = () => {
           link: fullPath,
           width: modalMediaSize.value.w,
           height: modalMediaSize.value.h,
-          __v: Date.now()
+          __v: timestamp
         }
       : mediaType.value === 'video'
       ? {
           type: 'video',
-          poster: '',
+          poster: '', // можно тут сохранить старый poster, см. ниже
           links: [{
             link: fullPath,
             mime: 'video/mp4'
           }],
           width: modalMediaSize.value.w,
           height: modalMediaSize.value.h,
-          __v: Date.now()
+          __v: timestamp
         }
       : {}
 
   if (isEditingMedia.value && typeof colIdx === 'number') {
+    const existing = gridRows.value[rowIdx].items[colIdx]
+
+    // Сохраняем старый постер, если он был
+    if (mediaType.value === 'video' && existing.media?.poster) {
+      media.poster = existing.media.poster
+    }
+
     gridRows.value[rowIdx].items[colIdx] = {
+      ...existing,
       title: modalMediaTitle.value || '',
       media
     }
@@ -853,14 +877,16 @@ const confirmMediaInsert = () => {
     gridRows.value[rowIdx].items.push({
       title: modalMediaTitle.value || '',
       media,
-      __v: Date.now()
+      __v: timestamp
     })
   }
 
+  // Сброс модалки
   showMediaModal.value = false
   isEditingMedia.value = false
   modalMediaPreview.value = ''
   modalMediaTitle.value = ''
+  modalMediaSize.value = { w: 0, h: 0 }
 }
 
 const onVrZipChange = (e) => {
