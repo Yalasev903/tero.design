@@ -195,26 +195,24 @@ class ProjectController extends Controller
         $project = Project::findOrFail($projectId);
 
         $request->validate([
-            'zip' => 'required|file|mimes:zip|max:304800', // макс 100 МБ
+            'zip' => 'required|file|mimes:zip|max:304800', // макс 300 МБ
         ]);
 
         $zipFile = $request->file('zip');
         $projectSlug = Str::slug($project->title, '_');
         $destinationPath = public_path("360tours/$projectSlug");
 
-        // Создаём папку 360tours если нет
         if (!File::exists(public_path('360tours'))) {
             File::makeDirectory(public_path('360tours'), 0755, true);
         }
 
-        // Удалим старую папку, если существует
         if (File::exists($destinationPath)) {
             File::deleteDirectory($destinationPath);
         }
 
         File::makeDirectory($destinationPath, 0755, true);
 
-        $zip = new ZipArchive;
+        $zip = new \ZipArchive;
         if ($zip->open($zipFile->getRealPath()) === true) {
             $zip->extractTo($destinationPath);
             $zip->close();
@@ -224,15 +222,18 @@ class ProjectController extends Controller
             ], 500);
         }
 
-        // Проверим наличие index.htm
-        $indexPath = $destinationPath . '/index.htm';
-        if (!File::exists($indexPath)) {
+        // Рекурсивный поиск index.htm
+        $indexPath = collect(File::allFiles($destinationPath))
+            ->first(fn($file) => $file->getFilename() === 'index.htm');
+
+        if (!$indexPath) {
             return response()->json([
                 'message' => 'В архиве отсутствует index.htm',
             ], 422);
         }
 
-        $iframeLink = "/360tours/$projectSlug/index.htm";
+        $relativePath = str_replace(public_path(), '', $indexPath->getPathname());
+        $iframeLink = str_replace('\\', '/', $relativePath); // ← единственная правильная строка
 
         return response()->json([
             'message' => 'VR-тур успешно загружен',
