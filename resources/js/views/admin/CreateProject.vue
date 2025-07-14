@@ -315,7 +315,7 @@
   <div v-if="curtainSize1.w && curtainSize1.h" style="margin-bottom: 4px; font-size: 13px; text-align: center;">
     {{ curtainSize1.w }} × {{ curtainSize1.h }} px
   </div>
-  <img :src="'/multimedia/' + curtainImage1" style="max-width: 100%;" />
+  <img :src="buildMediaUrl(curtainImage1)" style="max-width: 100%;" />
 </div>
         <el-button @click="selectCurtainImage(1)">Выбрать изображение 1</el-button>
         <el-input
@@ -332,7 +332,7 @@
   <div v-if="curtainSize2.w && curtainSize2.h" style="margin-bottom: 4px; font-size: 13px; text-align: center;">
     {{ curtainSize2.w }} × {{ curtainSize2.h }} px
   </div>
-  <img :src="'/multimedia/' + curtainImage2" style="max-width: 100%;" />
+  <img :src="buildMediaUrl(curtainImage2)" style="max-width: 100%;" />
 </div>
         <el-button @click="selectCurtainImage(2)">Выбрать изображение 2</el-button>
         <el-input
@@ -586,10 +586,9 @@ const handleFileSelect = async (items) => {
   if (!items.length) return
 
   const file = items[0]
-
-  // Папка проекта
-  const folder = form.value.folder?.replace(/^multimedia\//, '').replace(/^\/+|\/+$/g, '')
   const fileName = file.path.split('/').pop()
+
+  const folder = form.value.folder?.replace(/^multimedia\//, '').replace(/^\/+|\/+$/g, '')
   const fullPath = folder ? `multimedia/${folder}/${fileName}` : `multimedia/${fileName}`
 
   const ext = fileName.split('.').pop()?.toLowerCase()
@@ -601,7 +600,7 @@ const handleFileSelect = async (items) => {
     const target = selectingCurtainIndex.value === 1 ? curtainImage1 : curtainImage2
     const size = selectingCurtainIndex.value === 1 ? curtainSize1 : curtainSize2
 
-    target.value = fileName
+    target.value = fullPath
     await nextTick()
     const img = new Image()
     img.onload = () => size.value = { w: img.naturalWidth, h: img.naturalHeight }
@@ -611,7 +610,7 @@ const handleFileSelect = async (items) => {
     return
   }
 
-  // 📦 Модалка вставки нового файла
+  // 📦 Модалка вставки нового медиа
   if (selectedCell.value?.modal && 'rowIdx' in selectedCell.value) {
     modalMediaPreview.value = fullPath
 
@@ -623,12 +622,7 @@ const handleFileSelect = async (items) => {
       const video = document.createElement('video')
       video.preload = 'metadata'
       video.src = buildMediaUrl(fullPath)
-      video.onloadedmetadata = () => {
-        modalMediaSize.value = {
-          w: video.videoWidth,
-          h: video.videoHeight
-        }
-      }
+      video.onloadedmetadata = () => modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
     }
 
     showFileManager.value = false
@@ -636,10 +630,7 @@ const handleFileSelect = async (items) => {
   }
 
   // ✏️ Редактирование существующего элемента
-  if (
-    selectedCell.value?.rowIdx !== undefined &&
-    selectedCell.value?.colIdx !== undefined
-  ) {
+  if (selectedCell.value?.rowIdx !== undefined && selectedCell.value?.colIdx !== undefined) {
     const row = gridRows.value[selectedCell.value.rowIdx]
     const col = row.items[selectedCell.value.colIdx]
 
@@ -655,6 +646,7 @@ const handleFileSelect = async (items) => {
         }
       }
       img.src = buildMediaUrl(fullPath)
+
     } else if (isVideo) {
       const video = document.createElement('video')
       video.preload = 'metadata'
@@ -697,12 +689,7 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
   if (mediaType.value === 'img') {
     modalMediaPreview.value = col.media.link
     const img = new Image()
-    img.onload = () => {
-      modalMediaSize.value = {
-        w: img.naturalWidth,
-        h: img.naturalHeight
-      }
-    }
+    img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
     img.src = buildMediaUrl(modalMediaPreview.value)
     showMediaModal.value = true
 
@@ -711,12 +698,7 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
     const video = document.createElement('video')
     video.preload = 'metadata'
     video.src = buildMediaUrl(modalMediaPreview.value)
-    video.onloadedmetadata = () => {
-      modalMediaSize.value = {
-        w: video.videoWidth,
-        h: video.videoHeight
-      }
-    }
+    video.onloadedmetadata = () => modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
     showMediaModal.value = true
 
   } else if (mediaType.value === 'vr') {
@@ -729,13 +711,11 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
     const images = col.media.images || []
     const titles = col.media.titles || []
 
-    // ❗ здесь сохраняем полный путь, а не только имя
-    curtainImage1.value = images[0] || ''
-    curtainImage2.value = images[1] || ''
+    curtainImage1.value = images[0]?.replace(/^\/?multimedia\//, 'multimedia/') || ''
+    curtainImage2.value = images[1]?.replace(/^\/?multimedia\//, 'multimedia/') || ''
     curtainTitle1.value = titles[0] || ''
     curtainTitle2.value = titles[1] || ''
 
-    // определяем размеры по полному пути
     const img1 = new Image()
     img1.onload = () => curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight }
     img1.src = buildMediaUrl(curtainImage1.value)
