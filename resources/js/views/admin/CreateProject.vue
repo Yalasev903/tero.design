@@ -54,23 +54,27 @@
                   <div class="media-thumb" @click="openPreview(col)">
                     <!-- Media content -->
                     <template v-if="col.media?.type === 'img'">
-                      <img :src="buildMediaUrl(col.media.link)" :key="col.media?.__v || colIdx" class="grid-img" />
+                      <img
+                        class="grid-img"
+                        :key="col.media?.__v || colIdx"
+                        :src="buildMediaUrl(col.media.link) + (col.media?.__v ? '?v=' + col.media.__v : '')"
+                        />
                     </template>
 
                     <template v-else-if="col.media?.type === 'video'">
-                      <video
+                        <video
                         class="grid-video"
                         :key="col.media?.__v || colIdx"
                         autoplay muted loop playsinline preload="metadata"
-                        :poster="col.media.poster ? buildMediaUrl(col.media.poster) : undefined"
-                      >
+                        :poster="col.media.poster ? buildMediaUrl(col.media.poster) + (col.media.__v ? '?v=' + col.media.__v : '') : undefined"
+                        >
                         <source
-                          v-for="(link, i) in col.media.links || []"
-                          :key="i"
-                          :src="buildMediaUrl(link.link)"
-                          :type="link.mime || 'video/mp4'"
+                            v-for="(link, i) in col.media.links || []"
+                            :key="link.link + '_' + i"
+                            :src="buildMediaUrl(link.link) + (col.media.__v ? '?v=' + col.media.__v : '')"
+                            :type="link.mime || 'video/mp4'"
                         />
-                      </video>
+                        </video>
                     </template>
 
                     <template v-else-if="col.media?.type === 'vr'">
@@ -177,8 +181,8 @@
         </div>
         <img
             v-if="modalMediaPreview"
-            :key="modalMediaPreview"
-            :src="buildMediaUrl(modalMediaPreview)"
+            :key="modalMediaPreview + '__' + modalMediaSize.w + 'x' + modalMediaSize.h + '__' + Date.now()"
+            :src="buildMediaUrl(modalMediaPreview) + '?v=' + Date.now()"
             class="preview-img"
             style="margin-top: 10px;" />
         </el-form-item>
@@ -194,7 +198,7 @@
                 autoplay muted loop playsinline controls
                 style="max-width: 100%;"
                 >
-                <source :src="buildMediaUrl(modalMediaPreview)" />
+                <source :src="buildMediaUrl(modalMediaPreview) + '?v=' + Date.now()" />
             </video>
         </div>
         </el-form-item>
