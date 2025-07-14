@@ -274,36 +274,66 @@
 
     <!-- Модалка добавления VR -->
     <el-dialog v-model="showVrModal" title="Добавление VR-тура" width="600px" :append-to-body="true">
-      <el-form label-position="top">
-        <el-form-item label="HTML iframe код">
-          <el-input
-            type="textarea"
-            v-model="vrIframeCode"
-            rows="4"
-             :size="inputSize"
-            placeholder='<iframe src="..." width="..." height="..." ...></iframe>'
-          />
-        </el-form-item>
+        <!-- Предпросмотр -->
+        <div v-if="vrIframeCode.trim()" style="margin-top: 16px">
+        <p style="font-weight: 500; margin-bottom: 6px;">Предпросмотр VR-тура:</p>
 
-        <el-row :gutter="10">
-          <el-col :span="12">
-            <el-form-item label="Ширина">
-              <el-input-number v-model="vrWidth" :min="100" :step="100"  :size="inputSize" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="Высота">
-              <el-input-number v-model="vrHeight" :min="100" :step="100" :size="inputSize" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
+        <div v-if="vrLoadError" style="color: red; margin-bottom: 8px">
+            ⚠️ Не удалось загрузить VR-тур. Проверьте путь или содержимое архива (index.htm).
+        </div>
 
-      <template #footer>
-        <el-button @click="cancelVrInsert">Отмена</el-button>
-        <el-button type="primary" @click="insertVrIframe">Добавить</el-button>
-        <el-button @click="detectVrIframeSize">Определить размер</el-button>
-      </template>
+        <iframe
+            ref="vrPreviewIframe"
+            :src="extractIframeSrc(vrIframeCode) + '?v=' + Date.now()"
+            :width="Math.min(vrWidth, 500)"
+            :height="Math.min(vrHeight, 300)"
+            frameborder="0"
+            allow="autoplay; fullscreen; xr-spatial-tracking; gyroscope; accelerometer"
+            style="border-radius: 8px; box-shadow: 0 0 8px rgba(0,0,0,0.1); max-width: 100%;"
+            @error="vrLoadError = true"
+            @load="vrLoadError = false"
+        ></iframe>
+        </div>
+
+        <!-- Форма -->
+        <el-form label-position="top">
+            <el-form-item label="HTML iframe код">
+            <el-input
+                type="textarea"
+                v-model="vrIframeCode"
+                rows="4"
+                :size="inputSize"
+                placeholder='<iframe src="..." width="..." height="..." ...></iframe>'
+            />
+            </el-form-item>
+
+            <el-row :gutter="10">
+            <el-col :span="12">
+                <el-form-item label="Ширина">
+                <el-input-number v-model="vrWidth" :min="100" :step="100" :size="inputSize" />
+                </el-form-item>
+            </el-col>
+            <el-col :span="12">
+                <el-form-item label="Высота">
+                <el-input-number v-model="vrHeight" :min="100" :step="100" :size="inputSize" />
+                </el-form-item>
+            </el-col>
+            </el-row>
+
+            <el-form-item label="Загрузить архив VR-тура (.zip)">
+            <input type="file" accept=".zip" @change="onVrZipChange" />
+            <el-button @click="uploadVrZip" :disabled="!vrZipFile" style="margin-top: 8px">
+                Загрузить архив
+            </el-button>
+            </el-form-item>
+        </el-form>
+
+        <!-- Футер -->
+        <template #footer>
+            <el-button @click="cancelVrInsert">Отмена</el-button>
+            <el-button type="primary" @click="insertVrIframe">Добавить</el-button>
+            <el-button @click="detectVrIframeSize">Определить размер</el-button>
+        </template>
     </el-dialog>
 
     <!-- Модалка добавления шторки -->
@@ -429,6 +459,10 @@ const modalMediaTitle = ref('')
 const modalMediaPreview = ref('')
 const modalMediaSize = ref({ w: null, h: null })
 const isEditingMedia = ref(false)
+
+const vrZipFile = ref(null)
+const vrLoadError = ref(false)
+const vrPreviewIframe = ref(null)
 
 const fileExists = async (path) => {
   try {
@@ -793,6 +827,33 @@ const confirmMediaInsert = () => {
   isEditingMedia.value = false
   modalMediaPreview.value = ''
   modalMediaTitle.value = ''
+}
+
+const onVrZipChange = (e) => {
+  const file = e.target.files?.[0]
+  if (file && file.type === 'application/zip') {
+    vrZipFile.value = file
+  } else {
+    vrZipFile.value = null
+    ElNotification({ title: 'Ошибка', message: 'Выберите файл .zip', type: 'warning' })
+  }
+}
+
+const uploadVrZip = async () => {
+  if (!vrZipFile.value || !projectId.value) return
+
+  const formData = new FormData()
+  formData.append('zip', vrZipFile.value)
+
+  try {
+    const { data } = await axios.post(`/api/admin/projects/${projectId.value}/upload-vr`, formData)
+    vrIframeCode.value = `<iframe src="${data.iframe_src}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`
+    detectVrIframeSize()
+    ElNotification({ title: 'Успешно', message: 'VR-тур загружен и готов к вставке', type: 'success' })
+  } catch (e) {
+    const msg = e?.response?.data?.message || 'Ошибка загрузки VR'
+    ElNotification({ title: 'Ошибка', message: msg, type: 'error' })
+  }
 }
 
 const cancelMediaInsert = () => {

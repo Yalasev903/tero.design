@@ -189,6 +189,56 @@ class ProjectController extends Controller
         return $col;
     }
 
+    public function uploadVrTour(Request $request, $projectId)
+    {
+        $project = Project::findOrFail($projectId);
+
+        $request->validate([
+            'zip' => 'required|file|mimes:zip|max:102400', // макс 100 МБ
+        ]);
+
+        $zipFile = $request->file('zip');
+        $projectSlug = Str::slug($project->title, '_');
+        $destinationPath = public_path("360tours/$projectSlug");
+
+        // Создаём папку 360tours если нет
+        if (!File::exists(public_path('360tours'))) {
+            File::makeDirectory(public_path('360tours'), 0755, true);
+        }
+
+        // Удалим старую папку, если существует
+        if (File::exists($destinationPath)) {
+            File::deleteDirectory($destinationPath);
+        }
+
+        File::makeDirectory($destinationPath, 0755, true);
+
+        $zip = new ZipArchive;
+        if ($zip->open($zipFile->getRealPath()) === true) {
+            $zip->extractTo($destinationPath);
+            $zip->close();
+        } else {
+            return response()->json([
+                'message' => 'Ошибка при распаковке ZIP архива',
+            ], 500);
+        }
+
+        // Проверим наличие index.htm
+        $indexPath = $destinationPath . '/index.htm';
+        if (!File::exists($indexPath)) {
+            return response()->json([
+                'message' => 'В архиве отсутствует index.htm',
+            ], 422);
+        }
+
+        $iframeLink = "/360tours/$projectSlug/index.htm";
+
+        return response()->json([
+            'message' => 'VR-тур успешно загружен',
+            'iframe_src' => $iframeLink,
+        ]);
+    }
+
     public function show($id)
     {
         $project = Project::findOrFail($id);
