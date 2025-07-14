@@ -842,6 +842,7 @@ const confirmMediaInsert = () => {
       ? {
           type: 'img',
           link: fullPath,
+          title: modalMediaTitle.value || '',
           width: modalMediaSize.value.w,
           height: modalMediaSize.value.h,
           __v: timestamp
@@ -849,11 +850,12 @@ const confirmMediaInsert = () => {
       : mediaType.value === 'video'
       ? {
           type: 'video',
-          poster: '', // можно тут сохранить старый poster, см. ниже
+          poster: '',
           links: [{
             link: fullPath,
             mime: 'video/mp4'
           }],
+          title: modalMediaTitle.value || '',
           width: modalMediaSize.value.w,
           height: modalMediaSize.value.h,
           __v: timestamp
@@ -868,14 +870,10 @@ const confirmMediaInsert = () => {
       media.poster = existing.media.poster
     }
 
-    gridRows.value[rowIdx].items[colIdx] = {
-      ...existing,
-      title: modalMediaTitle.value || '',
-      media
-    }
+    // Обновляем только media (title внутри него)
+    gridRows.value[rowIdx].items[colIdx].media = media
   } else {
     gridRows.value[rowIdx].items.push({
-      title: modalMediaTitle.value || '',
       media,
       __v: timestamp
     })
