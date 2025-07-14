@@ -723,28 +723,29 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
     vrIframeCode.value = col.media.link || ''
     vrWidth.value = col.media.width || 1920
     vrHeight.value = col.media.height || 1080
-    selectedCell.value = { rowIdx, colIdx }
     showVrModal.value = true
 
   } else if (mediaType.value === 'curtain') {
     const images = col.media.images || []
     const titles = col.media.titles || []
 
-    curtainImage1.value = images[0]?.split('/').pop() || ''
-    curtainImage2.value = images[1]?.split('/').pop() || ''
+    // ❗ здесь сохраняем полный путь, а не только имя
+    curtainImage1.value = images[0] || ''
+    curtainImage2.value = images[1] || ''
     curtainTitle1.value = titles[0] || ''
     curtainTitle2.value = titles[1] || ''
 
-    // определение размеров по первой и второй картинке
+    // определяем размеры по полному пути
     const img1 = new Image()
     img1.onload = () => curtainSize1.value = { w: img1.naturalWidth, h: img1.naturalHeight }
-    img1.src = buildMediaUrl(`multimedia/${form.value.folder}/${curtainImage1.value}`)
+    img1.src = buildMediaUrl(curtainImage1.value)
 
     const img2 = new Image()
     img2.onload = () => curtainSize2.value = { w: img2.naturalWidth, h: img2.naturalHeight }
-    img2.src = buildMediaUrl(`multimedia/${form.value.folder}/${curtainImage2.value}`)
+    img2.src = buildMediaUrl(curtainImage2.value)
 
     showCurtainModal.value = true
+
   } else {
     console.warn('❗ Неизвестный тип медиа для редактирования:', mediaType.value)
   }
