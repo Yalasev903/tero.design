@@ -7,6 +7,8 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     libpng-dev libjpeg-dev libfreetype6-dev libonig-dev libxml2-dev libzip-dev \
     && docker-php-ext-install pdo_mysql mbstring gd zip
 
+COPY ./docker/php/php.ini /usr/local/etc/php/conf.d/custom.ini
+
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
