@@ -506,8 +506,15 @@ const fileExists = async (path) => {
 
 const buildMediaUrl = (link) => {
   if (!link) return ''
+
+  // Уже абсолютный URL
   if (link.startsWith('http')) return link
-  return '/' + link.replace(/^\/+/, '')
+
+  // Уже начинается с multimedia/ — ок
+  if (link.startsWith('multimedia/')) return '/' + link
+
+  // Добавим префикс
+  return '/multimedia/' + link
 }
 
 // вызвать модалку
