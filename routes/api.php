@@ -74,7 +74,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/projects', [ProjectController::class, 'store']);
     Route::get('/projects/{id}', [ProjectController::class, 'show']);
     Route::put('/projects/{id}', [ProjectController::class, 'update']);
-    Route::post('/admin/projects/{id}/upload-vr', [ProjectController::class, 'uploadVrTour']);
+    Route::post('/projects/{id}/upload-vr', [ProjectController::class, 'uploadVrTour']);
     Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 
     Route::post('/cleanup', [CleanupController::class, 'cleanup']);
