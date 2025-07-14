@@ -321,11 +321,40 @@
             </el-row>
 
             <el-form-item label="Загрузить архив VR-тура (.zip)">
-            <input type="file" accept=".zip" @change="onVrZipChange" />
-            <el-button @click="uploadVrZip" :disabled="!vrZipFile" style="margin-top: 8px">
-                Загрузить архив
-            </el-button>
-            </el-form-item>
+                <!-- Скрытый input -->
+                <input
+                    ref="vrZipInput"
+                    type="file"
+                    accept=".zip"
+                    style="display: none"
+                    @change="onVrZipChange"
+                />
+
+                <!-- Видимая кнопка -->
+                <el-button
+                    @click="vrZipInput?.click()"
+                    :disabled="vrUploading"
+                    style="margin-top: 8px"
+                >
+                    Выбрать архив
+                </el-button>
+
+                <!-- Кнопка загрузки -->
+                <el-button
+                    @click="uploadVrZip"
+                    type="primary"
+                    :disabled="!vrZipFile"
+                    style="margin-left: 12px; margin-top: 8px"
+                    :loading="vrUploading"
+                >
+                    Загрузить архив
+                </el-button>
+
+                <!-- Показываем имя выбранного файла -->
+                <div v-if="vrZipFile" style="margin-top: 6px; font-size: 13px; color: #666;">
+                    📦 {{ vrZipFile.name }}
+                </div>
+                </el-form-item>
         </el-form>
 
         <!-- Футер -->
@@ -463,6 +492,8 @@ const isEditingMedia = ref(false)
 const vrZipFile = ref(null)
 const vrLoadError = ref(false)
 const vrPreviewIframe = ref(null)
+const vrUploading = ref(false)
+const vrZipInput = ref(null)
 
 const fileExists = async (path) => {
   try {
@@ -846,13 +877,22 @@ const uploadVrZip = async () => {
   formData.append('zip', vrZipFile.value)
 
   try {
+    vrUploading.value = true
+
     const { data } = await axios.post(`/api/admin/projects/${projectId.value}/upload-vr`, formData)
+
     vrIframeCode.value = `<iframe src="${data.iframe_src}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`
     detectVrIframeSize()
+
     ElNotification({ title: 'Успешно', message: 'VR-тур загружен и готов к вставке', type: 'success' })
+
+    vrZipFile.value = null
+    vrZipInput.value.value = ''
   } catch (e) {
     const msg = e?.response?.data?.message || 'Ошибка загрузки VR'
     ElNotification({ title: 'Ошибка', message: msg, type: 'error' })
+  } finally {
+    vrUploading.value = false
   }
 }
 

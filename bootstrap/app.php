@@ -9,6 +9,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Http\Middleware\HandleCors;
+use App\Http\Middleware\IncreasePostSizeLimit;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,6 +19,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->append(IncreasePostSizeLimit::class);
+
         $middleware->appendToGroup('api', [
             EnsureFrontendRequestsAreStateful::class,
             StartSession::class,
