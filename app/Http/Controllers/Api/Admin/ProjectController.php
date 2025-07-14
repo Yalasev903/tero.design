@@ -194,7 +194,7 @@ class ProjectController extends Controller
         $project = Project::findOrFail($projectId);
 
         $request->validate([
-            'zip' => 'required|file|mimes:zip|max:102400', // макс 100 МБ
+            'zip' => 'required|file|mimes:zip|max:304800', // макс 100 МБ
         ]);
 
         $zipFile = $request->file('zip');
