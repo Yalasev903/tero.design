@@ -880,7 +880,7 @@ const uploadVrZip = async () => {
     vrUploading.value = true
 
     const { data } = await axios.post(`/api/admin/projects/${projectId.value}/upload-vr`, formData)
-
+    console.log('[VR RESPONSE]', data)
     vrIframeCode.value = `<iframe src="${data.iframe_src}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`
     detectVrIframeSize()
 
