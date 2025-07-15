@@ -777,13 +777,11 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
   selectedCell.value = { rowIdx, colIdx }
   mediaType.value = col.media.type || type || null
   isEditingMedia.value = true
-
-  // 🔒 Сохраняем оригинальное состояние для отмены
   originalMedia.value = JSON.parse(JSON.stringify(col.media))
 
   if (mediaType.value === 'img') {
     modalMediaPreview.value = col.media.link
-    modalMediaTitle.value = col.media.title || ''
+    modalMediaTitle.value = col.media.title ?? ''
 
     const img = new Image()
     img.onload = () => {
@@ -791,14 +789,13 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
       showMediaModal.value = true
     }
     img.onerror = () => {
-      console.warn('❌ Не удалось загрузить изображение')
       showMediaModal.value = true
     }
     img.src = buildMediaUrl(modalMediaPreview.value)
 
   } else if (mediaType.value === 'video') {
     modalMediaPreview.value = col.media?.links?.[0]?.link || ''
-    modalMediaTitle.value = col.media.title || ''
+    modalMediaTitle.value = col.media.title ?? ''
 
     const video = document.createElement('video')
     video.preload = 'metadata'
@@ -807,7 +804,6 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
       showMediaModal.value = true
     }
     video.onerror = () => {
-      console.warn('❌ Не удалось загрузить видео')
       showMediaModal.value = true
     }
     video.src = buildMediaUrl(modalMediaPreview.value)
@@ -836,9 +832,6 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
     img2.src = buildMediaUrl(curtainImage2.value)
 
     showCurtainModal.value = true
-
-  } else {
-    console.warn('❗ Неизвестный тип медиа для редактирования:', mediaType.value)
   }
 }
 
@@ -877,10 +870,7 @@ const confirmMediaInsert = () => {
       ? {
           type: 'video',
           poster: '',
-          links: [{
-            link: fullPath,
-            mime: 'video/mp4'
-          }],
+          links: [{ link: fullPath, mime: 'video/mp4' }],
           title: modalMediaTitle.value || '',
           width: modalMediaSize.value.w,
           height: modalMediaSize.value.h,
@@ -890,18 +880,15 @@ const confirmMediaInsert = () => {
 
   if (isEditingMedia.value && typeof colIdx === 'number') {
     const existing = gridRows.value[rowIdx].items[colIdx]
-
-    // Сохраняем старый постер, если он был
     if (mediaType.value === 'video' && existing.media?.poster) {
       media.poster = existing.media.poster
     }
 
-    // Обновляем только media (title внутри него)
     gridRows.value[rowIdx].items[colIdx] = {
-  ...gridRows.value[rowIdx].items[colIdx],
-  media,
-  __v: Date.now() // принудительно заменяем key тоже
-}
+      ...existing,
+      media,
+      __v: Date.now()
+    }
   } else {
     gridRows.value[rowIdx].items.push({
       media,
@@ -909,7 +896,6 @@ const confirmMediaInsert = () => {
     })
   }
 
-  // Сброс модалки
   showMediaModal.value = false
   isEditingMedia.value = false
   modalMediaPreview.value = ''
@@ -1273,7 +1259,7 @@ const submit = async () => {
 }
 
 const loadProject = async () => {
-const id = route.params.id ?? null
+  const id = route.params.id ?? null
   projectId.value = id
 
   if (route.name === 'EditProject' && id) {
@@ -1313,19 +1299,14 @@ const id = route.params.id ?? null
     return path.split('/').pop()?.trim() || ''
   }
 
-  // ✅ Универсальный поиск — учитываем подпапки
   const tryPathsInOrder = async (rawPath) => {
     if (!rawPath || typeof rawPath !== 'string') return ''
-
-    const projectFolder = sessionStorage.getItem('project-folder')
-      ?.replace(/^multimedia\//, '')
-      .replace(/\/$/, '')
-
+    const projectFolder = sessionStorage.getItem('project-folder')?.replace(/^multimedia\//, '').replace(/\/$/, '')
     const normalizedPath = rawPath.replace(/^multimedia\//, '').replace(/^\/+/, '')
     const filename = normalizedPath.split('/').pop()
 
     const possiblePaths = [
-      `multimedia/${normalizedPath}`, // путь с подпапкой
+      `multimedia/${normalizedPath}`,
       projectFolder ? `multimedia/${projectFolder}/${filename}` : null,
       `multimedia/${filename}`
     ].filter(Boolean)
@@ -1334,13 +1315,12 @@ const id = route.params.id ?? null
       if (await fileExists('/' + fullPath)) return fullPath
     }
 
-    return '' // не найдено
+    return ''
   }
 
-  // 🧩 Обработка строк мультимедиа
   gridRows.value = await Promise.all(form.value.multimedia_grid.map(async items => {
     const rowItems = await Promise.all(items.map(async item => {
-      const alt = item.title || item.description || getFilename(item.link) || ''
+      const alt = item.title ?? item.description ?? getFilename(item.link) ?? ''
       let type = item.type
       let link = item.link || ''
 
@@ -1354,12 +1334,8 @@ const id = route.params.id ?? null
 
       if (type === 'curtain') {
         const images = item.images || []
-        const resolvedImages = await Promise.all(images.map(async img => {
-          return await tryPathsInOrder(img)
-        }))
-
+        const resolvedImages = await Promise.all(images.map(img => tryPathsInOrder(img)))
         return {
-          title: alt,
           media: {
             type: 'curtain',
             images: resolvedImages,
@@ -1372,10 +1348,10 @@ const id = route.params.id ?? null
       if (type === 'img') {
         const resolvedLink = await tryPathsInOrder(link)
         return {
-          title: alt,
           media: {
             type: 'img',
             link: resolvedLink,
+            title: alt,
             debug_path: resolvedLink
           }
         }
@@ -1383,18 +1359,16 @@ const id = route.params.id ?? null
 
       if (type === 'video') {
         const resolvedPoster = await tryPathsInOrder(item.poster)
-
         const links = await Promise.all((item.links || []).map(async video => {
           const resolved = await tryPathsInOrder(video.link)
           return { ...video, link: resolved }
         }))
-
         return {
-          title: alt,
           media: {
             type: 'video',
             poster: resolvedPoster,
             links,
+            title: alt,
             debug_path: {
               poster: resolvedPoster,
               links: links.map(v => v.link)
@@ -1405,12 +1379,12 @@ const id = route.params.id ?? null
 
       if (type === 'vr') {
         return {
-          title: alt,
           media: {
             type: 'vr',
             link,
             width: item.width || null,
             height: item.height || null,
+            title: alt,
             debug_path: link
           }
         }
@@ -1419,10 +1393,10 @@ const id = route.params.id ?? null
       // fallback
       const fallback = getFilename(link)
       return {
-        title: alt,
         media: {
           type,
           link: fallback,
+          title: alt,
           debug_path: fallback
         }
       }
@@ -1433,18 +1407,6 @@ const id = route.params.id ?? null
       items: rowItems.filter(i => i.media?.link || i.media?.type === 'curtain' || i.media?.type === 'vr')
     }
   }))
-
-  // 🔍 DEBUG
-  console.log('%c[GRID DEBUG]', 'color: #2e86de; font-weight: bold')
-  gridRows.value.forEach((row, i) => {
-    console.group(`Row ${i}`)
-    row.items.forEach((item, j) => {
-      const link = item.media?.link
-      const debug = item.media?.debug_path
-      console.log(`📌 [${item.media?.type}] "${item.title}" link:`, link, `debug:`, debug)
-    })
-    console.groupEnd()
-  })
 }
 
 watch(form, (newVal) => {
