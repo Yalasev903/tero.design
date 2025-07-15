@@ -527,47 +527,37 @@ onMounted(() => {
   const savedSize = localStorage.getItem('input-size')
   if (savedSize) inputSize.value = savedSize
 
+  const flatItems = menuItems.flatMap(item => item.children ?? [item])
+  const tabComponentsMap = {
+    '/dashboard': DashboardIndex,
+    '/home-grid': HomeGrid,
+    '/projects/create': CreateProject,
+    '/projects/list': Projects,
+    '/workflow': Workflow,
+    '/services': Services,
+    '/seo/index': SeoIndex,
+    '/seo/project': SeoProject,
+    '/seo/services': SeoServices,
+    '/showreel': ShowreelPreview
+  }
+
   // 1. Восстановление порядка вкладок
   const savedTabs = sessionStorage.getItem('admin-tabs')
   if (savedTabs) {
     try {
       const parsedTabs = JSON.parse(savedTabs)
-      const flatItems = menuItems.flatMap(item => item.children ?? [item])
-
       tabs.value = parsedTabs.map(savedTab => {
-        const original = flatItems.find(m => m.path === savedTab.path)
+        const path = savedTab.path
+        let component = tabComponentsMap[path] || null
 
-        let resolvedComponent = savedTab.component || original?.component
-
-        // 🛠 Явная подстановка компонентов, если не удалось восстановить
-        if (!resolvedComponent) {
-          if (savedTab.path === '/projects/create') {
-            resolvedComponent = markRaw(CreateProject)
-          }
-          if (savedTab.path.startsWith('/projects/edit/')) {
-            resolvedComponent = markRaw(CreateProject)
-          }
-          if (savedTab.path === '/projects/list') {
-            resolvedComponent = markRaw(Projects)
-          }
-          if (savedTab.path === '/home-grid') {
-            resolvedComponent = markRaw(HomeGrid)
-          }
-          if (savedTab.path === '/services') {
-            resolvedComponent = markRaw(Services)
-          }
-          if (savedTab.path === '/workflow') {
-            resolvedComponent = markRaw(Workflow)
-          }
-          if (savedTab.path === '/dashboard') {
-            resolvedComponent = markRaw(DashboardIndex)
-          }
+        if (!component && path.startsWith('/projects/edit/')) {
+          component = CreateProject
         }
 
         return {
           ...savedTab,
-          component: resolvedComponent,
-          key: savedTab.key || savedTab.path
+          component: component ? markRaw(component) : undefined,
+          key: savedTab.key || path
         }
       })
     } catch (e) {
@@ -578,14 +568,12 @@ onMounted(() => {
   // 2. Восстановление активной вкладки
   const savedPath = sessionStorage.getItem('active-tab-path')
   if (savedPath) {
-    const flatItems = menuItems.flatMap(item => item.children ?? [item])
+    const restoredTab =
+      tabs.value.find(t => t.path === savedPath) ||
+      flatItems.find(m => m.path === savedPath)
 
-    const savedTab =
-      flatItems.find(m => m.path === savedPath) ||
-      tabs.value.find(t => t.path === savedPath)
-
-    if (savedTab) {
-      openTab(savedTab)
+    if (restoredTab) {
+      openTab(restoredTab)
       router.push(savedPath)
     }
   }
