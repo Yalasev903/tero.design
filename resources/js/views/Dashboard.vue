@@ -543,8 +543,13 @@ onMounted(() => {
     '/showreel': ShowreelPreview
   }
 
-  // 1. Восстановление порядка вкладок
   const savedTabs = localStorage.getItem('admin-tabs')
+  const savedPath = localStorage.getItem('active-tab-path')
+
+  console.log('[restore] savedTabs:', savedTabs)
+  console.log('[restore] savedPath:', savedPath)
+
+  // 1. Восстановление порядка вкладок
   if (savedTabs) {
     try {
       const parsedTabs = JSON.parse(savedTabs)
@@ -562,13 +567,14 @@ onMounted(() => {
           key: savedTab.key || path
         }
       })
+
+      console.log('[restore] tabs.value после восстановления:', tabs.value)
     } catch (e) {
       console.error('Ошибка парсинга сохранённых вкладок:', e)
     }
   }
 
   // 2. Восстановление активной вкладки
-  const savedPath = localStorage.getItem('active-tab-path')
   if (savedPath) {
     const restoredTab =
       tabs.value.find(t => t.path === savedPath) ||
