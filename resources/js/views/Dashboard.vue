@@ -533,11 +533,7 @@ onMounted(() => {
     '/projects/create': CreateProject,
     '/projects/list': Projects,
     '/workflow': Workflow,
-    '/services': Services,
-    '/seo/index': SeoIndex,
-    '/seo/project': SeoProject,
-    '/seo/services': SeoServices,
-    '/showreel': ShowreelPreview
+    '/services': Services
   }
 
   const savedTabs = localStorage.getItem('admin-tabs')
