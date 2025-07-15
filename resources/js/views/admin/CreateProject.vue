@@ -492,6 +492,7 @@ const modalMediaTitle = ref('')
 const modalMediaPreview = ref('')
 const modalMediaSize = ref({ w: null, h: null })
 const isEditingMedia = ref(false)
+const originalMedia = ref(null)
 
 const vrZipFile = ref(null)
 const vrLoadError = ref(false)
@@ -777,6 +778,9 @@ const handleEditClick = async (rowIdx, colIdx, type) => {
   mediaType.value = col.media.type || type || null
   isEditingMedia.value = true
 
+  // 🔒 Сохраняем оригинальное состояние для отмены
+  originalMedia.value = JSON.parse(JSON.stringify(col.media))
+
   if (mediaType.value === 'img') {
     modalMediaPreview.value = col.media.link
     modalMediaTitle.value = col.media.title || ''
@@ -949,10 +953,26 @@ const uploadVrZip = async () => {
 }
 
 const cancelMediaInsert = () => {
+  if (
+    isEditingMedia.value &&
+    selectedCell.value?.rowIdx !== undefined &&
+    selectedCell.value?.colIdx !== undefined &&
+    originalMedia.value
+  ) {
+    const row = gridRows.value[selectedCell.value.rowIdx]
+    const col = row.items[selectedCell.value.colIdx]
+
+    // 🔁 Откат к исходному media
+    col.media = JSON.parse(JSON.stringify(originalMedia.value))
+  }
+
+  // Сброс состояний
   showMediaModal.value = false
   isEditingMedia.value = false
   modalMediaPreview.value = ''
   modalMediaTitle.value = ''
+  modalMediaSize.value = { w: 0, h: 0 }
+  originalMedia.value = null
 }
 
 // =====================
