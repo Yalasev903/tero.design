@@ -67,7 +67,7 @@ const router = useRouter()
 const fetchProjects = async () => {
   loading.value = true
   try {
-    const { data } = await axios.get('/api/admin/projects')
+    const { data } = await axios.get('/api/admin/project')
     projects.value = data
   } catch (e) {
     ElNotification({
@@ -81,11 +81,11 @@ const fetchProjects = async () => {
 }
 
 const createNewProject = () => {
-  router.push('/projects/create')
+  router.push('/project/create')
 }
 
 const editProject = (id) => {
-  router.push(`/projects/edit/${id}`)
+  router.push(`/project/edit/${id}`)
 }
 
 const deleteProject = async (id) => {
@@ -100,7 +100,7 @@ const deleteProject = async (id) => {
       }
     )
 
-    await axios.delete(`/api/admin/projects/${id}`)
+    await axios.delete(`/api/admin/project/${id}`)
     await fetchProjects()
 
     ElNotification({

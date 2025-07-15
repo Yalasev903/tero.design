@@ -31,11 +31,11 @@ const routes = [
     children: [
       { path: 'dashboard', component: DashboardIndex },
       { path: 'home-grid', component: HomeGrid },
-      { path: 'projects', component: ProjectsList },
-      { path: 'projects/list', component: ProjectsList },
-      { path: 'projects/create', component: CreateProject },
+      { path: 'project', component: ProjectsList },
+      { path: 'project/list', component: ProjectsList },
+      { path: 'project/create', component: CreateProject },
       {
-        path: 'projects/edit/:id',
+        path: 'project/edit/:id',
         name: 'EditProject',
         component: CreateProject
       },

@@ -290,17 +290,17 @@ const menuItems = [
     component: markRaw(HomeGrid)
   },
   {
-    path: '/projects',
+    path: '/project',
     label: 'Проекты',
     icon: () => h(ElIcon, null, () => h(Document)),
     children: [
       {
-        path: '/projects/create',
+        path: '/project/create',
         label: 'Создать проект',
         component: markRaw(CreateProject)
       },
       {
-        path: '/projects/list',
+        path: '/project/list',
         label: 'Список проектов',
         component: markRaw(Projects)
       }
@@ -353,7 +353,7 @@ function generateTabKey(tab) {
 }
 
 function openTab(item) {
-  const isDynamic = item.path.startsWith('/projects/edit/') || item.path === '/projects/create'
+  const isDynamic = item.path.startsWith('/project/edit/') || item.path === '/project/create'
 
   // Стабильный key для кеша и <keep-alive>
   item.key = isDynamic ? `${item.path}-${Date.now()}` : item.path
@@ -385,7 +385,7 @@ function openTab(item) {
 function closeTab(tab) {
   const idx = tabs.value.indexOf(tab)
   if (idx !== -1) {
-    if (tab.path === '/projects/create') {
+    if (tab.path === '/project/create') {
       localStorage.removeItem('was-create-opened')
       localStorage.removeItem('create-project-form')
     }
@@ -530,8 +530,8 @@ onMounted(() => {
   const tabComponentsMap = {
     '/dashboard': DashboardIndex,
     '/home-grid': HomeGrid,
-    '/projects/create': CreateProject,
-    '/projects/list': Projects,
+    '/project/create': CreateProject,
+    '/project/list': Projects,
     '/workflow': Workflow,
     '/services': Services
   }
@@ -550,7 +550,7 @@ onMounted(() => {
         const path = savedTab.path
         let component = tabComponentsMap[path] || null
 
-        if (!component && path.startsWith('/projects/edit/')) {
+        if (!component && path.startsWith('/project/edit/')) {
           component = CreateProject
         }
 
@@ -605,7 +605,7 @@ onMounted(() => {
 
 function refreshCurrentTab() {
   const current = activeTab.value
-  if (current && current.path === '/projects/create') {
+  if (current && current.path === '/project/create') {
     localStorage.removeItem('create-project-form') // или любой ключ, если используешь сохранение формы
     router.replace({ path: current.path + '?refresh=' + Date.now() })
   }

@@ -4,7 +4,7 @@
 
        <a
         v-if="isEditing && projectId"
-        :href="`/projects/${projectId}`"
+        :href="`/project/${projectId}`"
         target="_blank"
         class="inline-flex items-center text-blue-600 hover:underline text-lg font-medium mb-4"
         style="margin-bottom: 16px; display: inline-flex; align-items: center;"
@@ -936,7 +936,7 @@ const uploadVrZip = async () => {
   try {
     vrUploading.value = true
 
-    const { data } = await axios.post(`/api/admin/projects/${projectId.value}/upload-vr`, formData)
+    const { data } = await axios.post(`/api/admin/project/${projectId.value}/upload-vr`, formData)
     vrIframeCode.value = `<iframe src="${data.iframe_src}" width="100%" height="600" frameborder="0" allowfullscreen></iframe>`
     detectVrIframeSize()
 
@@ -1200,11 +1200,11 @@ const submit = async () => {
     const isEdit = isEditing.value
 
     if (isEdit) {
-      res = await axios.put(`/api/admin/projects/${projectId.value}`, form.value)
+      res = await axios.put(`/api/admin/project/${projectId.value}`, form.value)
       ElNotification({ title: 'Успешно', message: 'Проект обновлён', type: 'success' })
     } else {
       // 🆕 Создание проекта
-      res = await axios.post('/api/admin/projects', form.value)
+      res = await axios.post('/api/admin/project', form.value)
 
       const folderPath = res.data.folder
       const newProjectId = res.data.project.id
@@ -1248,9 +1248,9 @@ const submit = async () => {
 
     // ✅ Переход на список (если tabsMode выключен — можно остаться)
     if (tabsMode?.value && openTab) {
-      openTab({ path: '/projects/list', label: 'Список проектов', component: Projects })
+      openTab({ path: '/project/list', label: 'Список проектов', component: Projects })
     } else {
-      router.push('/projects')
+      router.push('/project')
     }
 
   } catch (e) {
@@ -1278,7 +1278,7 @@ const id = route.params.id ?? null
 
   if (route.name === 'EditProject' && id) {
     isEditing.value = true
-    const { data } = await axios.get(`/api/admin/projects/${id}`)
+    const { data } = await axios.get(`/api/admin/project/${id}`)
     form.value = {
       ...data,
       multimedia_grid: data.multimedia_grid || []

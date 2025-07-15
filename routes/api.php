@@ -70,12 +70,12 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/faq/save-all', [FaqController::class, 'updateAll']);
     Route::post('/faq', [FaqController::class, 'store']);
 
-    Route::get('/projects', [ProjectController::class, 'index']);
-    Route::post('/projects', [ProjectController::class, 'store']);
-    Route::get('/projects/{id}', [ProjectController::class, 'show']);
-    Route::put('/projects/{id}', [ProjectController::class, 'update']);
-    Route::post('/projects/{id}/upload-vr', [ProjectController::class, 'uploadVrTour']);
-    Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+    Route::get('/project', [ProjectController::class, 'index']);
+    Route::post('/project', [ProjectController::class, 'store']);
+    Route::get('/project/{id}', [ProjectController::class, 'show']);
+    Route::put('/project/{id}', [ProjectController::class, 'update']);
+    Route::post('/project/{id}/upload-vr', [ProjectController::class, 'uploadVrTour']);
+    Route::delete('/project/{id}', [ProjectController::class, 'destroy']);
 
     Route::post('/cleanup', [CleanupController::class, 'cleanup']);
 });

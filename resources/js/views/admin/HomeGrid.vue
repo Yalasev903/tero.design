@@ -834,7 +834,7 @@ const insertMedia = async () => {
 
 const loadProjects = async () => {
   try {
-    const { data } = await axios.get('/api/admin/projects')
+    const { data } = await axios.get('/api/admin/project')
 
     const usageMap = {}
     let emptyCount = 0
