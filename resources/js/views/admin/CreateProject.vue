@@ -1273,17 +1273,17 @@ const submit = async () => {
 }
 
 const loadProject = async () => {
-  if (route.name === 'EditProject') {
-    isEditing.value = true
-    projectId.value = route.params.id
-    const { data } = await axios.get(`/api/admin/projects/${projectId.value}`)
+const id = route.params.id ?? null
+  projectId.value = id
 
+  if (route.name === 'EditProject' && id) {
+    isEditing.value = true
+    const { data } = await axios.get(`/api/admin/projects/${id}`)
     form.value = {
       ...data,
       multimedia_grid: data.multimedia_grid || []
     }
 
-    // ✅ Сохраняем папку проекта
     if (data.folder) {
       sessionStorage.setItem('project-folder', data.folder)
     }
@@ -1490,8 +1490,6 @@ onActivated(() => {
   const isEdit = route.name === 'EditProject' || !!route.params.id || !!route.query.id
 
   if (isEdit) {
-    loadProject()
-  } else {
     const wasAlreadyOpened = sessionStorage.getItem('was-create-opened')
     if (!wasAlreadyOpened) {
       resetForm()
@@ -1504,19 +1502,24 @@ onActivated(() => {
 
 watch(
   () => route.fullPath,
-  () => {
-    const isEdit = route.name === 'EditProject' || !!route.params.id || !!route.query.id
+  (newPath, oldPath) => {
+    // 📌 Если route.id поменялся — загружаем
+    const newId = route.params.id
+    const oldId = projectId.value
 
-    if (isEdit) {
+    if (newId && newId !== oldId) {
       loadProject()
-    } else {
+      return
+    }
+
+    // Если перешли на создание (без ID)
+    if (!newId && oldId) {
       resetForm()
       sessionStorage.removeItem('create-project-form')
       sessionStorage.setItem('was-create-opened', 'true')
     }
   }
 )
-
 </script>
 
 <style scoped>
