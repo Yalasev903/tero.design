@@ -324,11 +324,8 @@ function onTabsReorder(event) {
   localStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
 }
 
-const tabs = ref([
-  { ...menuItems[0] }
-])
-
-const activeTab = ref(tabs.value[0])
+const tabs = ref([]) // ❗ по умолчанию пусто
+const activeTab = ref(null)
 
 const breadcrumbs = computed(() => {
   const tab = activeTab.value
@@ -586,10 +583,18 @@ onMounted(() => {
     }
   }
 
-  // 3. Закрытие всплывающих меню при клике вне
+  // 3. Если вкладки не были восстановлены — fallback на Dashboard
+  if (!tabs.value.length) {
+    const defaultTab = { ...menuItems[0] }
+    tabs.value.push(defaultTab)
+    activeTab.value = defaultTab
+    router.push(defaultTab.path)
+  }
+
+  // 4. Закрытие всплывающих меню при клике вне
   document.addEventListener('click', handleClickOutside)
 
-  // 4. Слежение за полноэкранным режимом
+  // 5. Слежение за полноэкранным режимом
   document.addEventListener('fullscreenchange', () => {
     isFullScreen.value = !!document.fullscreenElement
   })
