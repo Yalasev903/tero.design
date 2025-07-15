@@ -537,16 +537,37 @@ onMounted(() => {
       tabs.value = parsedTabs.map(savedTab => {
         const original = flatItems.find(m => m.path === savedTab.path)
 
+        let resolvedComponent = savedTab.component || original?.component
+
+        // 🛠 Явная подстановка компонентов, если не удалось восстановить
+        if (!resolvedComponent) {
+          if (savedTab.path === '/projects/create') {
+            resolvedComponent = markRaw(CreateProject)
+          }
+          if (savedTab.path.startsWith('/projects/edit/')) {
+            resolvedComponent = markRaw(CreateProject)
+          }
+          if (savedTab.path === '/projects/list') {
+            resolvedComponent = markRaw(Projects)
+          }
+          if (savedTab.path === '/home-grid') {
+            resolvedComponent = markRaw(HomeGrid)
+          }
+          if (savedTab.path === '/services') {
+            resolvedComponent = markRaw(Services)
+          }
+          if (savedTab.path === '/workflow') {
+            resolvedComponent = markRaw(Workflow)
+          }
+          if (savedTab.path === '/dashboard') {
+            resolvedComponent = markRaw(DashboardIndex)
+          }
+        }
+
         return {
           ...savedTab,
-          component: savedTab.component || original?.component,
-          key: savedTab.key || (
-            original?.path?.startsWith('/projects/edit/')
-              ? original.path + '-' + (savedTab.timestamp || Date.now())
-              : original?.path === '/projects/create'
-              ? original.path + '-' + Date.now()
-              : original?.path
-          )
+          component: resolvedComponent,
+          key: savedTab.key || savedTab.path
         }
       })
     } catch (e) {
@@ -558,7 +579,11 @@ onMounted(() => {
   const savedPath = sessionStorage.getItem('active-tab-path')
   if (savedPath) {
     const flatItems = menuItems.flatMap(item => item.children ?? [item])
-    const savedTab = flatItems.find(m => m.path === savedPath)
+
+    const savedTab =
+      flatItems.find(m => m.path === savedPath) ||
+      tabs.value.find(t => t.path === savedPath)
+
     if (savedTab) {
       openTab(savedTab)
       router.push(savedPath)
