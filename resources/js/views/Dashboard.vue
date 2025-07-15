@@ -611,7 +611,15 @@ function handleClickOutside(event) {
     })
   }
 }
+watch(tabs, (newTabs) => {
+  localStorage.setItem('admin-tabs', JSON.stringify(newTabs))
+}, { deep: true })
 
+watch(activeTab, (newTab) => {
+  if (newTab?.path) {
+    localStorage.setItem('active-tab-path', newTab.path)
+  }
+})
 </script>
 
 <style scoped>
