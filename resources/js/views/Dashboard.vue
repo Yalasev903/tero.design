@@ -574,8 +574,15 @@ onMounted(() => {
       flatItems.find(m => m.path === savedPath)
 
     if (restoredTab) {
-      openTab(restoredTab)
-      router.push(savedPath)
+    // уже открыта? просто активируем
+    const exists = tabs.value.find(t => t.path === restoredTab.path)
+    if (!exists) {
+        openTab(restoredTab)
+    } else {
+        activeTab.value = exists
+    }
+
+    router.push(savedPath)
     }
   }
 
