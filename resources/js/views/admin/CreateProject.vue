@@ -663,7 +663,7 @@ const handleFileSelect = async (items) => {
 
   const file = items[0]
   const rawPath = file.path.replace(/^local:\/\//, '').replace(/^\/+/, '')
-  const fullPath = rawPath // Пример: multimedia/folder1/subfolder/image.jpg
+  const fullPath = rawPath
 
   const ext = fullPath.split('.').pop()?.toLowerCase()
   const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
@@ -690,13 +690,19 @@ const handleFileSelect = async (items) => {
 
     if (isImage) {
       const img = new Image()
-      img.onload = () => modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+      img.onload = () => {
+        modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+        modalMediaTitle.value = getFilename(fullPath) // или ''
+      }
       img.src = buildMediaUrl(fullPath)
     } else if (isVideo) {
       const video = document.createElement('video')
       video.preload = 'metadata'
       video.src = buildMediaUrl(fullPath)
-      video.onloadedmetadata = () => modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
+      video.onloadedmetadata = () => {
+        modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
+        modalMediaTitle.value = getFilename(fullPath) // или ''
+      }
     }
 
     showFileManager.value = false
@@ -711,13 +717,20 @@ const handleFileSelect = async (items) => {
     if (isImage) {
       const img = new Image()
       img.onload = () => {
-        col.media = {
+        const updated = {
           type: 'img',
           link: fullPath,
+          title: modalMediaTitle.value || col.media?.title || '',
           width: img.naturalWidth,
           height: img.naturalHeight,
           __v: Date.now()
         }
+
+        col.media = updated
+
+        modalMediaPreview.value = fullPath
+        modalMediaTitle.value = updated.title
+        modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
       }
       img.src = buildMediaUrl(fullPath)
 
@@ -726,17 +739,127 @@ const handleFileSelect = async (items) => {
       video.preload = 'metadata'
       video.src = buildMediaUrl(fullPath)
       video.onloadedmetadata = () => {
-        col.media = {
+        const updated = {
           type: 'video',
-          poster: '',
+          poster: col.media?.poster || '',
           links: [{ link: fullPath, mime: file.mime || 'video/mp4' }],
+          title: modalMediaTitle.value || col.media?.title || '',
           width: video.videoWidth,
           height: video.videoHeight,
           __v: Date.now()
         }
+
+        col.media = updated
+
+        modalMediaPreview.value = fullPath
+        modalMediaTitle.value = updated.title
+        modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
       }
-    } else {
-      col.media = {}
+    }
+
+    showFileManager.value = false
+    return
+  }
+
+  console.warn('⚠ Не удалось определить, куда вставлять файл')
+}
+const handleFileSelect = async (items) => {
+  if (!items.length) return
+
+  const file = items[0]
+  const rawPath = file.path.replace(/^local:\/\//, '').replace(/^\/+/, '')
+  const fullPath = rawPath
+
+  const ext = fullPath.split('.').pop()?.toLowerCase()
+  const isImage = file.mime?.includes('image') || ['jpg', 'jpeg', 'png', 'webp'].includes(ext)
+  const isVideo = file.mime?.includes('video') || ['mp4', 'webm', 'mov'].includes(ext)
+
+  // 🧩 Шторка
+  if (selectingCurtainIndex.value) {
+    const target = selectingCurtainIndex.value === 1 ? curtainImage1 : curtainImage2
+    const size = selectingCurtainIndex.value === 1 ? curtainSize1 : curtainSize2
+
+    target.value = fullPath
+    await nextTick()
+    const img = new Image()
+    img.onload = () => size.value = { w: img.naturalWidth, h: img.naturalHeight }
+    img.src = buildMediaUrl(fullPath)
+    selectingCurtainIndex.value = null
+    showFileManager.value = false
+    return
+  }
+
+  // 📦 Модалка вставки нового медиа
+  if (selectedCell.value?.modal && 'rowIdx' in selectedCell.value) {
+    modalMediaPreview.value = fullPath
+
+    if (isImage) {
+      const img = new Image()
+      img.onload = () => {
+        modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+        modalMediaTitle.value = getFilename(fullPath) // или ''
+      }
+      img.src = buildMediaUrl(fullPath)
+    } else if (isVideo) {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.src = buildMediaUrl(fullPath)
+      video.onloadedmetadata = () => {
+        modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
+        modalMediaTitle.value = getFilename(fullPath) // или ''
+      }
+    }
+
+    showFileManager.value = false
+    return
+  }
+
+  // ✏️ Редактирование существующего элемента
+  if (selectedCell.value?.rowIdx !== undefined && selectedCell.value?.colIdx !== undefined) {
+    const row = gridRows.value[selectedCell.value.rowIdx]
+    const col = row.items[selectedCell.value.colIdx]
+
+    if (isImage) {
+      const img = new Image()
+      img.onload = () => {
+        const updated = {
+          type: 'img',
+          link: fullPath,
+          title: modalMediaTitle.value || col.media?.title || '',
+          width: img.naturalWidth,
+          height: img.naturalHeight,
+          __v: Date.now()
+        }
+
+        col.media = updated
+
+        modalMediaPreview.value = fullPath
+        modalMediaTitle.value = updated.title
+        modalMediaSize.value = { w: img.naturalWidth, h: img.naturalHeight }
+      }
+      img.src = buildMediaUrl(fullPath)
+
+    } else if (isVideo) {
+      const video = document.createElement('video')
+      video.preload = 'metadata'
+      video.src = buildMediaUrl(fullPath)
+      video.onloadedmetadata = () => {
+        const updated = {
+          type: 'video',
+          poster: col.media?.poster || '',
+          links: [{ link: fullPath, mime: file.mime || 'video/mp4' }],
+          title: modalMediaTitle.value || col.media?.title || '',
+          width: video.videoWidth,
+          height: video.videoHeight,
+          __v: Date.now()
+        }
+
+        col.media = updated
+
+        modalMediaPreview.value = fullPath
+        modalMediaTitle.value = updated.title
+        modalMediaSize.value = { w: video.videoWidth, h: video.videoHeight }
+      }
     }
 
     showFileManager.value = false
