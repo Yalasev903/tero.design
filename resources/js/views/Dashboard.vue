@@ -321,7 +321,7 @@ const menuItems = [
 ]
 
 function onTabsReorder(event) {
-  sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
+  localStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
 }
 
 const tabs = ref([
@@ -338,7 +338,7 @@ const breadcrumbs = computed(() => {
 
 function switchTab(tab) {
   activeTab.value = tab
-  sessionStorage.setItem('active-tab-path', tab.path)
+  localStorage.setItem('active-tab-path', tab.path)
   router.push(tab.path)
 
   setTimeout(() => {
@@ -377,8 +377,8 @@ function openTab(item) {
   }
 
   activeTab.value = tab
-  sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
-  sessionStorage.setItem('active-tab-path', tab.path)
+  localStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
+  localStorage.setItem('active-tab-path', tab.path)
 
   if (!tabsMode.value) {
     router.push(item.path)
@@ -389,17 +389,17 @@ function closeTab(tab) {
   const idx = tabs.value.indexOf(tab)
   if (idx !== -1) {
     if (tab.path === '/projects/create') {
-      sessionStorage.removeItem('was-create-opened')
-      sessionStorage.removeItem('create-project-form')
+      localStorage.removeItem('was-create-opened')
+      localStorage.removeItem('create-project-form')
     }
 
     tabs.value.splice(idx, 1)
 
-    sessionStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
+    localStorage.setItem('admin-tabs', JSON.stringify(tabs.value))
 
     if (activeTab.value === tab) {
       activeTab.value = tabs.value[idx] || tabs.value[idx - 1] || tabs.value[0]
-      sessionStorage.setItem('active-tab-path', activeTab.value.path)
+      localStorage.setItem('active-tab-path', activeTab.value.path)
       router.push(activeTab.value.path)
     }
   }
@@ -423,7 +423,7 @@ router.afterEach((to) => {
   // Если таб уже есть, не нужно заново открывать
   if (existingTab) {
     activeTab.value = existingTab
-    sessionStorage.setItem('active-tab-path', to.path)
+    localStorage.setItem('active-tab-path', to.path)
     return
   }
 
@@ -454,6 +454,8 @@ provide('inputSize', inputSize)
 
 const logout = async () => {
   await axios.post('/api/admin/logout')
+  localStorage.removeItem('admin-tabs')
+  localStorage.removeItem('active-tab-path')
   router.push('/login')
 }
 
@@ -542,7 +544,7 @@ onMounted(() => {
   }
 
   // 1. Восстановление порядка вкладок
-  const savedTabs = sessionStorage.getItem('admin-tabs')
+  const savedTabs = localStorage.getItem('admin-tabs')
   if (savedTabs) {
     try {
       const parsedTabs = JSON.parse(savedTabs)
@@ -566,7 +568,7 @@ onMounted(() => {
   }
 
   // 2. Восстановление активной вкладки
-  const savedPath = sessionStorage.getItem('active-tab-path')
+  const savedPath = localStorage.getItem('active-tab-path')
   if (savedPath) {
     const restoredTab =
       tabs.value.find(t => t.path === savedPath) ||
@@ -590,7 +592,7 @@ onMounted(() => {
 function refreshCurrentTab() {
   const current = activeTab.value
   if (current && current.path === '/projects/create') {
-    sessionStorage.removeItem('create-project-form') // или любой ключ, если используешь сохранение формы
+    localStorage.removeItem('create-project-form') // или любой ключ, если используешь сохранение формы
     router.replace({ path: current.path + '?refresh=' + Date.now() })
   }
 }
