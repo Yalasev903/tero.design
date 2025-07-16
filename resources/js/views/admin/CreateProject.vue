@@ -1366,7 +1366,14 @@ const loadProject = async () => {
         const resolvedPoster = await tryPathsInOrder(item.poster)
         const links = await Promise.all((item.links || []).map(async video => {
           const resolved = await tryPathsInOrder(video.link)
-          return { ...video, link: resolved }
+          const ext = resolved.split('.').pop()?.toLowerCase()
+          let mime = video.mime
+
+          if (ext === 'webm') mime = 'video/webm'
+          else if (ext === 'mp4') mime = 'video/mp4'
+          else if (ext === 'mov') mime = 'video/quicktime'
+
+          return { ...video, link: resolved, mime }
         }))
         return {
           media: {
