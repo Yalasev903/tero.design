@@ -854,7 +854,12 @@ const confirmMediaInsert = () => {
   }
 
   const fullPath = modalMediaPreview.value
+  const ext = fullPath.split('.').pop()?.toLowerCase() || ''
   const timestamp = Date.now()
+
+  let mimeType = 'video/mp4'
+  if (ext === 'webm') mimeType = 'video/webm'
+  else if (ext === 'mov') mimeType = 'video/quicktime'
 
   const media =
     mediaType.value === 'img'
@@ -870,7 +875,7 @@ const confirmMediaInsert = () => {
       ? {
           type: 'video',
           poster: '',
-          links: [{ link: fullPath, mime: 'video/mp4' }],
+          links: [{ link: fullPath, mime: mimeType }],
           title: modalMediaTitle.value || '',
           width: modalMediaSize.value.w,
           height: modalMediaSize.value.h,
