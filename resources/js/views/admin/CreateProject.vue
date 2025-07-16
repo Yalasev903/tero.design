@@ -1416,9 +1416,20 @@ const loadProject = async () => {
 
     return {
       id: Date.now() + Math.random(),
-      items: rowItems.filter(i => i.media?.link || i.media?.type === 'curtain' || i.media?.type === 'vr')
+      items: rowItems.filter(i =>
+        i.media &&
+        (
+          i.media.type === 'video' ||
+          i.media.link ||
+          i.media.type === 'curtain' ||
+          i.media.type === 'vr'
+        )
+      )
     }
   }))
+
+  // 👇 отладочный лог
+  console.log('[DEBUG] gridRows:', JSON.stringify(gridRows.value, null, 2))
 }
 
 watch(form, (newVal) => {
