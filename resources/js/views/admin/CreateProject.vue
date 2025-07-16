@@ -1590,7 +1590,7 @@ watch(
 .grid-item {
   border: 1px dashed #ccc;
   border-radius: 6px;
-  min-width: 220px;
+  min-width: auto; /* ⬅️ новое */
   max-width: 320px;
   padding: 10px;
   background: #fff;
@@ -1602,7 +1602,6 @@ watch(
 }
 .media-thumb {
   position: relative;
-  width: 180px;
   height: 120px;
   border-radius: 10px;
   overflow: hidden;
@@ -1611,14 +1610,16 @@ watch(
   cursor: pointer;
   box-shadow: 0 3px 12px rgba(0,0,0,0.05);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
+  width: auto; /* 🔄 адаптивная ширина */
+  max-width: 180px;
 }
 .media-thumb img,
 .media-thumb video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
 }
 .empty-media {
   width: 100%;
