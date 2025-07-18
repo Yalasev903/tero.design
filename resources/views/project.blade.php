@@ -29,35 +29,17 @@
   @php $grid = $project->multimedia_grid; @endphp
   @foreach ($grid as $rowIndex => $row)
 @php
-  $totalRatio = 0;
-  $preparedCols = [];
-
-  foreach ($row as $col) {
-      $w = $col['width'] ?? null;
-      $h = $col['height'] ?? null;
-
-      // Попытка получить размеры через getimagesize, только если нет и это IMG
-      if ((!$w || !$h) && isset($col['type']) && $col['type'] === 'img' && !empty($col['link'])) {
-          $localPath = public_path('multimedia/' . ltrim($col['link'], '/'));
-          if (file_exists($localPath) && is_file($localPath)) {
-              [$imgW, $imgH] = getimagesize($localPath);
-              $w = $imgW;
-              $h = $imgH;
-          }
-      }
-
-      // Fallback если всё равно пусто
-      if (!$w || !$h) {
-          $w = 1920;
-          $h = 1080;
-      }
-
-      $ratio = $w / $h;
-      $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
-      $totalRatio += $ratio;
-  }
+  // Вычисляем высоту строки в зависимости от количества колонок
+  $colsCount = count($preparedCols);
+  $rowHeight = match (true) {
+      $colsCount === 1 => 'min(1080px, 60vh)', // одиночная колонка — на всю высоту
+      $colsCount === 2 => 'min(540px, 40vh)',
+      $colsCount === 3 => 'min(400px, 35vh)',
+      $colsCount === 4 => 'min(300px, 30vh)',
+      default          => 'min(250px, 25vh)'
+  };
 @endphp
-<div class="grid-row" data-row-index="{{ $rowIndex }}">
+<div class="grid-row" data-row-index="{{ $rowIndex }}" style="height: {{ $rowHeight }};">
   @foreach ($preparedCols as $entry)
     @php
       $col = $entry['col'];
@@ -303,40 +285,38 @@ window.addEventListener('resize', () => {
   flex-wrap: nowrap;
   gap: 1px;
   margin-bottom: 6px;
-  align-items: stretch; /* 🔧 Важно для подстройки высоты */
+  align-items: stretch;
   width: 100%;
+  overflow: hidden;
+}
+
+.grid-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  overflow: hidden;
+  position: relative;
+  height: 100%; /* ← тянем под .grid-row */
 }
 
 .grid-inner-wrapper {
-  margin: 0;
-  padding: 0;
-  height: 100%; /* 🔧 Растягиваем по родителю */
+  width: 100%;
+  height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.grid-item {
-  position: relative;
-  background: #000;
-  flex-shrink: 0;
-  display: flex;
-  flex-direction: column;
-  width: auto;
-  height: auto;
-  aspect-ratio: unset;
-}
-
 .grid-item img,
+.grid-item video,
 .grid-item iframe,
 .grid-item canvas {
   width: 100%;
-  height: auto;
+  height: 100%;
   object-fit: contain;
   display: block;
-  max-height: 100%; /* 🔧 Подстраивается под высоту */
 }
-
 .grid-item video {
   width: 100%;
   height: auto;
