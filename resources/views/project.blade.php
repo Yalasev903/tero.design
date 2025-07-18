@@ -27,131 +27,155 @@
 
 <div class="grid" id="js-gallery">
   @php $grid = $project->multimedia_grid; @endphp
-  @foreach ($grid as $rowIndex => $row)
-@php
-  // Вычисляем высоту строки в зависимости от количества колонок
-  $colsCount = count($preparedCols);
-  $rowHeight = match (true) {
-      $colsCount === 1 => 'min(1080px, 60vh)', // одиночная колонка — на всю высоту
-      $colsCount === 2 => 'min(540px, 40vh)',
-      $colsCount === 3 => 'min(400px, 35vh)',
-      $colsCount === 4 => 'min(300px, 30vh)',
-      default          => 'min(250px, 25vh)'
-  };
-@endphp
-<div class="grid-row" data-row-index="{{ $rowIndex }}" style="height: {{ $rowHeight }};">
-  @foreach ($preparedCols as $entry)
-    @php
-      $col = $entry['col'];
-      $w = $entry['w'];
-      $h = $entry['h'];
-      $ratio = $entry['ratio'];
-      $widthPercent = ($ratio / $totalRatio) * 100;
-    @endphp
-
-    @switch($col['type'])
-
-      @case('img')
-        <a href="{{ $mediaPath($col['link']) }}"
-           class="grid-item grid-item-img js-img"
-           style="width: {{ $widthPercent }}%;"
-           data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-          <div class="grid-inner-wrapper">
-            <img src="{{ $mediaPath($col['link']) }}"
-                 alt="{{ $col['description'] ?? '' }}"
-                 width="{{ $w }}" height="{{ $h }}"
-                 class="js-grid-item-media lazyload" />
-          </div>
-        </a>
-        @break
-
-      @case('video')
-  @php $aspectRatio = $w / $h; @endphp
-  <div class="grid-item"
-       style="width: {{ $widthPercent }}%; aspect-ratio: {{ $w }} / {{ $h }};"
-       data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-    <div class="grid-inner-wrapper">
-      <video preload="metadata" playsinline muted loop autoplay
-             class="js-grid-item-media lazyload"
-             style="width: 100%; height: auto;">
-        @foreach ($col['links'] ?? [] as $source)
-          <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
-        @endforeach
-      </video>
-    </div>
-  </div>
-  @break
-
-  @case('curtain')
+@foreach ($grid as $rowIndex => $row)
   @php
-    $isNewFormat = isset($col['images']);
-    $img1Path = $isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? '');
-    $img2Path = $isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? '');
+    $totalRatio = 0;
+    $preparedCols = [];
 
-    $img1 = $mediaPath($img1Path);
-    $img2 = $mediaPath($img2Path);
+    foreach ($row as $col) {
+        $w = $col['width'] ?? null;
+        $h = $col['height'] ?? null;
 
-    // Попробуем получить размеры
-    $aspect = 1.777; // fallback
-    $img1W = 1920;
-    $img1H = 1080;
-
-    if (!empty($img1Path)) {
-        $img1FullPath = public_path('multimedia/' . ltrim($img1Path, '/'));
-        if (file_exists($img1FullPath) && is_file($img1FullPath)) {
-            [$img1W, $img1H] = getimagesize($img1FullPath);
-            $aspect = $img1W / $img1H;
+        if ((!$w || !$h) && isset($col['type']) && $col['type'] === 'img' && !empty($col['link'])) {
+            $localPath = public_path('multimedia/' . ltrim($col['link'], '/'));
+            if (file_exists($localPath) && is_file($localPath)) {
+                [$imgW, $imgH] = getimagesize($localPath);
+                $w = $imgW;
+                $h = $imgH;
+            }
         }
-    }
-    @endphp
 
-    <div class="grid-item curtain-container"
-    style="width: {{ $widthPercent }}%;"
-    data-img1="{{ asset(ltrim($img1, '/')) }}"
-    data-img2="{{ asset(ltrim($img2, '/')) }}"
-    data-media-width="{{ $img1W }}"
-    data-media-height="{{ $img1H }}">
-  <div class="grid-inner-wrapper">
-    <canvas class="curtain-canvas"></canvas>
-    <div class="curtain-handle">
-        <span class="curtain-arrow left">←</span>
-        <span class="curtain-arrow right">→</span>
-    </div>
-  </div>
-</div>
-    @break
+        if (!$w || !$h) {
+            $w = 1920;
+            $h = 1080;
+        }
 
-      @case('vr')
-  @php
-    $iframeSrc = $col['link'];
-    $paddingTop = 100 / ($w / $h); // пропорциональный контейнер
-    if (!str_starts_with($iframeSrc, '<iframe')) {
-      $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style=\"width:100%;height:100%\"></iframe>';
+        $ratio = $w / $h;
+        $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
+        $totalRatio += $ratio;
     }
+
+    $colsCount = count($preparedCols);
+    $rowHeight = match (true) {
+        $colsCount === 1 => 'min(1080px, 60vh)',
+        $colsCount === 2 => 'min(540px, 40vh)',
+        $colsCount === 3 => 'min(400px, 35vh)',
+        $colsCount === 4 => 'min(300px, 30vh)',
+        default          => 'min(250px, 25vh)',
+    };
   @endphp
-  <div class="grid-item"
-       style="width: {{ $widthPercent }}%;"
-       data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-    <div class="grid-inner-wrapper vr-wrapper" style="position: relative; padding-top: {{ $paddingTop }}%;">
-      <div style="position: absolute; top:0; left:0; width:100%; height:100%;">
-        {!! $iframeSrc !!}
-      </div>
-    </div>
-  </div>
-  @break
 
-      @default
-        <div class="grid-item"
+  <div class="grid-row" data-row-index="{{ $rowIndex }}" style="height: {{ $rowHeight }};">
+    @foreach ($preparedCols as $entry)
+      @php
+        $col = $entry['col'];
+        $w = $entry['w'];
+        $h = $entry['h'];
+        $ratio = $entry['ratio'];
+        $widthPercent = ($ratio / $totalRatio) * 100;
+      @endphp
+
+      @switch($col['type'])
+
+        @case('img')
+          <a href="{{ $mediaPath($col['link']) }}"
+             class="grid-item grid-item-img js-img"
              style="width: {{ $widthPercent }}%;"
-             data-media-width="16" data-media-height="9">
-          <div class="grid-inner-wrapper">
-            {{ $col['link'] ?? '' }}
+             data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+            <div class="grid-inner-wrapper">
+              <img src="{{ $mediaPath($col['link']) }}"
+                   alt="{{ $col['description'] ?? '' }}"
+                   width="{{ $w }}" height="{{ $h }}"
+                   class="js-grid-item-media lazyload" />
+            </div>
+          </a>
+          @break
+
+        @case('video')
+          <div class="grid-item"
+               style="width: {{ $widthPercent }}%; aspect-ratio: {{ $w }} / {{ $h }};"
+               data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+            <div class="grid-inner-wrapper">
+              <video preload="metadata" playsinline muted loop autoplay
+                     class="js-grid-item-media lazyload"
+                     style="width: 100%; height: auto;">
+                @foreach ($col['links'] ?? [] as $source)
+                  <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+                @endforeach
+              </video>
+            </div>
           </div>
-        </div>
-    @endswitch
-  @endforeach
-</div>
-  @endforeach
+          @break
+
+        @case('curtain')
+          @php
+            $isNewFormat = isset($col['images']);
+            $img1Path = $isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? '');
+            $img2Path = $isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? '');
+
+            $img1 = $mediaPath($img1Path);
+            $img2 = $mediaPath($img2Path);
+
+            $aspect = 1.777;
+            $img1W = 1920;
+            $img1H = 1080;
+
+            if (!empty($img1Path)) {
+                $img1FullPath = public_path('multimedia/' . ltrim($img1Path, '/'));
+                if (file_exists($img1FullPath) && is_file($img1FullPath)) {
+                    [$img1W, $img1H] = getimagesize($img1FullPath);
+                    $aspect = $img1W / $img1H;
+                }
+            }
+          @endphp
+
+          <div class="grid-item curtain-container"
+               style="width: {{ $widthPercent }}%;"
+               data-img1="{{ asset(ltrim($img1, '/')) }}"
+               data-img2="{{ asset(ltrim($img2, '/')) }}"
+               data-media-width="{{ $img1W }}"
+               data-media-height="{{ $img1H }}">
+            <div class="grid-inner-wrapper">
+              <canvas class="curtain-canvas"></canvas>
+              <div class="curtain-handle">
+                <span class="curtain-arrow left">←</span>
+                <span class="curtain-arrow right">→</span>
+              </div>
+            </div>
+          </div>
+          @break
+
+        @case('vr')
+          @php
+            $iframeSrc = $col['link'];
+            $paddingTop = 100 / ($w / $h);
+            if (!str_starts_with($iframeSrc, '<iframe')) {
+              $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style=\"width:100%;height:100%\"></iframe>';
+            }
+          @endphp
+          <div class="grid-item"
+               style="width: {{ $widthPercent }}%;"
+               data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+            <div class="grid-inner-wrapper vr-wrapper" style="position: relative; padding-top: {{ $paddingTop }}%;">
+              <div style="position: absolute; top:0; left:0; width:100%; height:100%;">
+                {!! $iframeSrc !!}
+              </div>
+            </div>
+          </div>
+          @break
+
+        @default
+          <div class="grid-item"
+               style="width: {{ $widthPercent }}%;"
+               data-media-width="16" data-media-height="9">
+            <div class="grid-inner-wrapper">
+              {{ $col['link'] ?? '' }}
+            </div>
+          </div>
+      @endswitch
+    @endforeach
+  </div>
+@endforeach
 </div>
 
 <script>
