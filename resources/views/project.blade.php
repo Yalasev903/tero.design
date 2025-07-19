@@ -323,20 +323,20 @@ window.addEventListener('resize', () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
   width: 100%;
+  height: 100%;
   overflow: hidden;
 }
+
 .grid-inner-wrapper > img,
 .grid-inner-wrapper > video,
 .grid-inner-wrapper > iframe,
 .grid-inner-wrapper > canvas {
-  max-height: 100%;
-  max-width: 100%;
-  height: auto;
+  height: 100%;
   width: auto;
+  max-width: none;
+  max-height: 100%;
   display: block;
-  margin: auto;
 }
 .grid-item img,
 .grid-item video,
