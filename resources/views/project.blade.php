@@ -36,7 +36,8 @@
         $w = $col['width'] ?? null;
         $h = $col['height'] ?? null;
 
-        if ((!$w || !$h) && $col['type'] === 'img' && !empty($col['link'])) {
+        // Извлекаем размеры и для img, и для video
+        if ((!$w || !$h) && in_array($col['type'], ['img', 'video']) && !empty($col['link'])) {
             $path = public_path(ltrim($col['link'], '/'));
             if (file_exists($path)) {
                 [$w, $h] = getimagesize($path);
@@ -54,7 +55,6 @@
 
     $totalRatio = array_sum(array_column($preparedCols, 'ratio'));
 
-    // Ширина для расчёта высоты строки — фиксированная (адаптив убран)
     $rowWidth = 1920;
     $rawHeight = $rowWidth / $totalRatio;
 
@@ -77,7 +77,7 @@
         $w = $entry['w'];
         $h = $entry['h'];
         $ratio = $entry['ratio'];
-        $flexPercent = round(($ratio / $totalRatio) * 100, 6); // ← точный %
+        $flexPercent = round(($ratio / $totalRatio) * 100, 6);
         $link = ltrim($col['link'] ?? '', '/');
         $url = '/' . $link;
       @endphp
@@ -103,13 +103,16 @@
                style="flex: 0 0 calc({{ $flexPercent }}%);"
                data-media-width="{{ $w }}" data-media-height="{{ $h }}">
             <div class="grid-inner-wrapper">
-              <video preload="metadata" playsinline muted loop autoplay
-                     class="js-grid-item-media lazyload"
-                     style="width: 100%; height: auto;">
-                @foreach ($col['links'] ?? [] as $source)
-                  <source src="{{ '/' . ltrim($source['link'], '/') }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
-                @endforeach
-              </video>
+              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                <video preload="metadata" playsinline muted loop autoplay
+                       class="js-grid-item-media lazyload"
+                       width="{{ $w }}" height="{{ $h }}"
+                       style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: block;">
+                  @foreach ($col['links'] ?? [] as $source)
+                    <source src="{{ '/' . ltrim($source['link'], '/') }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+                  @endforeach
+                </video>
+              </div>
             </div>
           </div>
           @break
@@ -330,23 +333,10 @@ window.addEventListener('resize', () => {
 .grid-inner-wrapper > canvas {
   height: 100%;
   width: auto;
-  max-width: none;
+  max-width: 100%;
   max-height: 100%;
   display: block;
 }
-.grid-item img,
-.grid-item video,
-.grid-item iframe,
-.grid-item canvas {
-  width: 100%;
-  display: block;
-}
-.grid-item video {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
 .grid-row.is-compact {
   height: auto;
 }
