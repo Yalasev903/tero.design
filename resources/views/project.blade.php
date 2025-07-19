@@ -55,7 +55,7 @@
     $totalRatio = array_sum(array_column($preparedCols, 'ratio'));
 
     // Стандартная ширина строки для расчёта высоты
-    $rowWidth = 1440;
+    $rowWidth = 1920;
     $rawHeight = $rowWidth / $totalRatio;
 
     $colsCount = count($preparedCols);
