@@ -301,23 +301,24 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.querySelector('#js-gallery');
   if (!container) return;
 
+  const params = new URLSearchParams(window.location.search);
+  if (params.has('_grid_width')) return;
+
   const width = container.offsetWidth || 1920;
-
-  // 🛑 проверка: если уже есть ?_grid_width= — НЕ перезагружать
-  if (window.location.search.includes('_grid_width=')) return;
-
   const url = new URL(window.location.href);
-  url.searchParams.set('_grid_width', width); // просто чтобы не кэшировалось
+  url.searchParams.set('_grid_width', width);
 
   fetch(url.toString(), {
     headers: {
       'X-Grid-Width': width
     }
-  }).then(r => r.text()).then(html => {
-    document.open();
-    document.write(html);
-    document.close();
-  });
+  })
+    .then(r => r.text())
+    .then(html => {
+      document.open();
+      document.write(html);
+      document.close();
+    });
 });
 </script>
 
