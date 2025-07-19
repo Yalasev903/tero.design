@@ -55,7 +55,7 @@
     $totalRatio = array_sum(array_column($preparedCols, 'ratio'));
 
     // Стандартная ширина строки для расчёта высоты
-    $rowWidth = 1920;
+    $rowWidth = min(1920, request()->header('X-Window-Width', 1920));
     $rawHeight = $rowWidth / $totalRatio;
 
     $colsCount = count($preparedCols);
@@ -297,6 +297,24 @@ window.addEventListener('resize', () => {
     ctx.drawImage(img1, 0, 0, w * 0.5, h, 0, 0, w * 0.5, h);
   });
 });
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.querySelector('#js-gallery');
+    if (!container) return;
+
+    const width = container.offsetWidth || 1920;
+    const url = new URL(window.location.href);
+    url.searchParams.set('_grid_width', width); // просто метка, чтобы Laravel не кэшировал
+
+    fetch(url.toString(), {
+      headers: {
+        'X-Grid-Width': width
+      }
+    }).then(r => r.text()).then(html => {
+      document.open();
+      document.write(html);
+      document.close();
+    });
+  });
 </script>
 
 <style>
