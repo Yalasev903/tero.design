@@ -162,7 +162,6 @@ html.light-theme .header-link {
     position: relative;
     display: inline-block;
     text-decoration: none;
-    overflow: hidden; /* Скрывает выход за границы */
 }
 
 html.light-theme .header-link::after {
