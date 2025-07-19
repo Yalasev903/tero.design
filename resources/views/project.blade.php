@@ -330,12 +330,6 @@ window.addEventListener('resize', () => {
   height: 100%;
   display: block;
 }
-.grid-inner-wrapper > * {
-  width: 100%;
-  height: auto;
-  display: block;
-  max-height: 100%;
-}
 .grid-item img,
 .grid-item video,
 .grid-item iframe,
