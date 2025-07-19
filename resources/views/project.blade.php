@@ -313,15 +313,23 @@ window.addEventListener('resize', () => {
   height: 100%;
   overflow: hidden;
 }
-
 .grid-inner-wrapper {
   width: 100%;
   height: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
+.grid-inner-wrapper > img,
+.grid-inner-wrapper > video,
+.grid-inner-wrapper > iframe,
+.grid-inner-wrapper > canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 .grid-inner-wrapper > * {
   width: 100%;
   height: auto;
@@ -334,14 +342,12 @@ window.addEventListener('resize', () => {
 .grid-item canvas {
   width: 100%;
   height: 100%;
-  object-fit: contain;
   display: block;
 }
 .grid-item video {
   width: 100%;
   height: auto;
   display: block;
-  object-fit: cover; /* либо убери совсем */
 }
 
 .grid-row.is-compact {
