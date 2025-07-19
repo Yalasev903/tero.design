@@ -162,24 +162,25 @@ html.light-theme .header-link {
     position: relative;
     display: inline-block;
     text-decoration: none;
-    overflow: hidden; /* чтобы подчёркивание не выходило */
+    overflow: hidden; /* Скрывает выход за границы */
 }
+
 html.light-theme .header-link::after {
     content: '';
     position: absolute;
-    bottom: 0; /* или bottom: -2px если нужно отступить ниже */
+    bottom: -4px; /* Смещение подчёркивания вниз */
     left: 0;
     height: 2px;
     width: 100%;
-    background: #000;
+    background-color: #000;
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.3s ease;
 }
+
 html.light-theme .header-link:hover::after {
     transform: scaleX(1);
 }
-
 /* ✅ Соцсети — полностью переписано */
 .footer-social-link {
     display: inline-block;
