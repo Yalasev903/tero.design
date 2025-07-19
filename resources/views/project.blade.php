@@ -29,47 +29,51 @@
   @php $grid = $project->multimedia_grid; @endphp
 
   @foreach ($grid as $rowIndex => $row)
-@php
-  $preparedCols = [];
-  $maxH = 0;
+    @php
+    $preparedCols = [];
+    $totalRatio = 0;
+    $maxAspect = 0;
 
-  foreach ($row as $col) {
-      $w = $col['width'] ?? null;
-      $h = $col['height'] ?? null;
+    foreach ($row as $col) {
+        $w = $col['width'] ?? null;
+        $h = $col['height'] ?? null;
 
-      if ((!$w || !$h) && $col['type'] === 'img' && !empty($col['link'])) {
-          $path = public_path(ltrim($col['link'], '/'));
-          if (file_exists($path)) {
-              [$w, $h] = getimagesize($path);
-          }
-      }
+        if ((!$w || !$h) && $col['type'] === 'img' && !empty($col['link'])) {
+            $path = public_path(ltrim($col['link'], '/'));
+            if (file_exists($path)) {
+                [$w, $h] = getimagesize($path);
+            }
+        }
 
-      if (!$w || !$h) {
-          $w = 1920;
-          $h = 1080;
-      }
+        if (!$w || !$h) {
+            $w = 1920;
+            $h = 1080;
+        }
 
-      $ratio = $w / $h;
-      $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
-      $maxH = max($maxH, $h);
-  }
+        $ratio = $w / $h;
+        $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
+        $totalRatio += $ratio;
+        $maxAspect = max($maxAspect, $h / $w); // тут наоборот
+    }
 
-  $colsCount = count($preparedCols);
+    // Стандартная ширина строки
+    $rowWidth = 1440;
+    $rawHeight = $rowWidth / $totalRatio;
 
-  $maxRowHeight = match (true) {
-      $colsCount === 1 => 1080,
-      $colsCount === 2 => 720,
-      $colsCount === 3 => 540,
-      $colsCount === 4 => 360,
-      default          => 250,
-  };
+    // Считаем максимально допустимую высоту строки
+    $colsCount = count($preparedCols);
+    $maxRowHeight = match (true) {
+        $colsCount === 1 => 1080,
+        $colsCount === 2 => 720,
+        $colsCount === 3 => 540,
+        $colsCount === 4 => 360,
+        default          => 300,
+    };
 
-  // масштаб по максимальной высоте
-  $scale = $maxRowHeight / $maxH;
-  $finalHeight = round($maxH * $scale);
-@endphp
-
-
+    // Масштабирование, если превышаем максимум
+    $scale = min(1, $maxRowHeight / $rawHeight);
+    $finalHeight = round($rawHeight * $scale);
+    @endphp
     <div class="grid-row" style="height: {{ $finalHeight }}px; display: flex;">
       @foreach ($preparedCols as $entry)
         @php
