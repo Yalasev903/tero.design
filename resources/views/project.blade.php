@@ -68,10 +68,10 @@
       $rowWidth = 1440;
       $rowHeight = $rowWidth / $totalRatio;
       $scale = min(1, $maxRowHeight / $rowHeight);
-      $finalHeight = round($rowHeight * $scale * 1.06);
+      $finalHeight = round($rowHeight * $scale * 1.075);
     @endphp
 
-    <div class="grid-row" style="height: {{ $finalHeight }}px; display: flex; gap: 1px; overflow: hidden;">
+    <div class="grid-row" style="height: {{ $finalHeight }}px; display: flex; gap: 1px;">
       @foreach ($preparedCols as $entry)
         @php
           $col = $entry['col'];
