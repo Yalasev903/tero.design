@@ -99,23 +99,23 @@
           @break
 
         @case('video')
-          <div class="grid-item"
-               style="flex: 0 0 calc({{ $flexPercent }}%);"
-               data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+        <div class="grid-item"
+            style="flex: 1 1 auto;"
+            data-media-width="{{ $w }}" data-media-height="{{ $h }}">
             <div class="grid-inner-wrapper">
-              <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
                 <video preload="metadata" playsinline muted loop autoplay
-                       class="js-grid-item-media lazyload"
-                       width="{{ $w }}" height="{{ $h }}"
-                       style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: block;">
-                  @foreach ($col['links'] ?? [] as $source)
+                    class="js-grid-item-media lazyload"
+                    width="{{ $w }}" height="{{ $h }}"
+                    style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: block;">
+                @foreach ($col['links'] ?? [] as $source)
                     <source src="{{ '/' . ltrim($source['link'], '/') }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
-                  @endforeach
+                @endforeach
                 </video>
-              </div>
             </div>
-          </div>
-          @break
+            </div>
+        </div>
+        @break
 
         @case('vr')
           @php
