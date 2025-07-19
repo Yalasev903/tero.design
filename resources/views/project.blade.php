@@ -194,7 +194,7 @@ function initCurtainCanvas(canvas, img1src, img2src) {
   const aspect1 = img1.naturalWidth / img1.naturalHeight;
   const aspect2 = img2.naturalWidth / img2.naturalHeight;
   const aspect = Math.min(aspect1, aspect2);
-  const h = w / aspect;
+  const h = canvas.parentElement.offsetHeight;
 
   canvas.width = w;
   canvas.height = h;
@@ -243,7 +243,7 @@ function initCurtainCanvas(canvas, img1src, img2src) {
 
     requestAnimationFrame(() => {
       canvas.style.width = '100%';
-      canvas.style.height = 'auto';
+      canvas.style.height = '100%';
       draw();
       updateHandle();
     });
@@ -285,12 +285,7 @@ window.addEventListener('resize', () => {
 
     const ctx = canvas.getContext('2d');
     const w = canvas.offsetWidth;
-    const aspect = Math.min(
-  img1.naturalWidth / img1.naturalHeight,
-  img2.naturalWidth / img2.naturalHeight
-);
-    const h = w / aspect;
-
+    const h = canvas.parentElement.offsetHeight;
 
     canvas.width = w;
     canvas.height = h;
@@ -474,9 +469,9 @@ window.addEventListener('resize', () => {
 .curtain-canvas {
   display: block;
   width: 100%;
-  height: auto;
-  max-width: 100%;
-  object-fit: contain;
+  height: 100%;
+  max-width: none;
+  max-height: none;
 }
 
 .curtain-wrapper {
