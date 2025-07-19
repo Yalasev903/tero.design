@@ -297,24 +297,28 @@ window.addEventListener('resize', () => {
     ctx.drawImage(img1, 0, 0, w * 0.5, h, 0, 0, w * 0.5, h);
   });
 });
-  document.addEventListener('DOMContentLoaded', () => {
-    const container = document.querySelector('#js-gallery');
-    if (!container) return;
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.querySelector('#js-gallery');
+  if (!container) return;
 
-    const width = container.offsetWidth || 1920;
-    const url = new URL(window.location.href);
-    url.searchParams.set('_grid_width', width); // просто метка, чтобы Laravel не кэшировал
+  const width = container.offsetWidth || 1920;
 
-    fetch(url.toString(), {
-      headers: {
-        'X-Grid-Width': width
-      }
-    }).then(r => r.text()).then(html => {
-      document.open();
-      document.write(html);
-      document.close();
-    });
+  // 🛑 проверка: если уже есть ?_grid_width= — НЕ перезагружать
+  if (window.location.search.includes('_grid_width=')) return;
+
+  const url = new URL(window.location.href);
+  url.searchParams.set('_grid_width', width); // просто чтобы не кэшировалось
+
+  fetch(url.toString(), {
+    headers: {
+      'X-Grid-Width': width
+    }
+  }).then(r => r.text()).then(html => {
+    document.open();
+    document.write(html);
+    document.close();
   });
+});
 </script>
 
 <style>
