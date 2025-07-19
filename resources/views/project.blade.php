@@ -37,8 +37,9 @@
           $w = $col['width'] ?? null;
           $h = $col['height'] ?? null;
 
+          // исправлено: не дублируем 'multimedia/', путь берётся из 'link' напрямую
           if ((!$w || !$h) && $col['type'] === 'img' && !empty($col['link'])) {
-              $path = public_path('multimedia/' . ltrim($col['link'], '/'));
+              $path = public_path(ltrim($col['link'], '/'));
               if (file_exists($path)) {
                   [$w, $h] = getimagesize($path);
               }
@@ -77,17 +78,19 @@
           $w = $entry['w'];
           $h = $entry['h'];
           $ratio = $entry['ratio'];
+          $link = ltrim($col['link'] ?? '', '/');
+          $url = '/' . $link;
         @endphp
 
         @switch($col['type'])
 
           @case('img')
-            <a href="{{ $mediaPath($col['link']) }}"
+            <a href="{{ $url }}"
                class="grid-item js-img"
                style="flex: {{ $ratio }};"
                data-media-width="{{ $w }}" data-media-height="{{ $h }}">
               <div class="grid-inner-wrapper" style="aspect-ratio: {{ $w }}/{{ $h }};">
-                <img src="{{ $mediaPath($col['link']) }}"
+                <img src="{{ $url }}"
                      alt="{{ $col['description'] ?? '' }}"
                      width="{{ $w }}" height="{{ $h }}"
                      class="js-grid-item-media lazyload" />
@@ -102,7 +105,7 @@
                        class="js-grid-item-media lazyload"
                        style="width: 100%; height: auto;">
                   @foreach ($col['links'] ?? [] as $source)
-                    <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+                    <source src="{{ '/' . ltrim($source['link'], '/') }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
                   @endforeach
                 </video>
               </div>
@@ -129,12 +132,12 @@
               $img1Path = $isNewFormat ? ($col['images'][0] ?? '') : ($col['first']['link'] ?? '');
               $img2Path = $isNewFormat ? ($col['images'][1] ?? '') : ($col['last']['link'] ?? '');
 
-              $img1 = $mediaPath($img1Path);
-              $img2 = $mediaPath($img2Path);
+              $img1 = '/' . ltrim($img1Path, '/');
+              $img2 = '/' . ltrim($img2Path, '/');
 
               $img1W = 1920; $img1H = 1080;
               if (!empty($img1Path)) {
-                  $full = public_path('multimedia/' . ltrim($img1Path, '/'));
+                  $full = public_path(ltrim($img1Path, '/'));
                   if (file_exists($full)) {
                       [$img1W, $img1H] = getimagesize($full);
                   }
@@ -143,8 +146,8 @@
 
             <div class="grid-item curtain-container"
                  style="flex: {{ $ratio }};"
-                 data-img1="{{ asset(ltrim($img1, '/')) }}"
-                 data-img2="{{ asset(ltrim($img2, '/')) }}"
+                 data-img1="{{ $img1 }}"
+                 data-img2="{{ $img2 }}"
                  data-media-width="{{ $img1W }}"
                  data-media-height="{{ $img1H }}">
               <div class="grid-inner-wrapper" style="aspect-ratio: {{ $img1W }}/{{ $img1H }};">
@@ -169,6 +172,7 @@
     </div>
   @endforeach
 </div>
+
 <script>
 function initCurtainCanvas(canvas, img1src, img2src) {
   const ctx = canvas.getContext('2d');
