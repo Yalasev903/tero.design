@@ -70,7 +70,18 @@
     $scale = min(1, $maxRowHeight / $rowHeight);
     $finalHeight = round($rowHeight * $scale);
   @endphp
-
+@php
+    dump([
+        'row' => $rowIndex,
+        'items' => array_map(fn($item) => [
+            'src' => $item['col']['link'],
+            'w' => $item['w'],
+            'h' => $item['h'],
+            'ratio' => $item['ratio']
+        ], $preparedCols),
+        'totalRatio' => $totalRatio
+    ]);
+@endphp
   <div class="grid-row" data-row-index="{{ $rowIndex }}" style="height: {{ $finalHeight }}px;">
     @foreach ($preparedCols as $entry)
       @php
