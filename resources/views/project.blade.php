@@ -56,23 +56,23 @@
         $maxAspect = max($maxAspect, $h / $w); // тут наоборот
     }
 
-    // Стандартная ширина строки
-    $rowWidth = 1440;
-    $rawHeight = $rowWidth / $totalRatio;
+// Стандартная ширина строки (контейнера)
+$rowWidth = 1440;
 
-    // Считаем максимально допустимую высоту строки
-    $colsCount = count($preparedCols);
-    $maxRowHeight = match (true) {
-        $colsCount === 1 => 1080,
-        $colsCount === 2 => 720,
-        $colsCount === 3 => 540,
-        $colsCount === 4 => 360,
-        default          => 300,
-    };
+// Вычисляем масштаб (чтобы строка влезала)
+$scale = $rowWidth / $totalRatio; // ← это реальная высота
 
-    // Масштабирование, если превышаем максимум
-    $scale = min(1, $maxRowHeight / $rawHeight);
-    $finalHeight = round($rawHeight * $scale);
+// Ограничиваем максимумом
+$colsCount = count($preparedCols);
+$maxRowHeight = match (true) {
+    $colsCount === 1 => 1080,
+    $colsCount === 2 => 744,
+    $colsCount === 3 => 520,
+    $colsCount === 4 => 420,
+    default => 360,
+};
+
+$finalHeight = min($scale, $maxRowHeight);
     @endphp
     <div class="grid-row" style="height: {{ $finalHeight }}px; display: flex;">
       @foreach ($preparedCols as $entry)
@@ -92,7 +92,7 @@
                class="grid-item js-img"
                style="flex: {{ $ratio }};"
                data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <div class="grid-inner-wrapper" style="aspect-ratio: {{ $w }}/{{ $h }};">
+              <div class="grid-inner-wrapper" >
                 <img src="{{ $url }}"
                      alt="{{ $col['description'] ?? '' }}"
                      width="{{ $w }}" height="{{ $h }}"
@@ -103,7 +103,7 @@
 
           @case('video')
             <div class="grid-item" style="flex: {{ $ratio }};" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <div class="grid-inner-wrapper" style="aspect-ratio: {{ $w }}/{{ $h }};">
+              <div class="grid-inner-wrapper" >
                 <video preload="metadata" playsinline muted loop autoplay
                        class="js-grid-item-media lazyload"
                        style="width: 100%; height: auto;">
@@ -123,7 +123,7 @@
               }
             @endphp
             <div class="grid-item" style="flex: {{ $ratio }};" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-              <div class="grid-inner-wrapper vr-wrapper" style="aspect-ratio: {{ $w }}/{{ $h }};">
+              <div class="grid-inner-wrapper vr-wrapper" >
                 {!! $iframeSrc !!}
               </div>
             </div>
