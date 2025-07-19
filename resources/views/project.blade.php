@@ -565,17 +565,12 @@ window.addEventListener('resize', () => {
   .grid-inner-wrapper {
     aspect-ratio: auto !important;
   }
-  .grid-item img,
-  .grid-item iframe {
+
+  .grid-inner-wrapper > img,
+  .grid-inner-wrapper > iframe,
+  .grid-inner-wrapper > video {
     width: 100%;
     height: auto;
-    object-fit: contain;
-  }
-  .grid-item video {
-  width: 100%;
-  height: auto;
-  display: block;
-  object-fit: cover; /* либо убери совсем */
 }
 }
 </style>
