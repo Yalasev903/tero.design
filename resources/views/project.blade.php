@@ -54,8 +54,8 @@
 
     $totalRatio = array_sum(array_column($preparedCols, 'ratio'));
 
-    // Стандартная ширина строки для расчёта высоты
-    $rowWidth = min(1920, request()->header('X-Window-Width', 1920));
+    // Ширина для расчёта высоты строки — фиксированная (адаптив убран)
+    $rowWidth = 1920;
     $rawHeight = $rowWidth / $totalRatio;
 
     $colsCount = count($preparedCols);
@@ -77,7 +77,7 @@
         $w = $entry['w'];
         $h = $entry['h'];
         $ratio = $entry['ratio'];
-        $flexGrow = $ratio / $totalRatio;
+        $flexPercent = round(($ratio / $totalRatio) * 100, 6); // ← точный %
         $link = ltrim($col['link'] ?? '', '/');
         $url = '/' . $link;
       @endphp
@@ -87,7 +87,7 @@
         @case('img')
           <a href="{{ $url }}"
              class="grid-item js-img"
-             style="flex: {{ $flexGrow }};"
+             style="flex: 0 0 calc({{ $flexPercent }}%);"
              data-media-width="{{ $w }}" data-media-height="{{ $h }}">
             <div class="grid-inner-wrapper">
               <img src="{{ $url }}"
@@ -99,7 +99,9 @@
           @break
 
         @case('video')
-          <div class="grid-item" style="flex: {{ $flexGrow }};" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+          <div class="grid-item"
+               style="flex: 0 0 calc({{ $flexPercent }}%);"
+               data-media-width="{{ $w }}" data-media-height="{{ $h }}">
             <div class="grid-inner-wrapper">
               <video preload="metadata" playsinline muted loop autoplay
                      class="js-grid-item-media lazyload"
@@ -119,7 +121,9 @@
               $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style="width:100%;height:100%"></iframe>';
             }
           @endphp
-          <div class="grid-item" style="flex: {{ $flexGrow }};" data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+          <div class="grid-item"
+               style="flex: 0 0 calc({{ $flexPercent }}%);"
+               data-media-width="{{ $w }}" data-media-height="{{ $h }}">
             <div class="grid-inner-wrapper vr-wrapper">
               {!! $iframeSrc !!}
             </div>
@@ -145,7 +149,7 @@
           @endphp
 
           <div class="grid-item curtain-container"
-               style="flex: {{ $flexGrow }};"
+               style="flex: 0 0 calc({{ $flexPercent }}%);"
                data-img1="{{ $img1 }}"
                data-img2="{{ $img2 }}"
                data-media-width="{{ $img1W }}"
@@ -161,7 +165,7 @@
           @break
 
         @default
-          <div class="grid-item" style="flex: {{ $flexGrow }};">
+          <div class="grid-item" style="flex: 0 0 calc({{ $flexPercent }}%);">
             <div class="grid-inner-wrapper">
               {{ $col['link'] ?? 'error type' }}
             </div>
@@ -171,7 +175,6 @@
     @endforeach
   </div>
 @endforeach
-
 </div>
 
 <script>
@@ -296,29 +299,6 @@ window.addEventListener('resize', () => {
     ctx.drawImage(img2, 0, 0, w, h);
     ctx.drawImage(img1, 0, 0, w * 0.5, h, 0, 0, w * 0.5, h);
   });
-});
-document.addEventListener('DOMContentLoaded', () => {
-  const container = document.querySelector('#js-gallery');
-  if (!container) return;
-
-  const params = new URLSearchParams(window.location.search);
-  if (params.has('_grid_width')) return;
-
-  const width = container.offsetWidth || 1920;
-  const url = new URL(window.location.href);
-  url.searchParams.set('_grid_width', width);
-
-  fetch(url.toString(), {
-    headers: {
-      'X-Grid-Width': width
-    }
-  })
-    .then(r => r.text())
-    .then(html => {
-      document.open();
-      document.write(html);
-      document.close();
-    });
 });
 </script>
 
