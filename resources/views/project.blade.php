@@ -70,7 +70,7 @@
 @endphp
 
 
-    <div class="grid-row" style="height: {{ $finalHeight }}px; display: flex; gap: 1px;">
+    <div class="grid-row" style="height: {{ $finalHeight }}px; display: flex;">
       @foreach ($preparedCols as $entry)
         @php
           $col = $entry['col'];
@@ -301,10 +301,10 @@ window.addEventListener('resize', () => {
 .grid-row {
   display: flex;
   flex-wrap: nowrap;
-  gap: 1px;
+  /* gap: 1px; */
   width: 100%;
   align-items: stretch;
-  overflow: hidden;
+  /* overflow: hidden; */
   margin-bottom: 8px;
 }
 
