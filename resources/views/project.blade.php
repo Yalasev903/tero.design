@@ -29,19 +29,17 @@
   @php $grid = $project->multimedia_grid; @endphp
 @foreach ($grid as $rowIndex => $row)
   @php
-    $totalRatio = 0;
     $preparedCols = [];
+    $totalRatio = 0;
 
     foreach ($row as $col) {
         $w = $col['width'] ?? null;
         $h = $col['height'] ?? null;
 
-        if ((!$w || !$h) && isset($col['type']) && $col['type'] === 'img' && !empty($col['link'])) {
-            $localPath = public_path('multimedia/' . ltrim($col['link'], '/'));
-            if (file_exists($localPath) && is_file($localPath)) {
-                [$imgW, $imgH] = getimagesize($localPath);
-                $w = $imgW;
-                $h = $imgH;
+        if ((!$w || !$h) && $col['type'] === 'img' && !empty($col['link'])) {
+            $path = public_path('multimedia/' . ltrim($col['link'], '/'));
+            if (file_exists($path)) {
+                [$w, $h] = getimagesize($path);
             }
         }
 
@@ -56,16 +54,24 @@
     }
 
     $colsCount = count($preparedCols);
-    $rowHeight = match (true) {
-        $colsCount === 1 => 'min(1080px, 60vh)',
-        $colsCount === 2 => 'min(540px, 40vh)',
-        $colsCount === 3 => 'min(400px, 35vh)',
-        $colsCount === 4 => 'min(300px, 30vh)',
-        default          => 'min(250px, 25vh)',
+
+    // Максимальная допустимая высота строки
+    $maxRowHeight = match (true) {
+        $colsCount === 1 => 1080,
+        $colsCount === 2 => 540,
+        $colsCount === 3 => 400,
+        $colsCount === 4 => 300,
+        default          => 250,
     };
+
+    // Рассчитываем ширины и итоговую высоту строки
+    $rowWidth = 1000; // произвольная ширина для расчёта
+    $rowHeight = $rowWidth / $totalRatio;
+    $scale = min(1, $maxRowHeight / $rowHeight);
+    $finalHeight = round($rowHeight * $scale);
   @endphp
 
-  <div class="grid-row" data-row-index="{{ $rowIndex }}" style="height: {{ $rowHeight }};">
+  <div class="grid-row" data-row-index="{{ $rowIndex }}" style="height: {{ $finalHeight }}px;">
     @foreach ($preparedCols as $entry)
       @php
         $col = $entry['col'];
@@ -86,19 +92,20 @@
               <img src="{{ $mediaPath($col['link']) }}"
                    alt="{{ $col['description'] ?? '' }}"
                    width="{{ $w }}" height="{{ $h }}"
-                   class="js-grid-item-media lazyload" />
+                   class="js-grid-item-media lazyload"
+                   style="aspect-ratio: {{ $w }} / {{ $h }};" />
             </div>
           </a>
           @break
 
         @case('video')
           <div class="grid-item"
-               style="width: {{ $widthPercent }}%; aspect-ratio: {{ $w }} / {{ $h }};"
+               style="width: {{ $widthPercent }}%;"
                data-media-width="{{ $w }}" data-media-height="{{ $h }}">
             <div class="grid-inner-wrapper">
               <video preload="metadata" playsinline muted loop autoplay
                      class="js-grid-item-media lazyload"
-                     style="width: 100%; height: auto;">
+                     style="aspect-ratio: {{ $w }}/{{ $h }}; width: 100%; height: auto;">
                 @foreach ($col['links'] ?? [] as $source)
                   <source src="{{ $mediaPath($source['link']) }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
                 @endforeach
@@ -116,15 +123,11 @@
             $img1 = $mediaPath($img1Path);
             $img2 = $mediaPath($img2Path);
 
-            $aspect = 1.777;
-            $img1W = 1920;
-            $img1H = 1080;
-
+            $img1W = 1920; $img1H = 1080;
             if (!empty($img1Path)) {
-                $img1FullPath = public_path('multimedia/' . ltrim($img1Path, '/'));
-                if (file_exists($img1FullPath) && is_file($img1FullPath)) {
-                    [$img1W, $img1H] = getimagesize($img1FullPath);
-                    $aspect = $img1W / $img1H;
+                $full = public_path('multimedia/' . ltrim($img1Path, '/'));
+                if (file_exists($full)) {
+                    [$img1W, $img1H] = getimagesize($full);
                 }
             }
           @endphp
@@ -136,7 +139,7 @@
                data-media-width="{{ $img1W }}"
                data-media-height="{{ $img1H }}">
             <div class="grid-inner-wrapper">
-              <canvas class="curtain-canvas"></canvas>
+              <canvas class="curtain-canvas" style="aspect-ratio: {{ $img1W }}/{{ $img1H }};"></canvas>
               <div class="curtain-handle">
                 <span class="curtain-arrow left">←</span>
                 <span class="curtain-arrow right">→</span>
@@ -148,26 +151,22 @@
         @case('vr')
           @php
             $iframeSrc = $col['link'];
-            $paddingTop = 100 / ($w / $h);
             if (!str_starts_with($iframeSrc, '<iframe')) {
-              $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style=\"width:100%;height:100%\"></iframe>';
+              $iframeSrc = '<iframe src="' . e($iframeSrc) . '" frameborder="0" allowfullscreen allow="xr-spatial-tracking; gyroscope; accelerometer" scrolling="no" style="width:100%;height:100%"></iframe>';
             }
           @endphp
           <div class="grid-item"
                style="width: {{ $widthPercent }}%;"
                data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-            <div class="grid-inner-wrapper vr-wrapper" style="position: relative; padding-top: {{ $paddingTop }}%;">
-              <div style="position: absolute; top:0; left:0; width:100%; height:100%;">
-                {!! $iframeSrc !!}
-              </div>
+            <div class="grid-inner-wrapper vr-wrapper" style="aspect-ratio: {{ $w }}/{{ $h }};">
+              {!! $iframeSrc !!}
             </div>
           </div>
           @break
 
         @default
           <div class="grid-item"
-               style="width: {{ $widthPercent }}%;"
-               data-media-width="16" data-media-height="9">
+               style="width: {{ $widthPercent }}%;">
             <div class="grid-inner-wrapper">
               {{ $col['link'] ?? '' }}
             </div>
@@ -308,10 +307,10 @@ window.addEventListener('resize', () => {
   display: flex;
   flex-wrap: nowrap;
   gap: 1px;
-  margin-bottom: 6px;
-  align-items: stretch;
   width: 100%;
+  align-items: stretch;
   overflow: hidden;
+  margin-bottom: 8px;
 }
 
 .grid-item {
@@ -319,9 +318,8 @@ window.addEventListener('resize', () => {
   flex-direction: column;
   justify-content: center;
   align-items: stretch;
+  height: 100%;
   overflow: hidden;
-  position: relative;
-  height: 100%; /* ← тянем под .grid-row */
 }
 
 .grid-inner-wrapper {
@@ -332,6 +330,12 @@ window.addEventListener('resize', () => {
   justify-content: center;
 }
 
+.grid-inner-wrapper > * {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 100%;
+}
 .grid-item img,
 .grid-item video,
 .grid-item iframe,
@@ -564,9 +568,11 @@ window.addEventListener('resize', () => {
   .grid-item {
     width: 100% !important;
     height: auto;
-    max-height: none;
   }
 
+  .grid-inner-wrapper {
+    aspect-ratio: auto !important;
+  }
   .grid-item img,
   .grid-item iframe {
     width: 100%;
