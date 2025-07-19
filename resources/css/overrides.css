@@ -161,7 +161,6 @@ input:checked + .slider:before {
 html.light-theme .header-link {
     position: relative;
     display: inline-block;
-    padding-bottom: 4px;
     text-decoration: none;
 }
 html.light-theme .header-link::after {
