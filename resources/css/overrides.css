@@ -162,11 +162,12 @@ html.light-theme .header-link {
     position: relative;
     display: inline-block;
     text-decoration: none;
+    overflow: hidden; /* чтобы подчёркивание не выходило */
 }
 html.light-theme .header-link::after {
     content: '';
     position: absolute;
-    bottom: 0;
+    bottom: 0; /* или bottom: -2px если нужно отступить ниже */
     left: 0;
     height: 2px;
     width: 100%;

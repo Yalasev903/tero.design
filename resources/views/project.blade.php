@@ -68,7 +68,7 @@
       $rowWidth = 1440;
       $rowHeight = $rowWidth / $totalRatio;
       $scale = min(1, $maxRowHeight / $rowHeight);
-      $finalHeight = round($rowHeight * $scale);
+      $finalHeight = round($rowHeight * $scale * 1.06);
     @endphp
 
     <div class="grid-row" style="height: {{ $finalHeight }}px; display: flex; gap: 1px; overflow: hidden;">
