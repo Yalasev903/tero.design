@@ -144,20 +144,18 @@
               </el-col>
               <el-col :span="12">
                 <el-form-item label="Маркер">
-                  <div style="display: flex; align-items: center;">
-                    <el-input
-                      v-model="form.marker"
-                      placeholder="Путь до иконки"
-                      :size="inputSize"
-                      style="flex: 1;"
-                    />
+                <div style="display: flex; align-items: center;">
+                    <el-button type="primary" @click="selectMarker" :size="inputSize">Выбрать файл</el-button>
+                    <span v-if="form.marker" style="margin-left: 10px; max-width: 220px; overflow: hidden; text-overflow: ellipsis;">
+                    {{ form.marker }}
+                    </span>
                     <img
-                      v-if="form.marker"
-                      :src="form.marker"
-                      alt="Маркер"
-                      style="height: 30px; margin-left: 10px; border-radius: 4px;"
+                    v-if="form.marker"
+                    :src="form.marker"
+                    alt="Маркер"
+                    style="height: 30px; margin-left: 10px; border-radius: 4px;"
                     />
-                  </div>
+                </div>
                 </el-form-item>
               </el-col>
             </el-row>
@@ -202,6 +200,7 @@ const form = ref({
   lng: '',
   zoom: '',
   google_key: '',
+  marker: '',
   footer_left: '',
   footer_right: '',
   footer_right_note: ''
@@ -242,6 +241,17 @@ const load = async () => {
 }
 
 const inputSize = inject('inputSize')
+
+const selectMarker = () => {
+  // Открываем VueFinder
+  window.open('/admin/filemanager?type=image', 'filemanager', 'width=1000,height=600')
+
+  // Назначаем callback
+  window.setSelectedFilePath = (path) => {
+    // Убираем префикс "/storage" если нужно
+    form.value.marker = path.startsWith('/') ? path : '/' + path
+  }
+}
 
 const saveSeo = async () => {
   try {
@@ -310,7 +320,8 @@ const saveMap = async () => {
       lat: form.value.lat,
       lng: form.value.lng,
       zoom: form.value.zoom,
-      google_key: form.value.google_key
+      google_key: form.value.google_key,
+      marker: form.value.marker,
     })
 
     ElNotification({

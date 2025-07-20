@@ -85,6 +85,7 @@ class SettingsController extends Controller
         $map->col_lng  = $request->lng ?? '';
         $map->col_zoom = $request->zoom ?? '';
         $map->col_key  = $request->google_key ?? '';
+        $map->col_marker = $request->marker ?? '';
         $map->save();
 
         return response()->noContent();
