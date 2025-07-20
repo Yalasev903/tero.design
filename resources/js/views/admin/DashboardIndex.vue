@@ -145,7 +145,7 @@
               <el-col :span="12">
                 <el-form-item label="Маркер">
                 <div style="display: flex; align-items: center;">
-                    <el-button type="primary" @click="selectMarker" :size="inputSize">Выбрать файл</el-button>
+                    <el-button type="primary" @click="openMarkerManager" :size="inputSize">Выбрать файл</el-button>
                     <span v-if="form.marker" style="margin-left: 10px; max-width: 220px; overflow: hidden; text-overflow: ellipsis;">
                     {{ form.marker }}
                     </span>
@@ -168,6 +168,24 @@
       </el-col>
     </el-row>
   </div>
+
+    <!-- ViewFinder -->
+    <teleport to="body">
+    <div v-if="showMarkerFinder" class="finder-modal">
+        <div class="finder-container">
+        <vue-finder
+            id="vuefinder-marker"
+            :request="{
+            baseUrl: '/api/vuefinder',
+            adapter: 'local',
+            xsrfHeaderName: 'X-XSRF-TOKEN'
+            }"
+            @select="handleMarkerSelect"
+        />
+        <button class="close-btn" @click="showMarkerFinder = false">✖</button>
+        </div>
+    </div>
+    </teleport>
 </template>
 
 <script setup>
@@ -178,7 +196,20 @@ import { ref, onMounted, inject } from 'vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'
 import ShowreelPreview from '@/components/admin/ShowreelPreview.vue'
+import VueFinder from 'vuefinder'
 
+const showMarkerFinder = ref(false)
+
+const openMarkerManager = () => {
+  showMarkerFinder.value = true
+}
+
+const handleMarkerSelect = (items) => {
+  if (!items.length) return
+  const path = items[0].path.replace(/^local:\/\//, '').replace(/^multimedia\//, '')
+  form.value.marker = `/multimedia/${path}`
+  showMarkerFinder.value = false
+}
 
 const form = ref({
   jivochat: false,
@@ -358,5 +389,35 @@ onMounted(load)
   color: #409EFF !important;
   font-weight: 500;
   border-radius: 6px;
+}
+.finder-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.finder-container {
+  width: 90%;
+  height: 90%;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+}
+.close-btn {
+  position: absolute;
+  top: 5px;
+  right: 95px;
+  background: #e00;
+  color: #fff;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 10;
 }
 </style>
