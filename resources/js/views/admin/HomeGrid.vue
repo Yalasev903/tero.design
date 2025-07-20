@@ -386,7 +386,7 @@ if (!cell) {
   mediaType.value = cell.media?.type || 'img'
   modalMediaSize.value = { w: null, h: null }
 
-  selectedHasLink.value = cell.has_link === true
+  selectedHasLink.value = Boolean(cell.has_link)
 console.log('MODAL selectedHasLink =', selectedHasLink.value)
   editingTarget.value = { rowIdx, colIdx }
   isEditingModal.value = true
