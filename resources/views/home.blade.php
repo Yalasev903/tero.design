@@ -174,7 +174,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.style.marginRight = '10px';
                 buttonContainer.appendChild(link);
             }
-
             // ℹ️ Кнопка info
             const infoIcon = document.createElement('span');
             infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
@@ -188,7 +187,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 } else {
                     infoBlock = document.createElement('div');
                     infoBlock.classList.add('info-block');
-                    infoBlock.innerHTML = text2;
+
+                    // Очистка text2 от пустых блоков и лишнего HTML
+                    const cleanedText2 = (text2 || '')
+                        .replace(/<p>(\s|&nbsp;|\u00A0)*<\/p>/gi, '') // удаляет пустые <p>, <p>&nbsp;</p>, <p> </p>
+                        .replace(/<br\s*\/?>/gi, '')                  // удаляет <br>
+                        .replace(/<ul>\s*<\/ul>/gi, '')               // удаляет пустые списки
+                        .replace(/\s+$/, '');                         // удаляет пробелы в конце строки
+
+                    infoBlock.innerHTML = cleanedText2;
                     popupInner.appendChild(infoBlock);
                 }
             });
