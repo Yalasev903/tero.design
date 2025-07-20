@@ -437,7 +437,7 @@ const loadGrid = async () => {
             ? JSON.parse(item.media || '{}')
             : (item.media || {}),
         is_mobile: item.is_mobile || false,
-        has_link: typeof item.has_link === 'boolean' ? item.has_link : true,
+        has_link: item.has_link === 1 || item.has_link === true,
         title: item.title || 'Без названия',
         text2: item.text2 || ''
         }
