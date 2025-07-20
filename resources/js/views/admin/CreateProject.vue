@@ -1614,6 +1614,7 @@ watch(
   justify-content: center;
   width: auto; /* 🔄 адаптивная ширина */
   max-width: 180px;
+  aspect-ratio: 16 / 9;
 }
 .media-thumb img,
 .media-thumb video {
