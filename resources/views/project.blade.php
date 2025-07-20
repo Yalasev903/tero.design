@@ -29,14 +29,14 @@
   @php $grid = $project->multimedia_grid; @endphp
 
 @foreach ($grid as $rowIndex => $row)
-  @php
+@php
     $preparedCols = [];
 
     foreach ($row as $col) {
         $w = $col['width'] ?? null;
         $h = $col['height'] ?? null;
 
-        // Извлекаем размеры и для img, и для video
+        // Попытка получить размеры, если они не заданы
         if ((!$w || !$h) && in_array($col['type'], ['img', 'video']) && !empty($col['link'])) {
             $path = public_path(ltrim($col['link'], '/'));
             if (file_exists($path)) {
@@ -44,6 +44,7 @@
             }
         }
 
+        // Запасной вариант, если ничего не вышло
         if (!$w || !$h) {
             $w = 1920;
             $h = 1080;
@@ -53,10 +54,7 @@
         $preparedCols[] = ['col' => $col, 'w' => $w, 'h' => $h, 'ratio' => $ratio];
     }
 
-    $totalRatio = array_sum(array_column($preparedCols, 'ratio'));
-
     $rowWidth = 1920;
-    $rawHeight = $rowWidth / $totalRatio;
 
     $colsCount = count($preparedCols);
     $maxRowHeight = match (true) {
@@ -67,8 +65,31 @@
         default => 360,
     };
 
-    $finalHeight = min($rawHeight, $maxRowHeight);
-  @endphp
+    // 🔁 Подбор финальной высоты строки по фактическим пропорциям
+    $finalHeight = null;
+    $step = 10;
+
+    for ($h = 200; $h <= $maxRowHeight; $h += $step) {
+        $totalWidth = 0;
+
+        foreach ($preparedCols as $entry) {
+            $totalWidth += ($entry['w'] / $entry['h']) * $h;
+        }
+
+        if ($totalWidth >= $rowWidth) {
+            $finalHeight = $h;
+            break;
+        }
+    }
+
+    // Если не набралась ширина — берём максимально допустимую
+    $finalHeight = $finalHeight ?? $maxRowHeight;
+
+    // Теперь можно снова посчитать ratio/percent
+    $totalRatio = array_sum(array_map(function ($entry) {
+        return $entry['w'] / $entry['h'];
+    }, $preparedCols));
+@endphp
 
   <div class="grid-row" style="height: {{ round($finalHeight) }}px; display: flex;">
     @foreach ($preparedCols as $entry)
