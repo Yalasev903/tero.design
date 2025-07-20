@@ -367,14 +367,15 @@ const defaultFolder = ref('')
 const isEditingModal = ref(false)
 const editingTarget = ref({ rowIdx: null, colIdx: null })
 
-const openEditModal = (rowIdx, colIdx) => {
+const openEditModal = async (rowIdx, colIdx) => {
   const cell = gridRows.value[rowIdx].items[colIdx]
-if (!cell) {
-  console.warn('❌ cell не найден при openEditModal', rowIdx, colIdx)
-  return
-}
+  if (!cell) {
+    console.warn('❌ cell не найден при openEditModal', rowIdx, colIdx)
+    return
+  }
 
   selectedProjectId.value = cell.project_id ?? null
+
   if (cell.media?.type === 'img') {
     selectedPath.value = cell.media.link
     mediaDescription.value = cell.media?.description || ''
@@ -387,10 +388,15 @@ if (!cell) {
   modalMediaSize.value = { w: null, h: null }
 
   selectedHasLink.value = Boolean(cell.has_link)
-console.log('MODAL selectedHasLink =', selectedHasLink.value)
+  console.log('MODAL selectedHasLink =', selectedHasLink.value)
+
   editingTarget.value = { rowIdx, colIdx }
   isEditingModal.value = true
+
+  await nextTick() // 🧠 гарантируем установку значений перед рендером модалки
+
   showMediaModal.value = true
+
   loadProjects()
 }
 
