@@ -386,7 +386,7 @@ if (!cell) {
   mediaType.value = cell.media?.type || 'img'
   modalMediaSize.value = { w: null, h: null }
 
-  selectedHasLink.value = typeof cell.has_link === 'undefined' ? true : cell.has_link
+  selectedHasLink.value = cell.has_link === true
 console.log('MODAL selectedHasLink =', selectedHasLink.value)
   editingTarget.value = { rowIdx, colIdx }
   isEditingModal.value = true
@@ -535,7 +535,7 @@ const saveGrid = async () => {
           is_mobile: item.is_mobile || false,
           title: item.title || '',
           text2: item.text2 || '',
-          has_link: typeof item.has_link === 'undefined' ? true : item.has_link
+          has_link: item.has_link === true
         })
       })
     })
@@ -760,6 +760,7 @@ const cancelMediaInsert = () => {
   isEditingModal.value = false
   editingTarget.value = { rowIdx: null, colIdx: null }
   mediaDescription.value = ''
+  selectedHasLink.value = true
 }
 
 const insertMedia = async () => {
