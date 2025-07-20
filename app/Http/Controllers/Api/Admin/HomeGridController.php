@@ -71,7 +71,7 @@ class HomeGridController extends Controller
                         'project_id' => $col['project_id'] ?? null,
                         'media' => json_encode($media, JSON_UNESCAPED_UNICODE),
                         'is_mobile' => $col['is_mobile'] ?? false,
-                        'has_link' => $col['has_link'] ?? true,
+                        'has_link' => array_key_exists('has_link', $col) ? $col['has_link'] : true,
                         'updated_at' => now(),
                     ]
                 );
