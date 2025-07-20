@@ -51,7 +51,7 @@
 
     .project-link-text {
     text-decoration: none;
-    font-size: 14px;
+    font-size: 20px;
     padding: 4px 10px;
     border-radius: 4px;
     transition: all 0.2s ease;
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 link.classList.add('project-link-text');
                 link.textContent = 'View Full Project';
                 link.style.position = 'relative';
-                link.style.top = '-12px';
+                link.style.top = '-10px';
                 link.style.marginRight = '10px';
                 buttonContainer.appendChild(link);
             }
