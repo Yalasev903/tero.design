@@ -309,7 +309,6 @@ window.addEventListener('resize', () => {
   align-items: stretch;
   /* overflow: hidden; */
 }
-
 .grid-item {
   display: flex;
   flex-direction: column;
@@ -318,6 +317,7 @@ window.addEventListener('resize', () => {
   height: 100%;
   overflow: hidden;
 }
+
 .grid-inner-wrapper {
   display: flex;
   align-items: center;
@@ -326,15 +326,13 @@ window.addEventListener('resize', () => {
   height: 100%;
   overflow: hidden;
 }
-
 .grid-inner-wrapper > img,
 .grid-inner-wrapper > video,
 .grid-inner-wrapper > iframe,
 .grid-inner-wrapper > canvas {
-  height: 100%;
-  width: auto;
-  max-width: 100%;
-  max-height: 100%;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
   display: block;
 }
 .grid-row.is-compact {
