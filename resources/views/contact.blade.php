@@ -75,7 +75,10 @@
         new google.maps.Marker({
             position: mapCenter,
             map: map,
-            icon: '{{ asset("multimedia/" . ($map_data["marker"]["link"] ?? "marker.png")) }}'
+            icon: {
+                url: '{{ asset($map_data["marker"]) }}',
+                scaledSize: new google.maps.Size(60, 60)
+            }
         });
 
         // Поведение при взаимодействии
