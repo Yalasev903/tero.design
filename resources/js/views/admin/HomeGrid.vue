@@ -431,7 +431,7 @@ const loadGrid = async () => {
             ? JSON.parse(item.media || '{}')
             : (item.media || {}),
         is_mobile: item.is_mobile || false,
-        has_link: item.has_link !== false,
+        has_link: typeof item.has_link === 'boolean' ? item.has_link : true,
         title: item.title || 'Без названия',
         text2: item.text2 || ''
         }
@@ -535,7 +535,7 @@ const saveGrid = async () => {
           is_mobile: item.is_mobile || false,
           title: item.title || '',
           text2: item.text2 || '',
-          has_link: item.has_link === true
+          has_link: item.has_link
         })
       })
     })
