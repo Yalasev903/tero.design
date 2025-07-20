@@ -264,6 +264,7 @@ const load = async () => {
   form.value.lng = data.lng
   form.value.zoom = data.zoom
   form.value.google_key = data.google_key
+  form.value.marker = data.marker || ''
   form.value.google_tm = data.google_tm || ''
   form.value.footer_left = data.footer_left || ''
   form.value.footer_right = data.footer_right || ''
