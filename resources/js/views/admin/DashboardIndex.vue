@@ -196,7 +196,6 @@ import { ref, onMounted, inject } from 'vue'
 import axios from 'axios'
 import { ElNotification } from 'element-plus'
 import ShowreelPreview from '@/components/admin/ShowreelPreview.vue'
-import VueFinder from 'vuefinder'
 
 const showMarkerFinder = ref(false)
 
