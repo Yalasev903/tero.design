@@ -91,10 +91,10 @@ body {
 }
 
 /* Переопределение top */
-.mobile-menu.open,
+/* .mobile-menu.open,
 .showreel.open {
     top: 0px !important;
-}
+} */
 
 .showreel-center {
     position: relative;
