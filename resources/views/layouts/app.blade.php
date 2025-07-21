@@ -597,6 +597,18 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const trigger = document.getElementById('js-menu-trigger');
+        const menu = document.getElementById('js-mobile-menu');
+        if (trigger && menu) {
+            trigger.addEventListener('click', function (e) {
+                e.preventDefault();
+                menu.classList.toggle('open');
+            });
+        }
+    });
+</script>
 
 @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
         <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
