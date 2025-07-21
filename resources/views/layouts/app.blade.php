@@ -427,6 +427,41 @@ body {
 </script>
 
 <script>
+document.addEventListener('DOMContentLoaded', async function () {
+    const posterImg = document.getElementById('showreel-poster-img');
+    const video = document.getElementById('js-video');
+    const posterBlock = document.getElementById('showreel-poster-block');
+
+    try {
+        const response = await fetch('/api/admin/showreel');
+        const data = await response.json();
+        const media = data.media;
+
+        if (!media || media.type !== 'video') throw new Error('Неверный формат данных');
+
+        // 👉 Устанавливаем постер
+        const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
+        if (posterImg) posterImg.src = poster;
+
+        // 👉 Добавляем <source> в видео
+        video.innerHTML = '';
+        for (const link of media.links) {
+            const source = document.createElement('source');
+            source.src = `/multimedia/${link.link}`;
+            source.type = link.mime || 'video/mp4';
+            video.appendChild(source);
+        }
+
+        video.load(); // ⬅️ очень важно: preload перед любым кликом
+
+    } catch (e) {
+        console.warn('Ошибка при подготовке видео:', e);
+        if (posterImg) posterImg.src = '/multimedia/showreel_2023/obl-2023_2.jpg';
+    }
+});
+</script>
+
+<script>
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('js-showreel');
     if (!modal) return;
@@ -435,7 +470,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeBtn = document.getElementById('js-showreel-close');
     const video = document.getElementById('js-video');
     const posterBlock = document.getElementById('showreel-poster-block');
-    const posterImg = document.getElementById('showreel-poster-img');
     const page = document.getElementById('page');
 
     const openModal = () => {
@@ -479,47 +513,27 @@ document.addEventListener('DOMContentLoaded', function () {
     if (playBtn && video) {
         playBtn.addEventListener('click', async function () {
             try {
-                // Загружаем данные о видео
-                const response = await fetch('/api/admin/showreel');
-                const data = await response.json();
-                const media = data.media;
+                document.querySelectorAll('video').forEach(v => {
+                    if (v !== video) v.pause();
+                });
 
-                if (!media || media.type !== 'video') throw new Error('Неверный формат видео');
-
-                // Устанавливаем постер
-                const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
-                if (posterImg) {
-                    posterImg.src = poster;
-                }
-
-                // Очищаем видео от старых source
-                video.innerHTML = '';
-
-                for (const link of media.links) {
-                    const source = document.createElement('source');
-                    source.src = `/multimedia/${link.link}`;
-                    source.type = link.mime || 'video/mp4';
-                    video.appendChild(source);
-                }
-
-                video.load();
                 posterBlock.style.display = 'none';
                 video.style.display = 'block';
 
-                // Временно отключаем звук для мобилок
+                // 🔈 Временно без звука (требование мобильных)
                 video.muted = true;
 
                 await video.play();
 
-                // Включаем звук после начала
+                // 🔊 Включаем звук спустя 300мс
                 setTimeout(() => {
                     video.muted = false;
                     video.volume = 1.0;
                 }, 300);
 
             } catch (err) {
-                console.warn('❌ Ошибка загрузки или воспроизведения Showreel:', err);
-                alert('Ошибка воспроизведения видео.');
+                console.warn('❌ Ошибка воспроизведения:', err);
+                alert('Видео не удалось воспроизвести.');
             }
         });
     }
