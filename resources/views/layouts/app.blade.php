@@ -514,13 +514,25 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (v !== video) v.pause();
             });
 
+            // Показываем видео, скрываем постер
             posterBlock.style.display = 'none';
             video.style.display = 'block';
 
+            // ✅ Обход ограничений: временно включаем mute
+            video.muted = true;
+
             requestAnimationFrame(() => {
-                video.play().catch(() => {
-                    // Тихо игнорируем ошибку
-                });
+                video.play()
+                    .then(() => {
+                        // ✅ Через 200мс включаем звук
+                        setTimeout(() => {
+                            video.muted = false;
+                            video.volume = 1.0;
+                        }, 200);
+                    })
+                    .catch((err) => {
+                        console.warn('Ошибка воспроизведения видео:', err);
+                    });
             });
         });
     }
