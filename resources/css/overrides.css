@@ -5,15 +5,22 @@ body.loading {
     background: #000;
 }
 .mobile-menu {
-    position: fixed;
-    top: -100%;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background: #000;
-    z-index: 9998;
-    display: block;
-    transition: top 0.3s ease;
+  position: fixed;
+  top: -100%;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: #000;
+  z-index: 10010; /* выше чем у всех video или content */
+  transition: top 0.3s ease;
+  display: block;
+}
+.mobile-menu.open {
+  top: 0 !important;
+}
+.services-item-video {
+  z-index: 0 !important;
+  position: relative !important;
 }
 .loader {
     position: fixed;
