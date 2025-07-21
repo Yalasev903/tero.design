@@ -425,7 +425,6 @@ body {
     }
 })();
 </script>
-
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
     const posterImg = document.getElementById('showreel-poster-img');
@@ -439,11 +438,9 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         if (!media || media.type !== 'video') throw new Error('Неверный формат данных');
 
-        // 👉 Устанавливаем постер
         const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
         if (posterImg) posterImg.src = poster;
 
-        // 👉 Добавляем <source> в видео
         video.innerHTML = '';
         for (const link of media.links) {
             const source = document.createElement('source');
@@ -452,7 +449,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             video.appendChild(source);
         }
 
-        video.load(); // ⬅️ очень важно: preload перед любым кликом
+        video.load(); // обязательно!
 
     } catch (e) {
         console.warn('Ошибка при подготовке видео:', e);
@@ -471,6 +468,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const video = document.getElementById('js-video');
     const posterBlock = document.getElementById('showreel-poster-block');
     const page = document.getElementById('page');
+
+    let isPlaying = false;
 
     const openModal = () => {
         modal.classList.add('open');
@@ -494,13 +493,16 @@ document.addEventListener('DOMContentLoaded', function () {
             page.classList.remove('loading', 'form-open', 'showreel-open');
         }
 
-        if (video) {
+        // ⛔ Останавливаем только если видео действительно играет
+        if (!video.paused && !video.ended) {
             video.pause();
-            video.currentTime = 0;
-            video.style.display = 'none';
         }
 
+        video.currentTime = 0;
+        video.style.display = 'none';
         if (posterBlock) posterBlock.style.display = 'flex';
+
+        isPlaying = false; // сбрасываем флаг
     };
 
     document.querySelectorAll('.js-showreel-open').forEach(el => {
@@ -512,28 +514,35 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (playBtn && video) {
         playBtn.addEventListener('click', async function () {
+            if (isPlaying) return; // блок повторного воспроизведения
+
             try {
+                isPlaying = true;
+
+                // Остановим другие видео
                 document.querySelectorAll('video').forEach(v => {
-                    if (v !== video) v.pause();
+                    if (v !== video && !v.paused) v.pause();
                 });
 
                 posterBlock.style.display = 'none';
                 video.style.display = 'block';
 
-                // 🔈 Временно без звука (требование мобильных)
                 video.muted = true;
 
-                await video.play();
+                const playPromise = video.play();
 
-                // 🔊 Включаем звук спустя 300мс
-                setTimeout(() => {
-                    video.muted = false;
-                    video.volume = 1.0;
-                }, 300);
+                if (playPromise !== undefined) {
+                    await playPromise;
+                    setTimeout(() => {
+                        video.muted = false;
+                        video.volume = 1.0;
+                    }, 300);
+                }
 
             } catch (err) {
                 console.warn('❌ Ошибка воспроизведения:', err);
                 alert('Видео не удалось воспроизвести.');
+                isPlaying = false;
             }
         });
     }
