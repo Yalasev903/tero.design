@@ -4,6 +4,17 @@ body.loading .grid {
 body.loading {
     background: #000;
 }
+.mobile-menu {
+    position: fixed;
+    top: -100%;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 9998;
+    display: block;
+    transition: top 0.3s ease;
+}
 .loader {
     position: fixed;
     z-index: 99999;

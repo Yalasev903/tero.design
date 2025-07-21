@@ -597,17 +597,39 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const trigger = document.getElementById('js-menu-trigger');
-        const menu = document.getElementById('js-mobile-menu');
-        if (trigger && menu) {
-            trigger.addEventListener('click', function (e) {
-                e.preventDefault();
-                menu.classList.toggle('open');
-            });
+document.addEventListener('DOMContentLoaded', function () {
+    const trigger = document.getElementById('js-menu-trigger');
+    const menu = document.getElementById('js-mobile-menu');
+    const showreel = document.getElementById('js-showreel');
+
+    if (!trigger || !menu) return;
+
+    // ✅ Тоггл мобильного меню
+    trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+
+        // Если открыто шоурил — закрываем его
+        if (showreel?.classList.contains('open')) {
+            showreel.classList.remove('open');
+            showreel.style.display = 'none';
+            document.body.style.overflow = '';
+            document.documentElement.style.overflow = '';
+            document.getElementById('js-video')?.pause();
         }
+
+        // Открываем/закрываем меню
+        menu.classList.toggle('open');
     });
+
+    // ✅ При клике на любую ссылку меню — закрыть меню
+    menu.querySelectorAll('a, .js-showreel-open').forEach(el => {
+        el.addEventListener('click', () => {
+            menu.classList.remove('open');
+        });
+    });
+});
 </script>
 
 @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
