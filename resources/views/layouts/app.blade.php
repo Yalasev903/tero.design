@@ -352,36 +352,36 @@ body {
     @show
 
     <script>
-    document.addEventListener('DOMContentLoaded', async function () {
-                const posterImg = document.getElementById('showreel-poster-img');
-        const videoEl = document.getElementById('js-video');
+document.addEventListener('DOMContentLoaded', async function () {
+    const posterImg = document.getElementById('showreel-poster-img');
+    const videoEl = document.getElementById('js-video');
 
-        try {
-            const response = await fetch('/api/admin/showreel');
-            const data = await response.json();
-            const media = data.media;
+    try {
+        const response = await fetch('/api/admin/showreel');
+        const data = await response.json();
+        const media = data.media;
 
-            if (!media || media.type !== 'video') return;
+        if (!media || media.type !== 'video') return;
 
-            const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
-            if (posterImg && poster) {
-                posterImg.setAttribute('src', poster);
-            }
-
-            videoEl.innerHTML = ''; // очистим старые source'ы
-
-            for (const link of media.links) {
-                const source = document.createElement('source');
-                source.src = `/multimedia/${link.link}`;
-                source.type = link.mime || 'video/mp4';
-                videoEl.appendChild(source);
-            }
-
-        } catch (error) {
-            console.error('Ошибка загрузки Showreel:', error);
-            posterImg.src = '/multimedia/showreel_2023/obl-2023_2.jpg';
+        const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
+        if (posterImg && poster) {
+            posterImg.setAttribute('src', poster);
         }
-    });
+
+        videoEl.innerHTML = ''; // очистим старые source'ы
+
+        for (const link of media.links) {
+            const source = document.createElement('source');
+            source.src = `/multimedia/${link.link}`; 
+            source.type = link.mime || 'video/mp4';
+            videoEl.appendChild(source);
+        }
+
+    } catch (error) {
+        console.error('Ошибка загрузки Showreel:', error);
+        posterImg.src = '/multimedia/showreel_2023/obl-2023_2.jpg';
+    }
+});
     </script>
         <script>
         document.addEventListener('DOMContentLoaded', function () {
