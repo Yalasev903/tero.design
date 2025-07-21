@@ -610,7 +610,7 @@ document.addEventListener('DOMContentLoaded', function () {
     trigger.addEventListener('click', function (e) {
         e.preventDefault();
 
-        // Если открыто шоурил — закрываем его
+        // Закрываем шоурил, если открыт
         if (showreel?.classList.contains('open')) {
             showreel.classList.remove('open');
             showreel.style.display = 'none';
@@ -619,14 +619,18 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('js-video')?.pause();
         }
 
-        // Открываем/закрываем меню
+        // ⬅️ ВОТ ЭТО ГЛАВНОЕ: переключаем класс у кнопки
+        this.classList.toggle('open');
+
+        // Переключаем класс у мобильного меню
         menu.classList.toggle('open');
     });
 
-    // ✅ При клике на любую ссылку меню — закрыть меню
+    // При клике по ссылке — закрываем меню и сбрасываем крестик
     menu.querySelectorAll('a, .js-showreel-open').forEach(el => {
         el.addEventListener('click', () => {
             menu.classList.remove('open');
+            trigger.classList.remove('open');
         });
     });
 });
