@@ -469,20 +469,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const page = document.getElementById('page');
 
     const openModal = () => {
+        alert('🟢 Открыт Showreel modal');
         modal.classList.add('open');
         modal.style.display = 'flex';
 
-        // Скрываем скролл
         document.body.style.overflow = 'hidden';
         document.documentElement.style.overflow = 'hidden';
 
         if (page) page.classList.add('showreel-open');
 
-        // Подготовка видео
         if (video) {
             video.pause();
             video.currentTime = 0;
             video.style.display = 'none';
+            alert('🔄 Видео сброшено и скрыто');
         }
         if (posterBlock) posterBlock.style.display = 'flex';
     };
@@ -491,7 +491,6 @@ document.addEventListener('DOMContentLoaded', function () {
         modal.classList.remove('open');
         modal.style.display = 'none';
 
-        // Возврат скролла
         document.body.style.overflow = '';
         document.documentElement.style.overflow = '';
 
@@ -507,7 +506,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (posterBlock) posterBlock.style.display = 'flex';
     };
 
-    // Кнопка открытия Showreel
     document.querySelectorAll('.js-showreel-open').forEach(el => {
         el.addEventListener('click', function (e) {
             e.preventDefault();
@@ -515,10 +513,56 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    // Кнопка Play — запуск видео по клику
+    if (video) {
+        // Логирование видео-событий
+        video.addEventListener('error', (e) => {
+            console.error('❌ VIDEO ERROR:', e);
+            alert('❌ Ошибка при загрузке видео: ' + JSON.stringify(video.error));
+        });
+
+        video.addEventListener('loadedmetadata', () => {
+            console.log('ℹ️ Metadata загружена. Длительность:', video.duration);
+            alert('ℹ️ Metadata загружена. Длительность: ' + video.duration);
+        });
+
+        video.addEventListener('loadeddata', () => {
+            console.log('✅ Видео загружено (loadeddata)');
+            alert('✅ Видео загружено полностью (loadeddata)');
+        });
+
+        video.addEventListener('canplay', () => {
+            console.log('✅ Видео можно воспроизводить');
+            alert('✅ Видео готово к воспроизведению (canplay)');
+        });
+
+        video.addEventListener('stalled', () => {
+            console.warn('⚠️ Загрузка видео остановилась (stalled)');
+            alert('⚠️ Загрузка видео остановилась (stalled)');
+        });
+
+        video.addEventListener('abort', () => {
+            console.warn('⚠️ Загрузка видео была прервана (abort)');
+            alert('⚠️ Загрузка видео была прервана (abort)');
+        });
+
+        video.addEventListener('play', () => {
+            console.log('▶️ Воспроизведение началось');
+            alert('▶️ Воспроизведение началось');
+        });
+
+        video.addEventListener('pause', () => {
+            console.log('⏸ Видео поставлено на паузу');
+        });
+
+        video.addEventListener('ended', () => {
+            console.log('⏹ Видео завершено');
+        });
+    }
+
     if (playBtn && video) {
         playBtn.addEventListener('click', function () {
-            // Останавливаем все остальные видео
+            alert('▶️ Нажата кнопка PLAY');
+
             document.querySelectorAll('video').forEach(v => {
                 if (v !== video) {
                     v.pause();
@@ -528,16 +572,16 @@ document.addEventListener('DOMContentLoaded', function () {
             posterBlock.style.display = 'none';
             video.style.display = 'block';
 
-            // Вызов play() после отрисовки
             requestAnimationFrame(() => {
+                alert('⏯ Попытка воспроизвести видео');
                 video.play().catch(e => {
-                    console.warn('Не удалось воспроизвести видео:', e);
+                    console.error('❌ Не удалось воспроизвести видео:', e);
+                    alert('❌ Не удалось воспроизвести видео: ' + e.message);
                 });
             });
         });
     }
 
-    // Закрытие по кнопке
     if (closeBtn) {
         closeBtn.addEventListener('click', function (e) {
             e.preventDefault();
@@ -545,17 +589,16 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // Закрытие по клику вне
     modal.addEventListener('click', function (e) {
         if (e.target === modal) closeModal();
     });
 
-    // Закрытие по ESC
     document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') closeModal();
     });
 });
 </script>
+
         @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
         <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
         @endif
