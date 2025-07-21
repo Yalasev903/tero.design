@@ -351,38 +351,6 @@ body {
         </script>
     @show
 
-    <script>
-document.addEventListener('DOMContentLoaded', async function () {
-    const posterImg = document.getElementById('showreel-poster-img');
-    const videoEl = document.getElementById('js-video');
-
-    try {
-        const response = await fetch('/api/admin/showreel');
-        const data = await response.json();
-        const media = data.media;
-
-        if (!media || media.type !== 'video') return;
-
-        const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
-        if (posterImg && poster) {
-            posterImg.setAttribute('src', poster);
-        }
-
-        videoEl.innerHTML = ''; // очистим старые source'ы
-
-        for (const link of media.links) {
-            const source = document.createElement('source');
-            source.src = `/multimedia/${link.link}`;
-            source.type = link.mime || 'video/mp4';
-            videoEl.appendChild(source);
-        }
-
-    } catch (error) {
-        console.error('Ошибка загрузки Showreel:', error);
-        posterImg.src = '/multimedia/showreel_2023/obl-2023_2.jpg';
-    }
-});
-    </script>
         <script>
         document.addEventListener('DOMContentLoaded', function () {
             const checkbox = document.getElementById('theme-toggle-checkbox');
@@ -457,6 +425,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 })();
 </script>
+
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('js-showreel');
@@ -466,6 +435,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const closeBtn = document.getElementById('js-showreel-close');
     const video = document.getElementById('js-video');
     const posterBlock = document.getElementById('showreel-poster-block');
+    const posterImg = document.getElementById('showreel-poster-img');
     const page = document.getElementById('page');
 
     const openModal = () => {
@@ -476,8 +446,6 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.style.overflow = 'hidden';
 
         if (page) page.classList.add('showreel-open');
-
-        // Не трогаем видео, чтобы не сбить play()
         if (posterBlock) posterBlock.style.display = 'flex';
     };
 
@@ -509,31 +477,50 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     if (playBtn && video) {
-        playBtn.addEventListener('click', function () {
-            document.querySelectorAll('video').forEach(v => {
-                if (v !== video) v.pause();
-            });
+        playBtn.addEventListener('click', async function () {
+            try {
+                // Загружаем данные о видео
+                const response = await fetch('/api/admin/showreel');
+                const data = await response.json();
+                const media = data.media;
 
-            // Показываем видео, скрываем постер
-            posterBlock.style.display = 'none';
-            video.style.display = 'block';
+                if (!media || media.type !== 'video') throw new Error('Неверный формат видео');
 
-            // ✅ Обход ограничений: временно включаем mute
-            video.muted = true;
+                // Устанавливаем постер
+                const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
+                if (posterImg) {
+                    posterImg.src = poster;
+                }
 
-            requestAnimationFrame(() => {
-                video.play()
-                    .then(() => {
-                        // ✅ Через 200мс включаем звук
-                        setTimeout(() => {
-                            video.muted = false;
-                            video.volume = 1.0;
-                        }, 200);
-                    })
-                    .catch((err) => {
-                        console.warn('Ошибка воспроизведения видео:', err);
-                    });
-            });
+                // Очищаем видео от старых source
+                video.innerHTML = '';
+
+                for (const link of media.links) {
+                    const source = document.createElement('source');
+                    source.src = `/multimedia/${link.link}`;
+                    source.type = link.mime || 'video/mp4';
+                    video.appendChild(source);
+                }
+
+                video.load();
+                posterBlock.style.display = 'none';
+                video.style.display = 'block';
+
+                // Временно отключаем звук для мобилок
+                video.muted = true;
+
+                await video.play();
+
+                // Включаем звук после начала
+                setTimeout(() => {
+                    video.muted = false;
+                    video.volume = 1.0;
+                }, 300);
+
+            } catch (err) {
+                console.warn('❌ Ошибка загрузки или воспроизведения Showreel:', err);
+                alert('Ошибка воспроизведения видео.');
+            }
         });
     }
 
