@@ -598,44 +598,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const trigger = document.getElementById('js-menu-trigger');
-    const menu = document.getElementById('js-mobile-menu');
-    const showreel = document.getElementById('js-showreel');
-
-    if (!trigger || !menu) return;
-
-    // ✅ Тоггл мобильного меню
-    trigger.addEventListener('click', function (e) {
-        e.preventDefault();
-
-        // Закрываем шоурил, если открыт
-        if (showreel?.classList.contains('open')) {
-            showreel.classList.remove('open');
-            showreel.style.display = 'none';
-            document.body.style.overflow = '';
-            document.documentElement.style.overflow = '';
-            document.getElementById('js-video')?.pause();
-        }
-
-        // ⬅️ ВОТ ЭТО ГЛАВНОЕ: переключаем класс у кнопки
-        this.classList.toggle('open');
-
-        // Переключаем класс у мобильного меню
-        menu.classList.toggle('open');
-    });
-
-    // При клике по ссылке — закрываем меню и сбрасываем крестик
-    menu.querySelectorAll('a, .js-showreel-open').forEach(el => {
-        el.addEventListener('click', () => {
-            menu.classList.remove('open');
-            trigger.classList.remove('open');
-        });
-    });
-});
-</script>
-
 @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
         <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
         @endif
