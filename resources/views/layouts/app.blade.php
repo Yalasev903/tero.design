@@ -372,7 +372,7 @@ document.addEventListener('DOMContentLoaded', async function () {
 
         for (const link of media.links) {
             const source = document.createElement('source');
-            source.src = `/multimedia/${link.link}`; 
+            source.src = `/multimedia/${link.link}`;
             source.type = link.mime || 'video/mp4';
             videoEl.appendChild(source);
         }
@@ -457,95 +457,105 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 })();
 </script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const modal = document.getElementById('js-showreel');
-             if (!modal) return;
-            const playBtn = document.querySelector('.js-showreel-video-play');
-            const closeBtn = document.getElementById('js-showreel-close');
-            const video = document.getElementById('js-video');
-            const posterBlock = document.getElementById('showreel-poster-block');
-            const page = document.getElementById('page');
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('js-showreel');
+    if (!modal) return;
 
-            const openModal = () => {
-                modal.classList.add('open');
-                modal.style.display = 'flex';
+    const playBtn = document.querySelector('.js-showreel-video-play');
+    const closeBtn = document.getElementById('js-showreel-close');
+    const video = document.getElementById('js-video');
+    const posterBlock = document.getElementById('showreel-poster-block');
+    const page = document.getElementById('page');
 
-                // Скрываем скролл
-                document.body.style.overflow = 'hidden';
-                document.documentElement.style.overflow = 'hidden'; // <- важно для Safari/Firefox
+    const openModal = () => {
+        modal.classList.add('open');
+        modal.style.display = 'flex';
 
-                if (page) page.classList.add('showreel-open'); // если нужно доп.стили
+        // Скрываем скролл
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
 
-                // Обновляем видео
-                if (video) {
-                    video.pause();
-                    video.currentTime = 0;
-                    video.style.display = 'none';
-                }
-                if (posterBlock) posterBlock.style.display = 'flex';
-            };
+        if (page) page.classList.add('showreel-open');
 
-            const closeModal = () => {
-                modal.classList.remove('open');
-                modal.style.display = 'none';
+        // Подготовка видео
+        if (video) {
+            video.pause();
+            video.currentTime = 0;
+            video.style.display = 'none';
+        }
+        if (posterBlock) posterBlock.style.display = 'flex';
+    };
 
-                // Возвращаем скролл
-                document.body.style.overflow = '';
-                document.documentElement.style.overflow = '';
+    const closeModal = () => {
+        modal.classList.remove('open');
+        modal.style.display = 'none';
 
-                // Удаляем лишние классы
-                if (page) {
-                    page.classList.remove('loading', 'form-open', 'showreel-open');
-                }
+        // Возврат скролла
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
 
-                // Останавливаем и скрываем видео
-                if (video) {
-                    video.pause();
-                    video.currentTime = 0;
-                    video.style.display = 'none';
-                }
-                if (posterBlock) posterBlock.style.display = 'flex';
-            };
-
-            document.querySelectorAll('.js-showreel-open').forEach(el => {
-                el.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    openModal();
-                });
-            });
-
-            if (playBtn && video) {
-            playBtn.addEventListener('click', function () {
-                // Остановим все другие видео
-                document.querySelectorAll('video').forEach(v => {
-                    if (v !== video) {
-                        v.pause();
-                    }
-                });
-
-                posterBlock.style.display = 'none';
-                video.style.display = 'block';
-                video.play();
-            });
+        if (page) {
+            page.classList.remove('loading', 'form-open', 'showreel-open');
         }
 
-            if (closeBtn) {
-                closeBtn.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    closeModal();
-                });
-            }
+        if (video) {
+            video.pause();
+            video.currentTime = 0;
+            video.style.display = 'none';
+        }
+        if (posterBlock) posterBlock.style.display = 'flex';
+    };
 
-            modal.addEventListener('click', function (e) {
-                if (e.target === modal) closeModal();
+    // Кнопка открытия Showreel
+    document.querySelectorAll('.js-showreel-open').forEach(el => {
+        el.addEventListener('click', function (e) {
+            e.preventDefault();
+            openModal();
+        });
+    });
+
+    // Кнопка Play — запуск видео по клику
+    if (playBtn && video) {
+        playBtn.addEventListener('click', function () {
+            // Останавливаем все остальные видео
+            document.querySelectorAll('video').forEach(v => {
+                if (v !== video) {
+                    v.pause();
+                }
             });
 
-            document.addEventListener('keydown', function (e) {
-                if (e.key === 'Escape') closeModal();
+            posterBlock.style.display = 'none';
+            video.style.display = 'block';
+
+            // Вызов play() после отрисовки
+            requestAnimationFrame(() => {
+                video.play().catch(e => {
+                    console.warn('Не удалось воспроизвести видео:', e);
+                });
             });
         });
-        </script>
+    }
+
+    // Закрытие по кнопке
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function (e) {
+            e.preventDefault();
+            closeModal();
+        });
+    }
+
+    // Закрытие по клику вне
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+    });
+
+    // Закрытие по ESC
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+    });
+});
+</script>
         @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
         <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
         @endif
