@@ -425,6 +425,7 @@ body {
     }
 })();
 </script>
+
 <script>
 document.addEventListener('DOMContentLoaded', async function () {
     const posterImg = document.getElementById('showreel-poster-img');
@@ -439,7 +440,10 @@ document.addEventListener('DOMContentLoaded', async function () {
         if (!media || media.type !== 'video') throw new Error('Неверный формат данных');
 
         const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
-        if (posterImg) posterImg.src = poster;
+        if (posterImg) {
+            posterImg.src = poster;
+            console.log('[✅] Постер установлен:', poster);
+        }
 
         video.innerHTML = '';
         for (const link of media.links) {
@@ -447,12 +451,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             source.src = `/multimedia/${link.link}`;
             source.type = link.mime || 'video/mp4';
             video.appendChild(source);
+            console.log('[✅] Добавлен <source>:', source.src);
         }
 
-        video.load(); // обязательно!
+        video.load();
+        console.log('[✅] video.load() выполнен');
 
     } catch (e) {
-        console.warn('Ошибка при подготовке видео:', e);
+        console.error('❌ Ошибка при подготовке видео:', e);
         if (posterImg) posterImg.src = '/multimedia/showreel_2023/obl-2023_2.jpg';
     }
 });
@@ -471,6 +477,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let isPlaying = false;
 
+    // ✅ Лог всех событий видео для дебага
+    ['loadstart', 'loadeddata', 'canplay', 'canplaythrough', 'play', 'playing', 'pause', 'ended', 'error'].forEach(evt => {
+        video.addEventListener(evt, () => {
+            console.log(`[🎬 video event] ${evt}`);
+        });
+    });
+
     const openModal = () => {
         modal.classList.add('open');
         modal.style.display = 'flex';
@@ -480,6 +493,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (page) page.classList.add('showreel-open');
         if (posterBlock) posterBlock.style.display = 'flex';
+
+        video.style.display = 'none';
+        isPlaying = false;
     };
 
     const closeModal = () => {
@@ -493,16 +509,16 @@ document.addEventListener('DOMContentLoaded', function () {
             page.classList.remove('loading', 'form-open', 'showreel-open');
         }
 
-        // ⛔ Останавливаем только если видео действительно играет
         if (!video.paused && !video.ended) {
             video.pause();
+            console.log('[🛑] Видео остановлено вручную');
         }
 
         video.currentTime = 0;
         video.style.display = 'none';
         if (posterBlock) posterBlock.style.display = 'flex';
 
-        isPlaying = false; // сбрасываем флаг
+        isPlaying = false;
     };
 
     document.querySelectorAll('.js-showreel-open').forEach(el => {
@@ -514,12 +530,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (playBtn && video) {
         playBtn.addEventListener('click', async function () {
-            if (isPlaying) return; // блок повторного воспроизведения
+            if (isPlaying) {
+                console.log('[⏳] Видео уже проигрывается, повторный запуск заблокирован.');
+                return;
+            }
 
             try {
                 isPlaying = true;
 
-                // Остановим другие видео
                 document.querySelectorAll('video').forEach(v => {
                     if (v !== video && !v.paused) v.pause();
                 });
@@ -533,16 +551,32 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (playPromise !== undefined) {
                     await playPromise;
+                    console.log('[▶️] Видео успешно запущено');
+
                     setTimeout(() => {
                         video.muted = false;
                         video.volume = 1.0;
+                        console.log('[🔊] Звук включён');
                     }, 300);
                 }
 
             } catch (err) {
-                console.warn('❌ Ошибка воспроизведения:', err);
-                alert('Видео не удалось воспроизвести.');
                 isPlaying = false;
+
+                const errorCode = video.error?.code || 'неизвестно';
+                console.error(`❌ Ошибка воспроизведения (code ${errorCode}):`, err);
+
+                if (video.error) {
+                    switch (video.error.code) {
+                        case 1: console.error('MEDIA_ERR_ABORTED: пользователь прервал'); break;
+                        case 2: console.error('MEDIA_ERR_NETWORK: ошибка загрузки файла'); break;
+                        case 3: console.error('MEDIA_ERR_DECODE: не может декодировать поток'); break;
+                        case 4: console.error('MEDIA_ERR_SRC_NOT_SUPPORTED: формат не поддерживается'); break;
+                        default: console.error('Неизвестная ошибка');
+                    }
+                }
+
+                alert('⛔ Видео не удалось воспроизвести. Проверьте консоль.');
             }
         });
     }
