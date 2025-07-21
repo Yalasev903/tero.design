@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const posterBlock = document.getElementById('showreel-poster-block');
 
     try {
-        const response = await fetch('/api/admin/showreel');
+        const response = await fetch('/api/showreel');
         const data = await response.json();
         const media = data.media;
 
