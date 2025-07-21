@@ -469,7 +469,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const page = document.getElementById('page');
 
     const openModal = () => {
-        alert('🟢 Открыт Showreel modal');
         modal.classList.add('open');
         modal.style.display = 'flex';
 
@@ -478,12 +477,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (page) page.classList.add('showreel-open');
 
-        if (video) {
-            video.pause();
-            video.currentTime = 0;
-            video.style.display = 'none';
-            alert('🔄 Видео сброшено и скрыто');
-        }
+        // Не трогаем видео, чтобы не сбить play()
         if (posterBlock) posterBlock.style.display = 'flex';
     };
 
@@ -503,6 +497,7 @@ document.addEventListener('DOMContentLoaded', function () {
             video.currentTime = 0;
             video.style.display = 'none';
         }
+
         if (posterBlock) posterBlock.style.display = 'flex';
     };
 
@@ -513,70 +508,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    if (video) {
-        // Логирование видео-событий
-        video.addEventListener('error', (e) => {
-            console.error('❌ VIDEO ERROR:', e);
-            alert('❌ Ошибка при загрузке видео: ' + JSON.stringify(video.error));
-        });
-
-        video.addEventListener('loadedmetadata', () => {
-            console.log('ℹ️ Metadata загружена. Длительность:', video.duration);
-            alert('ℹ️ Metadata загружена. Длительность: ' + video.duration);
-        });
-
-        video.addEventListener('loadeddata', () => {
-            console.log('✅ Видео загружено (loadeddata)');
-            alert('✅ Видео загружено полностью (loadeddata)');
-        });
-
-        video.addEventListener('canplay', () => {
-            console.log('✅ Видео можно воспроизводить');
-            alert('✅ Видео готово к воспроизведению (canplay)');
-        });
-
-        video.addEventListener('stalled', () => {
-            console.warn('⚠️ Загрузка видео остановилась (stalled)');
-            alert('⚠️ Загрузка видео остановилась (stalled)');
-        });
-
-        video.addEventListener('abort', () => {
-            console.warn('⚠️ Загрузка видео была прервана (abort)');
-            alert('⚠️ Загрузка видео была прервана (abort)');
-        });
-
-        video.addEventListener('play', () => {
-            console.log('▶️ Воспроизведение началось');
-            alert('▶️ Воспроизведение началось');
-        });
-
-        video.addEventListener('pause', () => {
-            console.log('⏸ Видео поставлено на паузу');
-        });
-
-        video.addEventListener('ended', () => {
-            console.log('⏹ Видео завершено');
-        });
-    }
-
     if (playBtn && video) {
         playBtn.addEventListener('click', function () {
-            alert('▶️ Нажата кнопка PLAY');
-
             document.querySelectorAll('video').forEach(v => {
-                if (v !== video) {
-                    v.pause();
-                }
+                if (v !== video) v.pause();
             });
 
             posterBlock.style.display = 'none';
             video.style.display = 'block';
 
             requestAnimationFrame(() => {
-                alert('⏯ Попытка воспроизвести видео');
-                video.play().catch(e => {
-                    console.error('❌ Не удалось воспроизвести видео:', e);
-                    alert('❌ Не удалось воспроизвести видео: ' + e.message);
+                video.play().catch(() => {
+                    // Тихо игнорируем ошибку
                 });
             });
         });
@@ -599,7 +542,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-        @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
+@if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
         <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
         @endif
 
