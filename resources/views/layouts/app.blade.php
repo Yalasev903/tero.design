@@ -460,7 +460,8 @@ body {
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             const modal = document.getElementById('js-showreel');
-            const playBtn = document.querySelector('.js-video-play');
+             if (!modal) return;
+            const playBtn = document.querySelector('.js-showreel-video-play');
             const closeBtn = document.getElementById('js-showreel-close');
             const video = document.getElementById('js-video');
             const posterBlock = document.getElementById('showreel-poster-block');
@@ -515,12 +516,19 @@ body {
             });
 
             if (playBtn && video) {
-                playBtn.addEventListener('click', function () {
-                    posterBlock.style.display = 'none';
-                    video.style.display = 'block';
-                    video.play();
+            playBtn.addEventListener('click', function () {
+                // Остановим все другие видео
+                document.querySelectorAll('video').forEach(v => {
+                    if (v !== video) {
+                        v.pause();
+                    }
                 });
-            }
+
+                posterBlock.style.display = 'none';
+                video.style.display = 'block';
+                video.play();
+            });
+        }
 
             if (closeBtn) {
                 closeBtn.addEventListener('click', function (e) {

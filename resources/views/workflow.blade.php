@@ -16,16 +16,21 @@
 
             <div class="workflow-player js-player">
                 <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
+                     id="workflow-poster"
                      alt="{{ $workflow->col_poster_alt ?? 'Workflow poster' }}"
                      class="workflow-player-poster b-lazy">
 
-                <div class="workflow-player-play js-video-play">
+                <div class="workflow-player-play js-workflow-play">
                     <img src="/img/play.png" alt="play image">
                 </div>
 
                 <video controls
-                       class="workflow-player-video js-video"
-                       preload="metadata">
+                       id="workflow-video"
+                       class="workflow-player-video js-workflow-video"
+                       preload="metadata"
+                       playsinline
+                       controlsList="nodownload noplaybackrate nofullscreen"
+                       disablePictureInPicture>
                     <source src="/multimedia/{{ $workflow->col_video ?? '' }}" type="video/mp4">
                 </video>
             </div>
@@ -49,4 +54,50 @@
             @endforeach
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const video = document.getElementById('workflow-video');
+    const poster = document.getElementById('workflow-poster');
+    const playBtn = document.querySelector('.js-workflow-play');
+
+    if (!video || !playBtn || !poster) return;
+
+    playBtn.addEventListener('click', function () {
+        // Скрываем постер и кнопку
+        poster.style.display = 'none';
+        playBtn.style.display = 'none';
+
+        // Останавливаем все остальные видео, кроме workflow
+        document.querySelectorAll('video').forEach(v => {
+            if (v !== video) {
+                v.pause();
+            }
+        });
+
+        // Показываем и воспроизводим текущее видео
+        video.style.display = 'block';
+        video.play().catch(e => console.warn('Ошибка воспроизведения:', e));
+    });
+
+    // Если пользователь поставил паузу вручную — вернуть постер
+    video.addEventListener('pause', function () {
+        if (!video.ended) {
+            poster.style.display = 'block';
+            playBtn.style.display = 'block';
+            video.style.display = 'none';
+        }
+    });
+
+    // При завершении — показать постер снова
+    video.addEventListener('ended', function () {
+        poster.style.display = 'block';
+        playBtn.style.display = 'block';
+        video.style.display = 'none';
+        video.currentTime = 0;
+    });
+});
+</script>
 @endsection

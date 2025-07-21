@@ -10,7 +10,7 @@
             <div class="showreel-center">
                 <div class="showreel-poster-block" id="showreel-poster-block">
                     <img id="showreel-poster-img" alt="Showreel Poster">
-                    <button type="button" class="showreel-play js-video-play">
+                    <button type="button" class="showreel-play js-showreel-video-play">
                         <svg width="140" height="140" viewBox="0 0 140 140" fill="none">
                             <circle cx="70" cy="70" r="65" stroke="#fff" stroke-width="6"/>
                             <polygon points="58,45 105,70 58,95" fill="#fff"/>
