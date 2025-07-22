@@ -56,7 +56,6 @@
 
     @section('header_styles')
         <link rel="stylesheet" href="{{ asset('css/style.min.css?v=5.92') }}"/>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/css/lightgallery.min.css">
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/before-after.js/dist/before-after.min.css">
     @show
      <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
@@ -339,7 +338,6 @@ body {
     @section('scripts')
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
         <script src="{{ asset('js/lightgallery.min.js') }}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/lightgallery@2.7.1/plugins/video/lg-video.min.js"></script>
         <script src="{{ asset('js/jquery.event.move.min.js') }}"></script>
         <script src="{{ asset('js/jquery.twentytwenty.min.js') }}"></script>
         <script src="{{ asset('js/main.min.js?v=5.92') }}"></script>
