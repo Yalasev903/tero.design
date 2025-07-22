@@ -104,6 +104,40 @@
 #scroll-to-top:hover {
     color: white !important; /* при hover → цвет SVG меняется */
 }
+.popup-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 15px;
+    z-index: 99999;
+    order: 3;
+}
+.popup-arrow,
+.popup-close {
+    font-size: 32px;
+    color: white;
+    background: rgba(0,0,0,0.6);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+}
+.popup-arrow:hover,
+.popup-close:hover {
+    background: rgba(255,255,255,0.2);
+}
+@media (max-width: 768px) {
+    .popup-controls {
+        position: fixed;
+        bottom: 20px;
+        left: 0;
+        width: 100%;
+        justify-content: center;
+        gap: 20px;
+    }
+}
     </style>
     {{-- / Внутренние стили главной --}}
 
@@ -229,6 +263,39 @@ document.addEventListener('DOMContentLoaded', function () {
             topBar.appendChild(titleElement);
             topBar.appendChild(buttonContainer);
             popupInner.appendChild(topBar);
+
+
+        // 🔁 ДОБАВЛЯЕМ кнопки переключения и крестик (внизу)
+        const controls = document.createElement('div');
+        controls.classList.add('popup-controls');
+
+        const btnPrev = document.createElement('div');
+        btnPrev.classList.add('popup-arrow', 'prev');
+        btnPrev.textContent = '←';
+        btnPrev.onclick = function () {
+            const newIndex = (i - 1 + gridItemLinks.length) % gridItemLinks.length;
+            gridItemLinks[newIndex].click();
+        };
+
+        const btnNext = document.createElement('div');
+        btnNext.classList.add('popup-arrow', 'next');
+        btnNext.textContent = '→';
+        btnNext.onclick = function () {
+            const newIndex = (i + 1) % gridItemLinks.length;
+            gridItemLinks[newIndex].click();
+        };
+
+        const btnClose = document.createElement('div');
+        btnClose.classList.add('popup-close');
+        btnClose.textContent = '✕';
+        btnClose.onclick = function () {
+            popup.innerHTML = '';
+            popup.classList.remove('active');
+        };
+
+        controls.append(btnPrev, btnClose, btnNext);
+        popupInner.appendChild(controls);
+
 
             // 💡 Проверка наложения заголовка на кнопки (только для мобильной версии)
             setTimeout(() => {
