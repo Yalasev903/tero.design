@@ -31,6 +31,17 @@
             .popup-inner { max-width: 95%; max-height: 95%;}
             .info-block ul li { font-size: 12px;}
             .info-block { right: 11px; top: 45px; background: #0009; padding: 8px 8px; text-align: left;}
+                .popup-inner img,
+                .popup-inner video {
+                    max-width: 100%;
+                    height: auto;
+                }
+
+                .popup-inner img.tall-media,
+                .popup-inner video.tall-media {
+                    transform: scale(0.75);
+                    transform-origin: center top;
+                }
         }
         .close_svg { position: absolute; right: 10px; top: 26px; width: 28px; cursor: pointer;}
         .project-info {
@@ -122,6 +133,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (mediaType === 'image') {
                 const img = document.createElement('img');
                 img.src = mediaUrl;
+                img.onload = function () {
+                    if (this.naturalHeight / this.naturalWidth > 1.5) {
+                        this.classList.add('tall-media');
+                    }
+                };
                 popupInner.appendChild(img);
             } else {
                 mediaUrl = this.dataset.video;
@@ -133,6 +149,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const source = document.createElement('source');
                 source.src = mediaUrl;
                 video.appendChild(source);
+
+                // Проверка пропорций после метаданных
+                video.onloadedmetadata = function () {
+                    if (video.videoHeight / video.videoWidth > 1.5) {
+                        video.classList.add('tall-media');
+                    }
+                };
+
                 popupInner.appendChild(video);
             }
 
