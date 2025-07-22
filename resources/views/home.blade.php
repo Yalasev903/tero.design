@@ -60,18 +60,19 @@
         margin: 0;
         flex: 1;
     }
-
     .project-link-text {
-    text-decoration: none;
-    font-size: 20px;
-    padding: 4px 10px;
-    border-radius: 4px;
-    transition: all 0.2s ease;
+        text-decoration: none;
+        font-size: 20px;
+        padding: 4px 10px;
+        border-radius: 4px;
+        transition: none;
+        background: transparent;
+        color: #fff;
     }
 
     .project-link-text:hover {
-        background: #000;
-        color: #ccc;
+        background: transparent !important;
+        color: #fff !important; /* или inherit, если нужно */
     }
 
 /* Повышаем специфичность и применяем !important */
@@ -247,11 +248,18 @@ document.addEventListener('DOMContentLoaded', function () {
             // 🔧 Верхняя строка: заголовок + кнопки
             const topBar = document.createElement('div');
             topBar.style.position = 'absolute';
-            topBar.style.top = '5px';
+
+            // 🔧 Учитываем мобильную версию
+            if (window.innerWidth <= 576) {
+                topBar.style.top = '5px';
+            } else {
+                topBar.style.top = '-35px';
+            }
+
             topBar.style.left = '10px';
             topBar.style.right = '10px';
             topBar.style.zIndex = '2';
-            topBar.style.height = '30px'; // для контроля высоты
+            topBar.style.height = '30px';
 
             // Заголовок проекта — теперь абсолютно слева
             const titleElement = document.createElement('h3');
