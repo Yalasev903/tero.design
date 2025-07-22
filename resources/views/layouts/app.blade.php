@@ -598,46 +598,28 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 <script>
-    	/* Video
-	------------------------------------------------------- */
-	const videoPlayElement = document.querySelector('#js-video-play')
-	if(videoPlayElement) {
-		videoPlayElement.addEventListener('click', () => {
-			videoElement.play()
-			playerElement.classList.add('play')
-		})
+document.addEventListener('DOMContentLoaded', function () {
+	const menuTriggerElement = document.getElementById('js-menu-trigger');
+	const mobileMenuElement = document.getElementById('js-mobile-menu');
+	const headerElement = document.getElementById('js-header');
+
+	if (!menuTriggerElement || !mobileMenuElement || !headerElement) {
+		console.warn('[⚠️] Элементы мобильного меню не найдены');
+		return;
 	}
 
-	delegate(document, "click", ".js-video-play", event => {
-		const player = event.target.parent('.js-player')
-		if(player){
-			player.classList.add('play')
-		}
-		const video = player.querySelector('.js-video')
-		if(video) {
-			video.play()
-		}
+	menuTriggerElement.addEventListener('click', () => {
+		menuTriggerElement.classList.toggle('open');
+		mobileMenuElement.classList.toggle('open');
+		headerElement.classList.toggle('fixed');
 	});
 
-	/* Menu on mobile devices
-	------------------------------------------------------- */
-	const menuTriggerElement = document.querySelector('#js-menu-trigger')
-	const mobileMenuElement = document.querySelector('#js-mobile-menu')
-	const headerElement = document.querySelector('#js-header')
-	if(menuTriggerElement) {
-		menuTriggerElement.addEventListener('click', () => {
-			menuTriggerElement.classList.toggle('open')
-			mobileMenuElement.classList.toggle('open')
-			headerElement.classList.toggle('fixed')
-		})
-	}
-	function mobileMenuClose() {
-		if(!menuTriggerElement)
-			return
+	window.mobileMenuClose = function () {
 		menuTriggerElement.classList.remove('open');
 		mobileMenuElement.classList.remove('open');
 		headerElement.classList.remove('fixed');
-	}
+	};
+});
 </script>
 
 @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
