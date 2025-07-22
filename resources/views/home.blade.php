@@ -93,7 +93,41 @@
 #scroll-to-top:hover {
     color: white !important; /* при hover → цвет SVG меняется */
 }
-    </style>
+@media (max-width: 576px) {
+  .popup-inner .project-info {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .popup-inner .project-info h3 {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: clamp(14px, 5vw, 20px);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  .popup-inner .button-container {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .popup-inner .project-link-text {
+    font-size: clamp(12px, 4vw, 18px);
+    padding: 4px 8px;
+  }
+
+  .popup-inner .i_svg {
+    width: clamp(20px, 5vw, 28px);
+  }
+}
+  </style>
     {{-- / Внутренние стили главной --}}
 
     {{-- JS для popup --}}
@@ -160,6 +194,7 @@ document.addEventListener('DOMContentLoaded', function () {
             buttonContainer.style.position = 'absolute';
             buttonContainer.style.right = '0';
             buttonContainer.style.top = '-5px';
+            buttonContainer.classList.add('button-container');
 
             // 🔗 Кнопка "View Full Project"
             if (projectLink) {
