@@ -247,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
             // 🔧 Верхняя строка: заголовок + кнопки
             const topBar = document.createElement('div');
             topBar.style.position = 'absolute';
-            topBar.style.top = '-35px';
+            topBar.style.top = '5px';
             topBar.style.left = '10px';
             topBar.style.right = '10px';
             topBar.style.zIndex = '2';
