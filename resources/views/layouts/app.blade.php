@@ -597,6 +597,48 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+<script>
+    	/* Video
+	------------------------------------------------------- */
+	const videoPlayElement = document.querySelector('#js-video-play')
+	if(videoPlayElement) {
+		videoPlayElement.addEventListener('click', () => {
+			videoElement.play()
+			playerElement.classList.add('play')
+		})
+	}
+
+	delegate(document, "click", ".js-video-play", event => {
+		const player = event.target.parent('.js-player')
+		if(player){
+			player.classList.add('play')
+		}
+		const video = player.querySelector('.js-video')
+		if(video) {
+			video.play()
+		}
+	});
+
+	/* Menu on mobile devices
+	------------------------------------------------------- */
+	const menuTriggerElement = document.querySelector('#js-menu-trigger')
+	const mobileMenuElement = document.querySelector('#js-mobile-menu')
+	const headerElement = document.querySelector('#js-header')
+	if(menuTriggerElement) {
+		menuTriggerElement.addEventListener('click', () => {
+			menuTriggerElement.classList.toggle('open')
+			mobileMenuElement.classList.toggle('open')
+			headerElement.classList.toggle('fixed')
+		})
+	}
+	function mobileMenuClose() {
+		if(!menuTriggerElement)
+			return
+		menuTriggerElement.classList.remove('open');
+		mobileMenuElement.classList.remove('open');
+		headerElement.classList.remove('fixed');
+	}
+</script>
 
 @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
         <script src="//code.jivosite.com/widget.js" data-jv-id="{{ $base_config['jivochat_id'] }}" async></script>
