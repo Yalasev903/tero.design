@@ -117,7 +117,6 @@
 .popup-close {
     font-size: 32px;
     color: white;
-    background: rgba(0,0,0,0.6);
     padding: 8px 14px;
     border-radius: 6px;
     cursor: pointer;
@@ -306,9 +305,25 @@ document.addEventListener('DOMContentLoaded', function () {
         const controls = document.createElement('div');
         controls.classList.add('popup-controls');
 
+        // Вставка SVG из Blade — как строки
+        const svgArrowPrev = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 5560.1 4209.61">
+        <path fill="#fff" d="M2340.98 210.48c0,141.49 -70.98,176.24 -157.86,263.11l-1293.84 1293.84c-35.58,35.58 -82.15,62.87 -95.94,114.53l4358.18 0c118.54,0 408.58,-41.91 408.58,222.86 0,251.74 -278.74,222.86 -396.2,222.86l-4382.96 0c38.3,57.18 1250.22,1256.4 1395.98,1402.17 88.34,88.33 164.05,126.02 164.05,269.29 0,100.49 -90.44,210.48 -185.71,210.48 -186.19,0 -199.36,-56.99 -368.33,-225.95l-1560.03 -1560.05c-100.61,-100.6 -354.78,-305.2 -148.24,-488.72 284.63,-252.88 654.83,-643.11 928.25,-916.54l922.39 -922.42c69.72,-70.21 82.9,-95.94 201.2,-95.94 109.53,0 210.48,100.96 210.48,210.48z"/>
+        </svg>`;
+
+        const svgArrowNext = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="80" height="60" viewBox="0 0 1091.71 826.54">
+        <path fill="#fff" d="M632.07 41.33c0,27.78 13.94,34.6 31,51.66l254.04 254.04c6.99,6.99 16.13,12.34 18.84,22.49l-855.72 0c-23.27,0 -80.22,-8.23 -80.22,43.76 0,49.43 54.73,43.76 77.79,43.76l860.58 0c-7.52,11.23 -245.48,246.69 -274.1,275.31 -17.35,17.34 -32.21,24.74 -32.21,52.87 0,19.73 17.76,41.33 36.46,41.33 36.56,0 39.14,-11.19 72.32,-44.36l306.31 -306.31c19.76,-19.75 69.66,-59.93 29.11,-95.96 -55.89,-49.65 -128.57,-126.27 -182.26,-179.96l-181.11 -181.11c-13.69,-13.78 -16.28,-18.84 -39.51,-18.84 -21.51,0 -41.33,19.82 -41.33,41.33z"/>
+        </svg>`;
+
+        const svgClose = `
+        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 960.11 960.1">
+        <path fill="#fff" d="M8.07 911.53l431.48 -431.48 -431.48 -431.48c-10.76,-10.76 -10.76,-28.37 0,-39.13l1.37 -1.37c10.76,-10.76 28.37,-10.76 39.13,0l431.48 431.48 431.48 -431.48c10.76,-10.76 28.37,-10.76 39.13,0l1.37 1.37c10.76,10.76 10.76,28.37 0,39.13l-431.48 431.48 431.48 431.48c10.76,10.76 10.76,28.37 0,39.13l-1.37 1.37c-10.76,10.76 -28.37,10.76 -39.13,0l-431.48 -431.48 -431.48 431.48c-10.76,10.76 -28.37,10.76 -39.13,0l-1.37 -1.37c-10.76,-10.76 -10.76,-28.37 0,-39.13z"/>
+        </svg>`;
+
         const btnPrev = document.createElement('div');
         btnPrev.classList.add('popup-arrow', 'prev');
-        btnPrev.innerHTML = `<svg viewBox="0 0 914 534" xmlns="http://www.w3.org/2000/svg"><path d="M914 267C914 288.025 896.931 305.126 875.944 305.126H129.932L293.443 468.938C308.273 483.796 308.273 507.998 293.443 522.856C278.612 537.714 254.454 537.714 239.623 522.856L11.0997 293.913C7.5553 290.362 4.75707 286.25 2.89157 281.578C1.02607 276.905 1.75086e-05 272.046 1.75086e-05 267.187C1.75086e-05 267.093 1.75086e-05 267.093 1.75086e-05 267C1.75086e-05 262.047 1.02605 257.095 2.98482 252.422C4.85032 247.75 7.74183 243.545 11.193 240.087L239.716 11.1435C254.547 -3.7145 278.705 -3.7145 293.536 11.1435C308.367 26.0015 308.367 50.2041 293.536 65.0621L130.025 228.874H875.944C896.931 228.874 914 245.975 914 267Z" fill="#fff"/></svg>`;
+        btnPrev.innerHTML = svgArrowPrev;
         btnPrev.onclick = function () {
             const newIndex = (i - 1 + gridItemLinks.length) % gridItemLinks.length;
             gridItemLinks[newIndex].click();
@@ -316,7 +331,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const btnNext = document.createElement('div');
         btnNext.classList.add('popup-arrow', 'next');
-        btnNext.innerHTML = `<svg viewBox="0 0 914 534" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 267C0 288.025 17.0693 305.126 38.0561 305.126H784.068L620.557 468.938C605.727 483.796 605.727 507.998 620.557 522.856C635.388 537.714 659.546 537.714 674.377 522.856L902.9 293.913C906.445 290.362 909.243 286.25 911.108 281.578C912.974 276.905 914 272.046 914 267.187C914 267.093 914 267.093 914 267C914 262.047 912.974 257.095 911.015 252.422C909.15 247.75 906.258 243.545 902.807 240.087L674.284 11.1435C659.453 -3.7145 635.295 -3.7145 620.464 11.1435C605.633 26.0015 605.633 50.2041 620.464 65.0621L783.975 228.874H38.0561C17.0693 228.874 0 245.975 0 267Z" fill="#fff"/></svg>`;
+        btnNext.innerHTML = svgArrowNext;
         btnNext.onclick = function () {
             const newIndex = (i + 1) % gridItemLinks.length;
             gridItemLinks[newIndex].click();
@@ -324,7 +339,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const btnClose = document.createElement('div');
         btnClose.classList.add('popup-close');
-        btnClose.innerHTML = `<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.12 5.7A1 1 0 105.7 7.12L10.59 12l-4.9 4.88a1 1 0 001.42 1.42L12 13.41l4.88 4.9a1 1 0 001.42-1.42L13.41 12l4.9-4.88a1 1 0 000-1.41z"/></svg>`;
+        btnClose.innerHTML = svgClose;
         btnClose.onclick = function () {
             popup.innerHTML = '';
             popup.classList.remove('active');
@@ -332,7 +347,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         controls.append(btnPrev, btnClose, btnNext);
         popupInner.appendChild(controls);
-
 
             // 💡 Проверка наложения заголовка на кнопки (только для мобильной версии)
             setTimeout(() => {
