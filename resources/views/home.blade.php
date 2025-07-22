@@ -41,6 +41,7 @@
                 .popup-inner video.tall-media {
                     transform: scale(0.75);
                     transform-origin: center top;
+                    margin-top: 60px;
                 }
         }
         .close_svg { position: absolute; right: 10px; top: 26px; width: 28px; cursor: pointer;}
@@ -109,10 +110,9 @@
     justify-content: center;
     align-items: center;
     gap: 30px;
-    margin-top: 15px;
     z-index: 99999;
-    order: 3;
 }
+
 .popup-arrow,
 .popup-close {
     font-size: 32px;
@@ -124,10 +124,8 @@
     user-select: none;
     transition: background 0.2s;
 }
-.popup-arrow:hover,
-.popup-close:hover {
-    background: rgba(255,255,255,0.2);
-}
+
+/* 📱 Мобильная версия — стрелки и крестик снизу */
 @media (max-width: 768px) {
     .popup-controls {
         position: fixed;
@@ -136,6 +134,45 @@
         width: 100%;
         justify-content: center;
         gap: 20px;
+    }
+}
+
+/* 🖥️ Десктоп — стрелки по бокам, крестик в углу */
+@media (min-width: 769px) {
+    .popup-controls {
+        position: static;
+    }
+    .popup-arrow.prev {
+        position: fixed;
+        left: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10000;
+    }
+
+    .popup-arrow.next {
+        position: fixed;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10000;
+    }
+
+    .popup-close {
+        position: fixed;
+        top: 20px;
+        right: 30px;
+        font-size: 40px;
+        font-weight: bold;
+        z-index: 10000;
+        background: none;
+        padding: 0;
+    }
+
+    .popup-close svg {
+        width: 32px;
+        height: 32px;
+        fill: #fff;
     }
 }
     </style>
@@ -271,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const btnPrev = document.createElement('div');
         btnPrev.classList.add('popup-arrow', 'prev');
-        btnPrev.textContent = '←';
+        btnPrev.innerHTML = `<svg viewBox="0 0 914 534" xmlns="http://www.w3.org/2000/svg"><path d="M914 267C914 288.025 896.931 305.126 875.944 305.126H129.932L293.443 468.938C308.273 483.796 308.273 507.998 293.443 522.856C278.612 537.714 254.454 537.714 239.623 522.856L11.0997 293.913C7.5553 290.362 4.75707 286.25 2.89157 281.578C1.02607 276.905 1.75086e-05 272.046 1.75086e-05 267.187C1.75086e-05 267.093 1.75086e-05 267.093 1.75086e-05 267C1.75086e-05 262.047 1.02605 257.095 2.98482 252.422C4.85032 247.75 7.74183 243.545 11.193 240.087L239.716 11.1435C254.547 -3.7145 278.705 -3.7145 293.536 11.1435C308.367 26.0015 308.367 50.2041 293.536 65.0621L130.025 228.874H875.944C896.931 228.874 914 245.975 914 267Z" fill="#fff"/></svg>`;
         btnPrev.onclick = function () {
             const newIndex = (i - 1 + gridItemLinks.length) % gridItemLinks.length;
             gridItemLinks[newIndex].click();
@@ -279,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const btnNext = document.createElement('div');
         btnNext.classList.add('popup-arrow', 'next');
-        btnNext.textContent = '→';
+        btnNext.innerHTML = `<svg viewBox="0 0 914 534" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0 267C0 288.025 17.0693 305.126 38.0561 305.126H784.068L620.557 468.938C605.727 483.796 605.727 507.998 620.557 522.856C635.388 537.714 659.546 537.714 674.377 522.856L902.9 293.913C906.445 290.362 909.243 286.25 911.108 281.578C912.974 276.905 914 272.046 914 267.187C914 267.093 914 267.093 914 267C914 262.047 912.974 257.095 911.015 252.422C909.15 247.75 906.258 243.545 902.807 240.087L674.284 11.1435C659.453 -3.7145 635.295 -3.7145 620.464 11.1435C605.633 26.0015 605.633 50.2041 620.464 65.0621L783.975 228.874H38.0561C17.0693 228.874 0 245.975 0 267Z" fill="#fff"/></svg>`;
         btnNext.onclick = function () {
             const newIndex = (i + 1) % gridItemLinks.length;
             gridItemLinks[newIndex].click();
@@ -287,7 +324,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const btnClose = document.createElement('div');
         btnClose.classList.add('popup-close');
-        btnClose.textContent = '✕';
+        btnClose.innerHTML = `<svg viewBox="0 0 24 24" fill="#fff" xmlns="http://www.w3.org/2000/svg"><path d="M18.3 5.71a1 1 0 00-1.42 0L12 10.59 7.12 5.7A1 1 0 105.7 7.12L10.59 12l-4.9 4.88a1 1 0 001.42 1.42L12 13.41l4.88 4.9a1 1 0 001.42-1.42L13.41 12l4.9-4.88a1 1 0 000-1.41z"/></svg>`;
         btnClose.onclick = function () {
             popup.innerHTML = '';
             popup.classList.remove('active');
