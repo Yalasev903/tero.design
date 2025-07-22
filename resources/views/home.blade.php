@@ -206,6 +206,24 @@ document.addEventListener('DOMContentLoaded', function () {
             topBar.appendChild(buttonContainer);
             popupInner.appendChild(topBar);
 
+            // 💡 Проверка наложения заголовка на кнопки (только для мобильной версии)
+            setTimeout(() => {
+                const isMobile = window.innerWidth <= 768;
+                if (!isMobile) return;
+
+                const titleRect = titleElement.getBoundingClientRect();
+                const buttonRect = buttonContainer.getBoundingClientRect();
+
+                const overlap = !(titleRect.bottom < buttonRect.top ||
+                                titleRect.top > buttonRect.bottom ||
+                                titleRect.right < buttonRect.left ||
+                                titleRect.left > buttonRect.right);
+
+                if (overlap) {
+                    titleElement.style.top = '-43px';
+                }
+            }, 100);
+
             // Отобразить popup
             popup.innerHTML = '';
             popup.appendChild(popupInner);
