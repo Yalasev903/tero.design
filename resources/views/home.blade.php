@@ -247,19 +247,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 🔧 Верхняя строка: заголовок + кнопки
             const topBar = document.createElement('div');
-            topBar.style.position = 'absolute';
 
-            // 🔧 Учитываем мобильную версию
             if (window.innerWidth <= 576) {
-                topBar.style.top = '5px';
+                // 📱 Мобильная версия — нормальное поведение
+                topBar.style.display = 'flex';
+                topBar.style.flexDirection = 'row';
+                topBar.style.justifyContent = 'space-between';
+                topBar.style.alignItems = 'center';
+                topBar.style.gap = '10px';
+                topBar.style.width = '100%';
+                topBar.style.padding = '10px';
+                topBar.style.boxSizing = 'border-box';
             } else {
+                // 🖥️ Десктоп — оставляем абсолют
+                topBar.style.position = 'absolute';
                 topBar.style.top = '-35px';
+                topBar.style.left = '10px';
+                topBar.style.right = '10px';
+                topBar.style.zIndex = '2';
+                topBar.style.height = '30px';
             }
-
-            topBar.style.left = '10px';
-            topBar.style.right = '10px';
-            topBar.style.zIndex = '2';
-            topBar.style.height = '30px';
 
             // Заголовок проекта — теперь абсолютно слева
             const titleElement = document.createElement('h3');
