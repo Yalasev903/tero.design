@@ -173,6 +173,18 @@
         height: 32px;
         fill: #fff;
     }
+
+    @media (max-width: 576px) {
+    .popup-inner.tall-adjust {
+        transform: translateY(60px); /* 💡 Сдвигаем весь блок вниз */
+    }
+
+    .popup-inner img.tall-media,
+    .popup-inner video.tall-media {
+        transform: scale(0.75);
+        transform-origin: center top;
+    }
+}
 }
     </style>
     {{-- / Внутренние стили главной --}}
@@ -206,6 +218,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 img.onload = function () {
                     if (this.naturalHeight / this.naturalWidth > 1.5) {
                         this.classList.add('tall-media');
+                        popupInner.classList.add('tall-adjust');
                     }
                 };
                 popupInner.appendChild(img);
@@ -224,6 +237,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 video.onloadedmetadata = function () {
                     if (video.videoHeight / video.videoWidth > 1.5) {
                         video.classList.add('tall-media');
+                        popupInner.classList.add('tall-adjust'); 
                     }
                 };
 
