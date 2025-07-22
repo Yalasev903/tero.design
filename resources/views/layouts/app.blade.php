@@ -610,5 +610,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, true);
         </script>
     @stack('scripts')
+    @yield('scripts')
 </body>
 </html>
