@@ -110,5 +110,14 @@
   display: block;
   background-color: #000;
 }
+/* 🔥 Отключаем стиль от lazySizes для видео, у которых уже есть <source> */
+.js-grid-item-media video,
+.js-grid-item-media:not([src]):not([data-src]) {
+    background-image: none !important;
+    background-size: initial !important;
+    background-position: initial !important;
+    content: none !important;
+    min-height: 0 !important;
+}
 </style>
 
