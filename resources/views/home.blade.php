@@ -209,9 +209,9 @@ document.addEventListener('DOMContentLoaded', function () {
         // Сдвигаем popup-inner при необходимости
         if (isOverlapping) {
             if (window.innerWidth <= 768) {
-                popupInner.style.marginTop = '40px';
+                popupInner.style.marginTop = '60px';
             } else {
-                popupInner.style.marginTop = '20px';
+                popupInner.style.marginTop = '40px';
             }
         } else {
             popupInner.style.marginTop = '0';
