@@ -13,6 +13,10 @@ public function index(Request $request)
         $limit = 10; // 👈 количество строк, а не записей
         $offset = $batch * $limit;
 
+        $showreel_row = DB::table('home_projects_grid')
+            ->where('row_number', 0)
+            ->first();
+
         // 👇 Получаем только нужные row_number, исключая showreel
         $rows = DB::table('home_projects_grid')
             ->where('row_number', '!=', 0)
