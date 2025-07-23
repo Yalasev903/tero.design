@@ -10,21 +10,34 @@
     </div>
 
     <div id="load-trigger" style="display: flex; justify-content: center; align-items: center; padding: 40px 0;">
-        <svg id="loader-spinner" width="40" height="40" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" fill="#444">
-            <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="5" fill="none"/>
-            <path d="M25 5
-                    a 20 20 0 0 1 0 40
-                    a 20 20 0 0 1 0 -40"
-                stroke="#000" stroke-width="5" stroke-linecap="round" fill="none">
-                <animateTransform attributeName="transform"
-                                type="rotate"
-                                from="0 25 25"
-                                to="360 25 25"
-                                dur="1s"
-                                repeatCount="indefinite"/>
-            </path>
-        </svg>
-    </div>
+  <svg id="loader-spinner"
+       width="40" height="40" viewBox="0 0 50 50"
+       xmlns="http://www.w3.org/2000/svg"
+       role="status"
+       aria-label="Загрузка...">
+    <circle
+      cx="25" cy="25" r="20"
+      stroke="#555" stroke-opacity="0.2"
+      stroke-width="5"
+      fill="none" />
+    <circle
+      cx="25" cy="25" r="20"
+      stroke="#ccc"
+      stroke-width="5"
+      stroke-linecap="round"
+      fill="none"
+      stroke-dasharray="90"
+      stroke-dashoffset="60">
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        from="0 25 25"
+        to="360 25 25"
+        dur="0.8s"
+        repeatCount="indefinite" />
+    </circle>
+  </svg>
+</div>
 
     <div id="scroll-to-top">
     @include('components.svg.up')
@@ -545,7 +558,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const rows = tempDiv.querySelectorAll('.grid-row');
                         if (!rows.length) {
                             window.noMore = true;
-                            document.getElementById('load-trigger').innerHTML = 'All project loaded';
+                            document.getElementById('load-trigger').innerHTML = 'All projects loaded';
                             return;
                         }
 
