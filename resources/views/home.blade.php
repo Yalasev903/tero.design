@@ -558,6 +558,5 @@ document.addEventListener('DOMContentLoaded', function () {
     </script>
 
 
-    <script src="{{ asset('js/header.min.js?v=5.92') }}"></script>
         <script src="/js/grid-loader.js"></script>
 @endsection
