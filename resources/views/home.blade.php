@@ -194,6 +194,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     function checkTitleOverlap(titleElement, buttonContainer) {
+        const popupInner = titleElement.closest('.popup-inner');
         const titleRect = titleElement.getBoundingClientRect();
         const buttonRect = buttonContainer.getBoundingClientRect();
 
@@ -202,7 +203,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const isOverlapping = verticalOverlap && horizontalOverlap;
 
+        // Заголовок отдельно поднимаем как раньше
         titleElement.style.top = isOverlapping ? '-43px' : '0';
+
+        // Сдвигаем popup-inner при необходимости
+        if (isOverlapping) {
+            if (window.innerWidth <= 768) {
+                popupInner.style.marginTop = '40px';
+            } else {
+                popupInner.style.marginTop = '20px';
+            }
+        } else {
+            popupInner.style.marginTop = '0';
+        }
     }
 
     const gridItemLinks = document.getElementsByClassName('grid-item');
