@@ -557,7 +557,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     </script>
 
-    <script src="/js/main.js"></script>
-    <script src="/js/old.js"></script>
     <script src="/js/grid-loader.js"></script>
 @endsection
