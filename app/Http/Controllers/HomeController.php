@@ -10,7 +10,7 @@ class HomeController extends Controller
 public function index(Request $request)
 {
         $batch = $request->input('batch', 0);
-        $limit = 3;
+        $limit = 10;
         $offset = $batch * $limit;
 
         $showreel_row = DB::table('home_projects_grid')
@@ -27,9 +27,7 @@ public function index(Request $request)
             ->orderBy('row_number')
             ->orderBy('col_number');
 
-        $grid_raw = $request->ajax()
-            ? $query->skip($offset)->take($limit)->get()
-            : $query->get();
+        $grid_raw = $query->skip($offset)->take($limit)->get();
 
         $projects_grid = [];
         foreach ($grid_raw as $item) {

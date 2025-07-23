@@ -9,6 +9,23 @@
 @include('components.grid-rows', ['projects_grid' => $projects_grid])
     </div>
 
+    <div id="load-trigger" style="display: flex; justify-content: center; align-items: center; padding: 40px 0;">
+        <svg id="loader-spinner" width="40" height="40" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg" fill="#444">
+            <circle cx="25" cy="25" r="20" stroke="#ccc" stroke-width="5" fill="none"/>
+            <path d="M25 5
+                    a 20 20 0 0 1 0 40
+                    a 20 20 0 0 1 0 -40"
+                stroke="#000" stroke-width="5" stroke-linecap="round" fill="none">
+                <animateTransform attributeName="transform"
+                                type="rotate"
+                                from="0 25 25"
+                                to="360 25 25"
+                                dur="1s"
+                                repeatCount="indefinite"/>
+            </path>
+        </svg>
+    </div>
+
     <div id="scroll-to-top">
     @include('components.svg.up')
         </div>
@@ -480,4 +497,75 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const gallery = document.getElementById('js-gallery');
+    const trigger = document.getElementById('load-trigger');
+    const loader = document.getElementById('loader-spinner');
+
+    let currentBatch = 1;
+    let loading = false;
+    let noMore = false;
+
+    const observer = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && !loading && !noMore) {
+            loading = true;
+            loader.style.display = 'block';
+
+            fetch(`/?batch=${currentBatch}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = data.rows;
+
+                const rows = tempDiv.querySelectorAll('.grid-row');
+                if (!rows.length) {
+                    noMore = true;
+                    trigger.innerHTML = '🔚 Все проекты загружены';
+                    return;
+                }
+
+                rows.forEach(row => {
+                    row.style.opacity = '0';
+                    row.style.transition = 'opacity 0.4s ease';
+                    gallery.appendChild(row);
+                    requestAnimationFrame(() => row.style.opacity = '1');
+                });
+
+                // Автоплей видео при появлении
+                const newVideos = gallery.querySelectorAll('video.js-grid-item-media');
+                newVideos.forEach(video => observerVideo.observe(video));
+
+                currentBatch++;
+            })
+            .catch(err => {
+                console.error('❌ Ошибка подгрузки:', err);
+                trigger.innerHTML = '⚠ Ошибка загрузки';
+            })
+            .finally(() => {
+                loading = false;
+                loader.style.display = 'block';
+            });
+        }
+    }, {
+        threshold: 0.9
+    });
+
+    observer.observe(trigger);
+
+    // Повторно подключаем видео к IntersectionObserver
+    const observerVideo = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            const video = entry.target;
+            if (entry.isIntersecting && video.readyState >= 2) {
+                video.play().catch(() => {});
+            } else {
+                video.pause();
+            }
+        });
+    }, { threshold: 0.5 });
+});
+</script>
 @endsection
