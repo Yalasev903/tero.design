@@ -193,6 +193,18 @@
     {{-- JS для popup --}}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    function checkTitleOverlap(titleElement, buttonContainer) {
+        const titleRect = titleElement.getBoundingClientRect();
+        const buttonRect = buttonContainer.getBoundingClientRect();
+
+        const verticalOverlap = !(titleRect.bottom < buttonRect.top || titleRect.top > buttonRect.bottom);
+        const horizontalOverlap = !(titleRect.right < buttonRect.left || titleRect.left > buttonRect.right);
+
+        const isOverlapping = verticalOverlap && horizontalOverlap;
+
+        titleElement.style.top = isOverlapping ? '-43px' : '0';
+    }
+
     const gridItemLinks = document.getElementsByClassName('grid-item');
     const popup = document.createElement('div');
     popup.classList.add('popup');
@@ -379,20 +391,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 💡 Проверка наложения заголовка на кнопки (только для мобильной версии)
             setTimeout(() => {
-                const titleRect = titleElement.getBoundingClientRect();
-                const buttonRect = buttonContainer.getBoundingClientRect();
+                checkTitleOverlap(titleElement, buttonContainer);
+            }, 300);
 
-                const verticalOverlap = !(titleRect.bottom < buttonRect.top || titleRect.top > buttonRect.bottom);
-                const horizontalOverlap = !(titleRect.right < buttonRect.left || titleRect.left > buttonRect.right);
-
-                const isOverlapping = verticalOverlap && horizontalOverlap;
-
-                if (isOverlapping) {
-                    titleElement.style.top = '-43px';
-                } else {
-                    titleElement.style.top = '0';
+            window.addEventListener('resize', () => {
+                if (popup.classList.contains('active')) {
+                    checkTitleOverlap(
+                        popup.querySelector('h3'),
+                        popup.querySelector('.info-button')?.parentElement // там где View Full Project + info
+                    );
                 }
-            }, 100);
+            });
 
             // Отобразить popup
             popup.innerHTML = '';
