@@ -379,9 +379,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // 💡 Проверка наложения заголовка на кнопки (только для мобильной версии)
             setTimeout(() => {
-                const isMobile = window.innerWidth <= 768;
-                if (!isMobile) return;
-
                 const titleRect = titleElement.getBoundingClientRect();
                 const buttonRect = buttonContainer.getBoundingClientRect();
 
@@ -391,7 +388,11 @@ document.addEventListener('DOMContentLoaded', function () {
                                 titleRect.left > buttonRect.right);
 
                 if (overlap) {
+                    // Поднимаем заголовок вверх
                     titleElement.style.top = '-43px';
+                } else {
+                    // Возвращаем на место, если не перекрывается (опционально)
+                    titleElement.style.top = '0';
                 }
             }, 100);
 
