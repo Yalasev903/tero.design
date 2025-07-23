@@ -208,7 +208,7 @@
     {{-- / Внутренние стили главной --}}
 
     {{-- JS для popup --}}
-<script>
+{{-- <script>
 document.addEventListener('DOMContentLoaded', function () {
     function checkTitleOverlap(titleElement, buttonContainer) {
         const popupInner = titleElement.closest('.popup-inner');
@@ -455,7 +455,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 });
-</script>
+</script> --}}
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -497,75 +497,63 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     </script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const gallery = document.getElementById('js-gallery');
-    const trigger = document.getElementById('load-trigger');
-    const loader = document.getElementById('loader-spinner');
 
-    let currentBatch = 1;
-    let loading = false;
-    let noMore = false;
+    <script type="module">
+        import { bindPopupEvents } from '/js/popup-handler.js';
 
-    const observer = new IntersectionObserver((entries) => {
-        if (entries[0].isIntersecting && !loading && !noMore) {
-            loading = true;
-            loader.style.display = 'block';
+        document.addEventListener('DOMContentLoaded', () => {
+            bindPopupEvents(); // навешиваем при старте
 
-            fetch(`/?batch=${currentBatch}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(res => res.json())
-            .then(data => {
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = data.rows;
+            // Поддержка при подгрузке новых элементов
+            const observer = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && !window.loading && !window.noMore) {
+                    window.loading = true;
 
-                const rows = tempDiv.querySelectorAll('.grid-row');
-                if (!rows.length) {
-                    noMore = true;
-                    trigger.innerHTML = '🔚 Все проекты загружены';
-                    return;
+                    fetch(`/?batch=${window.currentBatch}`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = data.rows;
+
+                        const rows = tempDiv.querySelectorAll('.grid-row');
+                        if (!rows.length) {
+                            window.noMore = true;
+                            document.getElementById('load-trigger').innerHTML = '🔚 Все проекты загружены';
+                            return;
+                        }
+
+                        const gallery = document.getElementById('js-gallery');
+                        rows.forEach(row => {
+                            row.style.opacity = '0';
+                            row.style.transition = 'opacity 0.4s ease';
+                            gallery.appendChild(row);
+                            requestAnimationFrame(() => row.style.opacity = '1');
+                        });
+
+                        // 🎯 Навешиваем обработчики на подгруженные строки
+                        bindPopupEvents();
+
+                        window.currentBatch++;
+                    })
+                    .catch(err => {
+                        console.error('❌ Ошибка подгрузки:', err);
+                        document.getElementById('load-trigger').innerHTML = '⚠ Ошибка загрузки';
+                    })
+                    .finally(() => {
+                        window.loading = false;
+                        document.getElementById('loader-spinner').style.display = 'block';
+                    });
                 }
+            }, { threshold: 0.9 });
 
-                rows.forEach(row => {
-                    row.style.opacity = '0';
-                    row.style.transition = 'opacity 0.4s ease';
-                    gallery.appendChild(row);
-                    requestAnimationFrame(() => row.style.opacity = '1');
-                });
+            // Инициализация
+            window.currentBatch = 1;
+            window.loading = false;
+            window.noMore = false;
 
-                // Автоплей видео при появлении
-                const newVideos = gallery.querySelectorAll('video.js-grid-item-media');
-                newVideos.forEach(video => observerVideo.observe(video));
-
-                currentBatch++;
-            })
-            .catch(err => {
-                console.error('❌ Ошибка подгрузки:', err);
-                trigger.innerHTML = '⚠ Ошибка загрузки';
-            })
-            .finally(() => {
-                loading = false;
-                loader.style.display = 'block';
-            });
-        }
-    }, {
-        threshold: 0.9
-    });
-
-    observer.observe(trigger);
-
-    // Повторно подключаем видео к IntersectionObserver
-    const observerVideo = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            const video = entry.target;
-            if (entry.isIntersecting && video.readyState >= 2) {
-                video.play().catch(() => {});
-            } else {
-                video.pause();
-            }
+            observer.observe(document.getElementById('load-trigger'));
         });
-    }, { threshold: 0.5 });
-});
-</script>
+    </script>
 @endsection
