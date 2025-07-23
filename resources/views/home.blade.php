@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 topBar.style.alignItems = 'center';
                 topBar.style.gap = '10px';
                 topBar.style.width = '100%';
-                topBar.style.padding = '10px';
+                topBar.style.padding = '12px';
                 topBar.style.boxSizing = 'border-box';
             } else {
                 // 🖥️ Десктоп — оставляем абсолют

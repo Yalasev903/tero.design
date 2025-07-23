@@ -15,7 +15,28 @@
             </div>
 
             <div class="workflow-player js-player">
+                <div id="vimeo-container" style="display: none; position: relative; padding-top: 56.25%;">
+                    <iframe src="https://player.vimeo.com/video/1015356904?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+                            frameborder="0"
+                            allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                            referrerpolicy="strict-origin-when-cross-origin"
+                            style="position:absolute;top:0;left:0;width:100%;height:100%;"
+                            title="Terodesign Showreel 2024"
+                            id="vimeo-player">
+                    </iframe>
+                </div>
+
                 <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
+                    id="workflow-poster"
+                    alt="{{ $workflow->col_poster_alt ?? 'Workflow poster' }}"
+                    class="workflow-player-poster b-lazy">
+
+                <div class="workflow-player-play js-workflow-play">
+                    <img src="/img/play.png" alt="play image">
+                </div>
+
+                <script src="https://player.vimeo.com/api/player.js"></script>
+                {{-- <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
                      id="workflow-poster"
                      alt="{{ $workflow->col_poster_alt ?? 'Workflow poster' }}"
                      class="workflow-player-poster b-lazy">
@@ -32,7 +53,7 @@
                        controlsList="nodownload noplaybackrate nofullscreen"
                        disablePictureInPicture>
                     <source src="/multimedia/{{ $workflow->col_video ?? '' }}" type="video/mp4">
-                </video>
+                </video> --}}
             </div>
         </div>
 
@@ -57,7 +78,7 @@
 @endsection
 
 @section('scripts')
-<script>
+{{-- <script>
 document.addEventListener('DOMContentLoaded', function () {
     const video = document.getElementById('workflow-video');
     const poster = document.getElementById('workflow-poster');
@@ -97,6 +118,28 @@ document.addEventListener('DOMContentLoaded', function () {
         playBtn.style.display = 'block';
         video.style.display = 'none';
         video.currentTime = 0;
+    });
+});
+</script> --}}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const poster = document.getElementById('workflow-poster');
+    const playBtn = document.querySelector('.js-workflow-play');
+    const vimeoContainer = document.getElementById('vimeo-container');
+
+    if (!playBtn || !poster || !vimeoContainer) return;
+
+    playBtn.addEventListener('click', function () {
+        // Скрыть постер и кнопку
+        poster.style.display = 'none';
+        playBtn.style.display = 'none';
+
+        // Показать iframe
+        vimeoContainer.style.display = 'block';
+
+        // Запустить Vimeo-плеер
+        const player = new Vimeo.Player('vimeo-player');
+        player.play().catch(e => console.warn('error play for Vimeo:', e));
     });
 });
 </script>
