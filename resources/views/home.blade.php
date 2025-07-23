@@ -382,10 +382,14 @@ document.addEventListener('DOMContentLoaded', function () {
                 const titleRect = titleElement.getBoundingClientRect();
                 const buttonRect = buttonContainer.getBoundingClientRect();
 
-                const overlap = !(titleRect.bottom < buttonRect.top ||
-                                titleRect.top > buttonRect.bottom ||
-                                titleRect.right < buttonRect.left ||
-                                titleRect.left > buttonRect.right);
+                const verticalOverlap = !(titleRect.bottom < buttonRect.top || titleRect.top > buttonRect.bottom);
+
+                // Только если вертикально пересекаются и кнопки реально перекрываются
+                if (window.innerWidth <= 768 && verticalOverlap) {
+                    titleElement.style.top = '-43px';
+                } else {
+                    titleElement.style.top = '0';
+                }
 
                 if (overlap) {
                     // Поднимаем заголовок вверх
