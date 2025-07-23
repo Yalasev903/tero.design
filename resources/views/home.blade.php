@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const isOverlapping = verticalOverlap && horizontalOverlap;
 
         // Заголовок отдельно поднимаем как раньше
-        titleElement.style.top = isOverlapping ? '-43px' : '0';
+        titleElement.style.top = isOverlapping ? '-21px' : '0';
 
         // Сдвигаем popup-inner при необходимости
         if (isOverlapping) {
