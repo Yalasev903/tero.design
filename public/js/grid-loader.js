@@ -24,6 +24,7 @@
     };
 
     const hideLoader = () => {
+        if (!loader) return;
         loader.style.opacity = '0';
         loader.style.pointerEvents = 'none';
         setTimeout(() => loader.remove(), 600);
@@ -31,11 +32,13 @@
     };
 
     const init = () => {
-        revealGrid(); // 👈 Показываем сетку СРАЗУ
+        revealGrid();
+        resizeGrid();
+        observeNewGridItems();
 
         if (loadingVideo && loadingVideo.readyState >= 3) {
             loadingVideo.addEventListener('ended', hideLoader);
-            setTimeout(hideLoader, 3600); // запас на 1 сек
+            setTimeout(hideLoader, 3600);
         } else {
             setTimeout(hideLoader, 1000);
         }
@@ -46,54 +49,80 @@
     } else {
         window.addEventListener('load', init);
     }
+
+    // Важно: повторный рендер при resize
+    window.addEventListener('resize', resizeGrid);
 })();
 
 function resizeGrid() {
-    let windowWidth = document.body.clientWidth || document.documentElement.clientWidth || window.innerWidth;
+    const rows = document.querySelectorAll('.grid-row');
+    const windowWidth = window.innerWidth;
 
-    let rows = document.querySelectorAll('.grid-row');
     if (windowWidth > 1024) {
         for (let row of rows) {
             if (row.classList.contains('item-hidden')) row.classList.remove('item-hidden');
             let cols = row.querySelectorAll('.grid-item');
-            let colsArr = Array.prototype.slice.call(cols);
-            let colHeightMin = Math.min.apply(Math, colsArr.map(o => o.dataset.mediaHeight));
+            if (!cols.length) continue;
+
+            let colsArr = Array.from(cols);
+            let colHeightMin = Math.min(...colsArr.map(o => parseFloat(o.dataset.mediaHeight || 1)));
             let colsWidth = 0;
+
             for (let col of cols) {
                 let w = (colHeightMin / col.dataset.mediaHeight) * col.dataset.mediaWidth;
                 colsWidth += w;
             }
-            let cof = document.body.clientWidth / colsWidth;
+
+            let coef = document.body.clientWidth / colsWidth;
             for (let col of cols) {
-                col.style.width = ((colHeightMin / col.dataset.mediaHeight) * col.dataset.mediaWidth) * cof + 'px';
+                col.style.width = ((colHeightMin / col.dataset.mediaHeight) * col.dataset.mediaWidth) * coef + 'px';
                 if (col.classList.contains('grid-item-360')) {
                     col.classList.add('iframe');
                 }
-                if (col.classList.contains('item-hidden')) col.classList.remove('item-hidden');
+                col.classList.remove('item-hidden');
             }
-            row.style.height = colHeightMin * cof + 'px';
+
+            row.style.height = colHeightMin * coef + 'px';
         }
     } else {
         for (let row of rows) {
             row.style.height = 'auto';
             let cols = row.querySelectorAll('.grid-item');
-            let containsDesktopCount = 0;
+            let hiddenCount = 0;
+
             for (let col of cols) {
                 col.style.width = '100%';
                 if (col.classList.contains('grid-item-desktop')) {
                     col.classList.add('item-hidden');
-                    containsDesktopCount++;
+                    hiddenCount++;
                 }
             }
-            if (containsDesktopCount === cols.length) {
+
+            if (hiddenCount === cols.length) {
                 row.classList.add('item-hidden');
             }
         }
     }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    resizeGrid();
-    observeNewGridItems();
-    window.addEventListener('resize', resizeGrid);
-});
+function observeNewGridItems() {
+    if (!window.gridObserver) {
+        window.gridObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    if (video.readyState >= 2) {
+                        video.play().catch(() => {});
+                    }
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.5 });
+    }
+
+    document.querySelectorAll('video.js-grid-item-media:not([data-observed])').forEach(video => {
+        window.gridObserver.observe(video);
+        video.dataset.observed = 'true';
+    });
+}

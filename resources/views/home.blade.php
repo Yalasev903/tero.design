@@ -476,16 +476,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 </script>
-    @section('scripts')
-    {{-- ... все скрипты ... --}}
+@section('scripts')
+    {{-- ✅ LazySizes --}}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/plugins/ls.attrchange.min.js" async></script>
 
-    {{-- 👇 Добавить вот этот блок --}}
+    {{-- ✅ Загрузка видео по lazyload --}}
     <script>
         document.addEventListener('lazyloaded', function (e) {
             const el = e.target;
-
             if (el.tagName === 'VIDEO') {
                 el.querySelectorAll('source').forEach(source => {
                     if (source.dataset.src && !source.src) {
@@ -498,13 +497,39 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     </script>
 
+    {{-- ✅ Автоматический play/pause видео при появлении в зоне видимости --}}
+    <script>
+        window.gridObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const video = entry.target;
+                if (entry.isIntersecting) {
+                    if (video.readyState >= 2) {
+                        video.play().catch(() => {});
+                    }
+                } else {
+                    video.pause();
+                }
+            });
+        }, { threshold: 0.5 });
+
+        function observeNewGridItems() {
+            document.querySelectorAll('video.js-grid-item-media').forEach(video => {
+                if (!video.dataset.observed) {
+                    window.gridObserver.observe(video);
+                    video.dataset.observed = "true";
+                }
+            });
+        }
+    </script>
+
+    {{-- ✅ Основной обработчик подгрузки, popup и сетки --}}
     <script type="module">
         import { bindPopupEvents } from '/js/popup-handler.js';
 
         document.addEventListener('DOMContentLoaded', () => {
-            bindPopupEvents(); // навешиваем при старте
+            bindPopupEvents();
+            observeNewGridItems();
 
-            // Поддержка при подгрузке новых элементов
             const observer = new IntersectionObserver((entries) => {
                 if (entries[0].isIntersecting && !window.loading && !window.noMore) {
                     window.loading = true;
@@ -520,7 +545,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         const rows = tempDiv.querySelectorAll('.grid-row');
                         if (!rows.length) {
                             window.noMore = true;
-                            document.getElementById('load-trigger').innerHTML = '🔚 Все проекты загружены';
+                            document.getElementById('load-trigger').innerHTML = 'All project loaded';
                             return;
                         }
 
@@ -532,8 +557,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             requestAnimationFrame(() => row.style.opacity = '1');
                         });
 
-                        // 🎯 Навешиваем обработчики на подгруженные строки
+                        // 🔁 Обновляем обработчики
                         bindPopupEvents();
+                        observeNewGridItems();
+                        if (typeof resizeGrid === 'function') resizeGrid();
 
                         window.currentBatch++;
                     })
@@ -548,7 +575,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }, { threshold: 0.9 });
 
-            // Инициализация
+            // ⚙️ Инициализация
             window.currentBatch = 1;
             window.loading = false;
             window.noMore = false;
@@ -556,32 +583,8 @@ document.addEventListener('DOMContentLoaded', function () {
             observer.observe(document.getElementById('load-trigger'));
         });
     </script>
-<script>
-window.gridObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    const video = entry.target;
-    if (entry.isIntersecting) {
-      if (video.readyState >= 2) {
-        video.play().catch(() => {});
-      }
-    } else {
-      video.pause();
-    }
-  });
-}, {
-  threshold: 0.5
-});
 
-function observeNewGridItems() {
-  document.querySelectorAll('video.js-grid-item-media').forEach(video => {
-    if (!video.dataset.observed) {
-      window.gridObserver.observe(video);
-      video.dataset.observed = "true";
-    }
-  });
-}
-</script>
-
-
-        <script src="/js/grid-loader.js"></script>
+    {{-- ✅ Скрипт, содержащий loader + resizeGrid --}}
+    <script src="/js/grid-loader.js"></script>
 @endsection
+
