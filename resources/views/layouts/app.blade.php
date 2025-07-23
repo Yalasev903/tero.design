@@ -374,7 +374,7 @@ body {
             });
         });
         </script>
-<script>
+{{-- <script>
 (function () {
     const loader = document.querySelector('.loader');
     const grid = document.getElementById('js-gallery');
@@ -424,7 +424,7 @@ body {
         window.addEventListener('load', init);
     }
 })();
-</script>
+</script> --}}
 
 <script>
 document.addEventListener('DOMContentLoaded', async function () {

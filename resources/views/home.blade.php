@@ -556,4 +556,6 @@ document.addEventListener('DOMContentLoaded', function () {
             observer.observe(document.getElementById('load-trigger'));
         });
     </script>
+
+    <script src="/js/grid-loader.js"></script>
 @endsection
