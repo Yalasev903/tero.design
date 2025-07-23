@@ -556,6 +556,31 @@ document.addEventListener('DOMContentLoaded', function () {
             observer.observe(document.getElementById('load-trigger'));
         });
     </script>
+<script>
+window.gridObserver = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    const video = entry.target;
+    if (entry.isIntersecting) {
+      if (video.readyState >= 2) {
+        video.play().catch(() => {});
+      }
+    } else {
+      video.pause();
+    }
+  });
+}, {
+  threshold: 0.5
+});
+
+function observeNewGridItems() {
+  document.querySelectorAll('video.js-grid-item-media').forEach(video => {
+    if (!video.dataset.observed) {
+      window.gridObserver.observe(video);
+      video.dataset.observed = "true";
+    }
+  });
+}
+</script>
 
 
         <script src="/js/grid-loader.js"></script>

@@ -94,5 +94,6 @@ function resizeGrid() {
 
 document.addEventListener("DOMContentLoaded", function () {
     resizeGrid();
+    observeNewGridItems();
     window.addEventListener('resize', resizeGrid);
 });
