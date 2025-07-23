@@ -10,15 +10,22 @@ class HomeController extends Controller
 public function index(Request $request)
 {
         $batch = $request->input('batch', 0);
-        $limit = 10;
+        $limit = 10; // 👈 количество строк, а не записей
         $offset = $batch * $limit;
 
-        $showreel_row = DB::table('home_projects_grid')
-            ->where('row_number', 0)
-            ->first();
+        // 👇 Получаем только нужные row_number, исключая showreel
+        $rows = DB::table('home_projects_grid')
+            ->where('row_number', '!=', 0)
+            ->select('row_number')
+            ->distinct()
+            ->orderBy('row_number')
+            ->skip($offset)
+            ->take($limit)
+            ->pluck('row_number');
 
+        // 👇 Достаём все записи по этим строкам
         $query = DB::table('home_projects_grid')
-            ->where('row_number', '!=', 0) // ❗️ исключаем showreel
+            ->whereIn('row_number', $rows)
             ->leftJoin('projects', 'home_projects_grid.project_id', '=', 'projects.id')
             ->select(
                 'home_projects_grid.*',
@@ -28,7 +35,7 @@ public function index(Request $request)
             ->orderBy('row_number')
             ->orderBy('col_number');
 
-        $grid_raw = $query->skip($offset)->take($limit)->get();
+        $grid_raw = $query->get();
 
         $projects_grid = [];
         foreach ($grid_raw as $item) {
