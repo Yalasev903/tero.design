@@ -383,19 +383,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 const buttonRect = buttonContainer.getBoundingClientRect();
 
                 const verticalOverlap = !(titleRect.bottom < buttonRect.top || titleRect.top > buttonRect.bottom);
+                const horizontalOverlap = !(titleRect.right < buttonRect.left || titleRect.left > buttonRect.right);
 
-                // Только если вертикально пересекаются и кнопки реально перекрываются
-                if (window.innerWidth <= 768 && verticalOverlap) {
+                const isOverlapping = verticalOverlap && horizontalOverlap;
+
+                if (isOverlapping) {
                     titleElement.style.top = '-43px';
                 } else {
-                    titleElement.style.top = '0';
-                }
-
-                if (overlap) {
-                    // Поднимаем заголовок вверх
-                    titleElement.style.top = '-43px';
-                } else {
-                    // Возвращаем на место, если не перекрывается (опционально)
                     titleElement.style.top = '0';
                 }
             }, 100);
