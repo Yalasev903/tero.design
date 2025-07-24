@@ -129,17 +129,26 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!playBtn || !poster || !vimeoContainer) return;
 
+    let vimeoPlayer = null;
+
     playBtn.addEventListener('click', function () {
-        // Скрыть постер и кнопку
+        // Скрыть постер и кнопку play
         poster.style.display = 'none';
         playBtn.style.display = 'none';
 
-        // Показать iframe
+        // Показать iframe Vimeo
         vimeoContainer.style.display = 'block';
 
-        // Запустить Vimeo-плеер
-        const player = new Vimeo.Player('vimeo-player');
-        player.play().catch(e => console.warn('error play for Vimeo:', e));
+        // Инициализация плеера
+        if (!vimeoPlayer) {
+            const iframe = document.getElementById('vimeo-player');
+            vimeoPlayer = new Vimeo.Player(iframe);
+        }
+
+        // Попытка воспроизведения
+        vimeoPlayer.play().catch(function (error) {
+            console.warn('Ошибка воспроизведения Vimeo:', error.name || error);
+        });
     });
 });
 </script>
