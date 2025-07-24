@@ -15,7 +15,7 @@
             </div>
 
             <div class="workflow-player js-player">
-                <div id="vimeo-container" style="display: none; position: relative; padding-top: 56.25%;">
+                <div id="vimeo-container" style="position: relative; padding-top: 56.25%;">
                     <iframe src="https://player.vimeo.com/video/1015356904?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
                             frameborder="0"
                             allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
@@ -26,14 +26,14 @@
                     </iframe>
                 </div>
 
-                <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
+                {{-- <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
                     id="workflow-poster"
                     alt="{{ $workflow->col_poster_alt ?? 'Workflow poster' }}"
                     class="workflow-player-poster b-lazy">
 
                 <div class="workflow-player-play js-workflow-play">
                     <img src="/img/play.png" alt="play image">
-                </div>
+                </div> --}}
 
                 <script src="https://player.vimeo.com/api/player.js"></script>
                 {{-- <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
@@ -121,43 +121,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script> --}}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const poster = document.getElementById('workflow-poster');
-    const playBtn = document.querySelector('.js-workflow-play');
-    const vimeoContainer = document.getElementById('vimeo-container');
-    const iframe = document.getElementById('vimeo-player');
-
-    if (!playBtn || !poster || !vimeoContainer || !iframe) return;
-
-    let vimeoPlayer = null;
-
-    playBtn.addEventListener('click', function () {
-        // Скрываем постер и кнопку play
-        poster.style.display = 'none';
-        playBtn.style.display = 'none';
-
-        // Показываем Vimeo iframe
-        vimeoContainer.style.display = 'block';
-
-        // Очень важно: дождаться появления iframe в DOM
-        setTimeout(() => {
-            // Инициализируем плеер (если ещё не)
-            if (!vimeoPlayer) {
-                vimeoPlayer = new Vimeo.Player(iframe);
-            }
-
-            // Попытка воспроизведения
-            vimeoPlayer.play().then(() => {
-                console.log('Видео запущено');
-            }).catch((error) => {
-                console.warn('Ошибка воспроизведения:', error.name || error);
-                alert('Нажмите "Play" внутри видео для запуска (ограничение iOS)');
-            });
-        }, 200); // небольшая задержка для надёжности
-    });
-});
-</script>
+<script src="https://player.vimeo.com/api/player.js"></script>
 <script>
 
 	/* FAQ
