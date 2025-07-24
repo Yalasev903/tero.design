@@ -190,8 +190,8 @@
 
     .popup-close {
         position: fixed;
-        top: 20px;
-        right: 30px;
+        top: 60px;
+        right: 35px;
         font-size: 40px;
         font-weight: bold;
         z-index: 10000;
