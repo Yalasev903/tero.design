@@ -126,29 +126,35 @@ document.addEventListener('DOMContentLoaded', function () {
     const poster = document.getElementById('workflow-poster');
     const playBtn = document.querySelector('.js-workflow-play');
     const vimeoContainer = document.getElementById('vimeo-container');
+    const iframe = document.getElementById('vimeo-player');
 
-    if (!playBtn || !poster || !vimeoContainer) return;
+    if (!playBtn || !poster || !vimeoContainer || !iframe) return;
 
     let vimeoPlayer = null;
 
     playBtn.addEventListener('click', function () {
-        // Скрыть постер и кнопку play
+        // Скрываем постер и кнопку play
         poster.style.display = 'none';
         playBtn.style.display = 'none';
 
-        // Показать iframe Vimeo
+        // Показываем Vimeo iframe
         vimeoContainer.style.display = 'block';
 
-        // Инициализация плеера
-        if (!vimeoPlayer) {
-            const iframe = document.getElementById('vimeo-player');
-            vimeoPlayer = new Vimeo.Player(iframe);
-        }
+        // Очень важно: дождаться появления iframe в DOM
+        setTimeout(() => {
+            // Инициализируем плеер (если ещё не)
+            if (!vimeoPlayer) {
+                vimeoPlayer = new Vimeo.Player(iframe);
+            }
 
-        // Попытка воспроизведения
-        vimeoPlayer.play().catch(function (error) {
-            console.warn('Ошибка воспроизведения Vimeo:', error.name || error);
-        });
+            // Попытка воспроизведения
+            vimeoPlayer.play().then(() => {
+                console.log('Видео запущено');
+            }).catch((error) => {
+                console.warn('Ошибка воспроизведения:', error.name || error);
+                alert('Нажмите "Play" внутри видео для запуска (ограничение iOS)');
+            });
+        }, 200); // небольшая задержка для надёжности
     });
 });
 </script>
