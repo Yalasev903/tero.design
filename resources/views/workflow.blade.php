@@ -143,4 +143,20 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+<script>
+
+	/* FAQ
+	------------------------------------------------------- */
+	const questionElements = document.querySelectorAll('.js-question')
+	if(questionElements) {
+		for(const question of questionElements) {
+			question.addEventListener('click', () => {
+				const answer = question.nextElementSibling
+				answer.classList.toggle('active')
+				question.classList.toggle('active')
+				return false
+			})
+		}
+	}
+</script>
 @endsection
