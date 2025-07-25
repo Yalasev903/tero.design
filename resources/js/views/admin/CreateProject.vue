@@ -12,7 +12,6 @@
         <el-icon style="margin-right: 6px;"><View /></el-icon> Открыть проект
         </a>
 
-
     <SeoProject :title="'SEO для проекта'" :model="form" />
     <el-form :model="form" label-position="top" @submit.prevent="submit">
       <el-form-item label="Название проекта">

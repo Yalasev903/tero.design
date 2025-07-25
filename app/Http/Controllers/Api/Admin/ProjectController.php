@@ -14,6 +14,7 @@ use ZipArchive;
 
 class ProjectController extends Controller
 {
+
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -29,9 +30,16 @@ class ProjectController extends Controller
         try {
             DB::beginTransaction();
 
+            // 🛑 Проверяем дубликат по title
+            if (Project::where('title', $data['title'])->exists()) {
+                return response()->json([
+                    'message' => "Проект с названием '{$data['title']}' уже существует",
+                ], 409);
+            }
+
             $project = Project::create($data);
 
-            $folderName = Str::slug($project->title, '_'); // normalized
+            $folderName = Str::slug($project->title, '_');
             $folderPath = "multimedia/$folderName";
 
             if (!Storage::disk('multimedia')->exists($folderName)) {
@@ -91,9 +99,10 @@ class ProjectController extends Controller
 
             $project->update($data);
 
-            $folderName = Str::slug($project->title, '_'); // normalize title
+            $folderName = Str::slug($project->title, '_');
             $folderPath = "multimedia/$folderName";
 
+            // На всякий случай: проверка папки
             if (!Storage::disk('multimedia')->exists($folderName)) {
                 Storage::disk('multimedia')->makeDirectory($folderName);
             }
@@ -135,6 +144,7 @@ class ProjectController extends Controller
             ], 500);
         }
     }
+
 
     private function moveMediaToFolder(array $col, string $folderPath, array &$movedFiles = []): array
     {
