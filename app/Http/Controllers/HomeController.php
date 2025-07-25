@@ -11,7 +11,7 @@ class HomeController extends Controller
 public function index(Request $request)
 {
         $batch = $request->input('batch', 0);
-        $limit = 10; // 👈 количество строк, а не записей
+        $limit = 5; // 👈 количество строк, а не записей
         $offset = $batch * $limit;
 
         $showreel_row = DB::table('home_projects_grid')
@@ -20,7 +20,6 @@ public function index(Request $request)
 
         // 👇 Получаем только нужные row_number, исключая showreel
         $rows = DB::table('home_projects_grid')
-            ->where('row_number', '!=', 0)
             ->select('row_number')
             ->distinct()
             ->orderBy('row_number')
