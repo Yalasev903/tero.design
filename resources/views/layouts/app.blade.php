@@ -199,6 +199,12 @@ body {
     }
 }
 @media (max-width: 900px) {
+        .showreel-close {
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        z-index: 10000 !important;
+    }
     .showreel-center {
         width: calc(100vw - 40px);
         padding: 20px;
@@ -439,7 +445,6 @@ body {
 })();
 </script> --}}
 
-//Vimeo -Video Player
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const modal = document.getElementById('js-showreel');
