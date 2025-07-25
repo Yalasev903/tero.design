@@ -173,16 +173,15 @@ body {
 
 /* Кнопка закрытия (внутри .showreel-center) */
 .showreel-close {
-    position: fixed !important;
-    top: 20px !important;
-    right: 20px !important;
-    z-index: 10000 !important;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10;
     background: none;
     border: none;
     cursor: pointer;
     outline: none;
 }
-
 .showreel-close svg {
     width: 36px;
     height: 36px;
@@ -206,6 +205,19 @@ body {
     }
     .showreel-title {
         font-size: 1.15rem;
+    }
+}
+@media (max-width: 768px) {
+    .showreel-close {
+        position: fixed !important;
+        top: 20px !important;
+        right: 20px !important;
+        z-index: 10000 !important;
+    }
+
+    .showreel-close svg {
+        width: 28px !important;
+        height: 28px !important;
     }
 }
 @media (max-width: 700px) {
