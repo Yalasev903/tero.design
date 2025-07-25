@@ -30,17 +30,22 @@ class ProjectController extends Controller
         try {
             DB::beginTransaction();
 
-            // 🛑 Проверяем дубликат по title
+            // 🛑 Проверка на дубликат
             if (Project::where('title', $data['title'])->exists()) {
                 return response()->json([
                     'message' => "Проект с названием '{$data['title']}' уже существует",
                 ], 409);
             }
 
-            $project = Project::create($data);
-
-            $folderName = Str::slug($project->title, '_');
+            // ✅ Генерируем папку заранее
+            $folderName = Str::slug($data['title'], '_');
             $folderPath = "multimedia/$folderName";
+
+            // ✅ Добавляем folder сразу в $data
+            $data['folder'] = $folderName;
+
+            // ✅ Создаём проект с папкой
+            $project = Project::create($data);
 
             if (!Storage::disk('multimedia')->exists($folderName)) {
                 Storage::disk('multimedia')->makeDirectory($folderName);
@@ -56,8 +61,7 @@ class ProjectController extends Controller
                 }
 
                 $project->update([
-                    'multimedia_grid' => $data['multimedia_grid'],
-                    'folder' => $folderName,
+                    'multimedia_grid' => $data['multimedia_grid']
                 ]);
             }
 
@@ -80,6 +84,7 @@ class ProjectController extends Controller
         }
     }
 
+
     public function update(Request $request, $id)
     {
         $project = Project::findOrFail($id);
@@ -97,12 +102,20 @@ class ProjectController extends Controller
         try {
             DB::beginTransaction();
 
-            $project->update($data);
-
-            $folderName = Str::slug($project->title, '_');
+            // 🛑 Не пересоздаём folder
+            $folderName = $project->folder ?? Str::slug($project->title, '_');
             $folderPath = "multimedia/$folderName";
 
-            // На всякий случай: проверка папки
+            // Обновим базовые поля проекта (но НЕ folder)
+            $project->update([
+                'title' => $data['title'],
+                'text1' => $data['text1'] ?? null,
+                'text2' => $data['text2'] ?? null,
+                'meta_title' => $data['meta_title'] ?? null,
+                'meta_description' => $data['meta_description'] ?? null,
+                'meta_keywords' => $data['meta_keywords'] ?? null,
+            ]);
+
             if (!Storage::disk('multimedia')->exists($folderName)) {
                 Storage::disk('multimedia')->makeDirectory($folderName);
             }
@@ -122,7 +135,7 @@ class ProjectController extends Controller
 
                 $project->update([
                     'multimedia_grid' => $data['multimedia_grid'],
-                    'folder' => $folderName,
+                    // 'folder' — больше не обновляем ❌
                 ]);
             }
 
@@ -270,3 +283,4 @@ class ProjectController extends Controller
         return response()->json(['message' => 'Проект удалён']);
     }
 }
+
