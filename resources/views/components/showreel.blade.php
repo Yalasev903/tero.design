@@ -1,20 +1,16 @@
-@php
-    // прямой линк, жёстко как ты просил
-@endphp
-
 <div class="showreel" id="js-showreel">
     <div class="showreel-center">
         {{-- Вставка Vimeo --}}
         <div id="js-vimeo" style="width: 100%; max-width: 1920px;">
             <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
                 <iframe id="vimeo-player"
-                        src="https://player.vimeo.com/video/1015356904?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+                        src=""
                         style="position:absolute; top:0; left:0; width:100%; height:100%;"
                         frameborder="0"
-                        allow="autoplay; fullscreen; picture-in-picture"
+                        allow="fullscreen; picture-in-picture"
                         referrerpolicy="strict-origin-when-cross-origin"
                         allowfullscreen
-                        title="Terodesign Showreel 2024">
+                        title="Tero Design Showreel">
                 </iframe>
             </div>
         </div>
@@ -27,5 +23,22 @@
         </a>
     </div>
 </div>
+
 <script src="https://player.vimeo.com/api/player.js"></script>
 
+<script>
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const response = await fetch('/api/showreel');
+        const data = await response.json();
+
+        if (data?.media?.type === 'vimeo' && data.media.link) {
+            document.getElementById('vimeo-player').src = data.media.link;
+        } else {
+            console.warn('Vimeo link not found or invalid format');
+        }
+    } catch (e) {
+        console.error('Error loading showreel:', e);
+    }
+});
+</script>
