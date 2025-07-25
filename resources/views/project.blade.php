@@ -1,8 +1,8 @@
 @extends('layouts.app')
 
-@section('title', $project->meta_title ?? $project->title)
-@section('description', $project->meta_description)
-@section('keywords', $project->meta_keywords)
+@section('header_title', $project->meta_title ?? $project->title)
+@section('header_description', $project->meta_description)
+@section('header_keywords', $project->meta_keywords)
 
 @section('content')
 @php
