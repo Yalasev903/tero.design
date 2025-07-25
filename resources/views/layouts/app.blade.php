@@ -475,7 +475,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     modal.addEventListener('click', e => {
-        if (e.target === modal) closeModal();
+        if (e.target.classList.contains('showreel')) closeModal();
     });
 
     document.addEventListener('keydown', e => {
@@ -484,139 +484,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const modal = document.getElementById('js-showreel');
-    if (!modal) return;
-
-    const playBtn = document.querySelector('.js-showreel-video-play');
-    const closeBtn = document.getElementById('js-showreel-close');
-    const video = document.getElementById('js-video');
-    const posterBlock = document.getElementById('showreel-poster-block');
-    const page = document.getElementById('page');
-
-    let isPlaying = false;
-
-    // ✅ Лог всех событий видео для дебага
-    ['loadstart', 'loadeddata', 'canplay', 'canplaythrough', 'play', 'playing', 'pause', 'ended', 'error'].forEach(evt => {
-        video.addEventListener(evt, () => {
-            console.log(`[🎬 video event] ${evt}`);
-        });
-    });
-
-    const openModal = () => {
-        modal.classList.add('open');
-        modal.style.display = 'flex';
-
-        document.body.style.overflow = 'hidden';
-        document.documentElement.style.overflow = 'hidden';
-
-        if (page) page.classList.add('showreel-open');
-        if (posterBlock) posterBlock.style.display = 'flex';
-
-        video.style.display = 'none';
-        isPlaying = false;
-    };
-
-    const closeModal = () => {
-        modal.classList.remove('open');
-        modal.style.display = 'none';
-
-        document.body.style.overflow = '';
-        document.documentElement.style.overflow = '';
-
-        if (page) {
-            page.classList.remove('loading', 'form-open', 'showreel-open');
-        }
-
-        if (!video.paused && !video.ended) {
-            video.pause();
-            console.log('[🛑] Видео остановлено вручную');
-        }
-
-        video.currentTime = 0;
-        video.style.display = 'none';
-        if (posterBlock) posterBlock.style.display = 'flex';
-
-        isPlaying = false;
-    };
-
-    document.querySelectorAll('.js-showreel-open').forEach(el => {
-        el.addEventListener('click', function (e) {
-            e.preventDefault();
-            openModal();
-        });
-    });
-
-    if (playBtn && video) {
-        playBtn.addEventListener('click', async function () {
-            if (isPlaying) {
-                console.log('[⏳] Видео уже проигрывается, повторный запуск заблокирован.');
-                return;
-            }
-
-            try {
-                isPlaying = true;
-
-                document.querySelectorAll('video').forEach(v => {
-                    if (v !== video && !v.paused) v.pause();
-                });
-
-                posterBlock.style.display = 'none';
-                video.style.display = 'block';
-
-                video.muted = true;
-
-                const playPromise = video.play();
-
-                if (playPromise !== undefined) {
-                    await playPromise;
-                    console.log('[▶️] Видео успешно запущено');
-
-                    setTimeout(() => {
-                        video.muted = false;
-                        video.volume = 1.0;
-                        console.log('[🔊] Звук включён');
-                    }, 300);
-                }
-
-            } catch (err) {
-                isPlaying = false;
-
-                const errorCode = video.error?.code || 'неизвестно';
-                console.error(`❌ Ошибка воспроизведения (code ${errorCode}):`, err);
-
-                if (video.error) {
-                    switch (video.error.code) {
-                        case 1: console.error('MEDIA_ERR_ABORTED: пользователь прервал'); break;
-                        case 2: console.error('MEDIA_ERR_NETWORK: ошибка загрузки файла'); break;
-                        case 3: console.error('MEDIA_ERR_DECODE: не может декодировать поток'); break;
-                        case 4: console.error('MEDIA_ERR_SRC_NOT_SUPPORTED: формат не поддерживается'); break;
-                        default: console.error('Неизвестная ошибка');
-                    }
-                }
-
-                alert('⛔ Видео не удалось воспроизвести. Проверьте консоль.');
-            }
-        });
-    }
-
-    if (closeBtn) {
-        closeBtn.addEventListener('click', function (e) {
-            e.preventDefault();
-            closeModal();
-        });
-    }
-
-    modal.addEventListener('click', function (e) {
-        if (e.target === modal) closeModal();
-    });
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape') closeModal();
-    });
-});
-</script>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
 	const menuTriggerElement = document.getElementById('js-menu-trigger');

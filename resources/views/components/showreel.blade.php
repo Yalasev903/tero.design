@@ -16,7 +16,6 @@
                         title="Terodesign Showreel 2024">
                 </iframe>
             </div>
-            <script src="https://player.vimeo.com/api/player.js"></script>
         </div>
 
         {{-- Кнопка закрытия --}}
@@ -27,3 +26,5 @@
         </a>
     </div>
 </div>
+<script src="https://player.vimeo.com/api/player.js"></script>
+
