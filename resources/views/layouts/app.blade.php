@@ -91,10 +91,10 @@ body {
 }
 
 /* Переопределение top */
-/* .mobile-menu.open,
+.mobile-menu.open,
 .showreel.open {
     top: 0px !important;
-} */
+}
 
 .showreel-center {
     position: relative;
@@ -173,15 +173,16 @@ body {
 
 /* Кнопка закрытия (внутри .showreel-center) */
 .showreel-close {
-    position: absolute;
-    top: 20px;
-    right: 20px;
-    z-index: 10;
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 10000 !important;
     background: none;
     border: none;
     cursor: pointer;
     outline: none;
 }
+
 .showreel-close svg {
     width: 36px;
     height: 36px;
