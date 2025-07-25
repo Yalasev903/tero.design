@@ -29,7 +29,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', async () => {
     try {
-        const response = await fetch('/api/showreel');
+        const response = await fetch('/showreel');
         const data = await response.json();
 
         if (data?.media?.type === 'vimeo' && data.media.link) {
