@@ -78,22 +78,9 @@ public function index(Request $request)
             'keywords' => $page_obj->col_meta_keywords ?? '',
         ];
 
-        $showreel = null;
-        if ($showreel_row) {
-            $media = json_decode($showreel_row->media, true);
-            $showreel = [
-                'media' => $media,
-                'width' => $media['width'] ?? null,
-                'height' => $media['height'] ?? null,
-                'title' => 'SHOWREEL',
-            ];
-        }
+         $vimeoLink = optional(json_decode(optional(Showreel::first())->media, true))['link'] ?? null;
 
-        $vimeoLink = isset($showreel['media']['type'], $showreel['media']['link']) && $showreel['media']['type'] === 'vimeo'
-        ? $showreel['media']['link']
-        : null;
-
-        return view('home', compact('projects_grid', 'settings', 'showreel', 'page', 'vimeoLink'));
+        return view('home', compact('projects_grid', 'settings', 'page', 'vimeoLink'));
     }
 
 }
