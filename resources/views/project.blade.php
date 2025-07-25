@@ -27,16 +27,13 @@
 
 <div class="grid" id="js-gallery">
   @php $grid = $project->multimedia_grid; @endphp
-<pre style="color:white;background:#000;padding:20px;">
-Тип данных: {{ gettype($grid) }}
-{!! json_encode($grid, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) !!}
-</pre>
+
 @foreach ($grid as $rowIndex => $row)
+<pre style="color:yellow;">➡ row[{{ $rowIndex }}]: {{ gettype($row) }}</pre>
 @php
     $preparedCols = [];
 
     foreach ($row as $col) {
-        <pre style="color:yellow;">➡ row[{{ $rowIndex }}]: {{ gettype($row) }}</pre>
         $w = $col['width'] ?? null;
         $h = $col['height'] ?? null;
 
@@ -97,7 +94,6 @@
 
   <div class="grid-row" style="height: {{ round($finalHeight) }}px; display: flex;">
     @foreach ($preparedCols as $entry)
-    <pre style="color:cyan;">⛳ col: {{ json_encode($col) }}</pre>
       @php
         $col = $entry['col'];
         $w = $entry['w'];
@@ -107,7 +103,7 @@
         $link = ltrim($col['link'] ?? '', '/');
         $url = '/' . $link;
       @endphp
-
+<pre style="color:cyan;">⛳ col: {{ json_encode($col) }}</pre>
       @switch($col['type'])
 
         @case('img')
@@ -119,7 +115,7 @@
               <img src="{{ $url }}"
                    alt="{{ $col['description'] ?? '' }}"
                    width="{{ $w }}" height="{{ $h }}"
-                   class="js-grid-item-media" />
+                   class="js-grid-item-media lazyload" />
             </div>
           </a>
           @break
@@ -135,7 +131,7 @@
                     muted
                     loop
                     autoplay
-                    class="js-grid-item-media"
+                    class="js-grid-item-media lazyload"
                     style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;">
                 @foreach ($col['links'] ?? [] as $source)
                 <source src="{{ '/' . ltrim($source['link'], '/') }}"
