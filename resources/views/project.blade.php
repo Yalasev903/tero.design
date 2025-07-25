@@ -401,6 +401,7 @@ window.addEventListener('resize', () => {
   height: 100%;
   overflow: hidden;
 }
+.grid-inner-wrapper > video,
 .grid-inner-wrapper > img {
   width: auto;
   height: 100%;
@@ -413,14 +414,6 @@ window.addEventListener('resize', () => {
   width: 100%;
   height: auto;
   object-fit: contain;
-  display: block;
-}
-.grid-inner-wrapper > video {
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  width: auto;
-  height: auto;
   display: block;
 }
 .video-wrapper {
