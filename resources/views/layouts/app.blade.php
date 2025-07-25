@@ -109,18 +109,19 @@ body {
 }
 
 /* Контейнер с постером и видео */
-.showreel-poster-block,
-.showreel-player-video {
+.showreel-poster-block {
     position: relative;
     width: 100%;
-    aspect-ratio: 16 / 9;
     background: #000;
     box-shadow: 0 2px 38px rgba(0, 0, 0, 0.38);
     overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     max-height: calc(100vh - 100px);
+}
+
+.showreel-player-video {
+    width: 100%;
+    max-width: 1920px;
+    margin: 0 auto;
 }
 
 /* Постер */
@@ -133,10 +134,9 @@ body {
 
 /* Видео */
 .showreel-player-video {
-    display: none;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
+    max-width: 1920px;
+    margin: 0 auto;
 }
 
 /* Кнопка Play */

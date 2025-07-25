@@ -5,14 +5,15 @@
 <div class="showreel" id="js-showreel">
     <div class="showreel-center">
         {{-- Вставка Vimeo --}}
-        <div id="js-vimeo" class="showreel-player-video">
-            <div style="padding:56.25% 0 0 0;position:relative;">
+        <div id="js-vimeo" style="width: 100%; max-width: 1920px;">
+            <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
                 <iframe id="vimeo-player"
                         src="https://player.vimeo.com/video/1015356904?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+                        style="position:absolute; top:0; left:0; width:100%; height:100%;"
                         frameborder="0"
-                        allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                        allow="autoplay; fullscreen; picture-in-picture"
                         referrerpolicy="strict-origin-when-cross-origin"
-                        style="position:absolute;top:0;left:0;width:100%;height:100%;"
+                        allowfullscreen
                         title="Terodesign Showreel 2024">
                 </iframe>
             </div>
