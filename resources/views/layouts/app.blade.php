@@ -426,41 +426,61 @@ body {
 })();
 </script> --}}
 
+//Vimeo -Video Player
 <script>
-document.addEventListener('DOMContentLoaded', async function () {
-    const posterImg = document.getElementById('showreel-poster-img');
-    const video = document.getElementById('js-video');
-    const posterBlock = document.getElementById('showreel-poster-block');
+document.addEventListener('DOMContentLoaded', function () {
+    const modal = document.getElementById('js-showreel');
+    const closeBtn = document.getElementById('js-showreel-close');
+    const page = document.getElementById('page');
+    let vimeoPlayer = null;
 
-    try {
-        const response = await fetch('/showreel');
-        const data = await response.json();
-        const media = data.media;
+    const openModal = () => {
+        modal.classList.add('open');
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+        if (page) page.classList.add('showreel-open');
 
-        if (!media || media.type !== 'video') throw new Error('Неверный формат данных');
-
-        const poster = media.poster ? `/multimedia/${media.poster}` : '/multimedia/showreel_2023/obl-2023_2.jpg';
-        if (posterImg) {
-            posterImg.src = poster;
-            console.log('[✅] Постер установлен:', poster);
+        const iframe = document.getElementById('vimeo-player');
+        if (!vimeoPlayer && iframe && window.Vimeo) {
+            vimeoPlayer = new Vimeo.Player(iframe);
         }
+    };
 
-        video.innerHTML = '';
-        for (const link of media.links) {
-            const source = document.createElement('source');
-            source.src = `/multimedia/${link.link}`;
-            source.type = link.mime || 'video/mp4';
-            video.appendChild(source);
-            console.log('[✅] Добавлен <source>:', source.src);
+    const closeModal = () => {
+        modal.classList.remove('open');
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+        document.documentElement.style.overflow = '';
+        if (page) page.classList.remove('showreel-open');
+
+        if (vimeoPlayer) {
+            vimeoPlayer.pause().catch(() => {});
+            vimeoPlayer.setCurrentTime(0).catch(() => {});
         }
+    };
 
-        video.load();
-        console.log('[✅] video.load() выполнен');
+    document.querySelectorAll('.js-showreel-open').forEach(el => {
+        el.addEventListener('click', e => {
+            e.preventDefault();
+            openModal();
+        });
+    });
 
-    } catch (e) {
-        console.error('❌ Ошибка при подготовке видео:', e);
-        if (posterImg) posterImg.src = '/multimedia/showreel_2023/obl-2023_2.jpg';
+    if (closeBtn) {
+        closeBtn.addEventListener('click', e => {
+            e.preventDefault();
+            closeModal();
+        });
     }
+
+    modal.addEventListener('click', e => {
+        if (e.target === modal) closeModal();
+    });
+
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') closeModal();
+    });
 });
 </script>
 
