@@ -16,14 +16,18 @@
 
             <div class="workflow-player js-player">
                 <div id="vimeo-container" style="position: relative; padding-top: 56.25%;">
-                    <iframe src="https://player.vimeo.com/video/1015356904?badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479"
+                    @if($workflowVimeoLink)
+                        <iframe
+                            src="{{ $workflowVimeoLink }}"
                             frameborder="0"
                             allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share"
+                            allowfullscreen
                             referrerpolicy="strict-origin-when-cross-origin"
                             style="position:absolute;top:0;left:0;width:100%;height:100%;"
-                            title="Terodesign Showreel 2024"
-                            id="vimeo-workflow-player">
-                    </iframe>
+                            title="Workflow Vimeo"
+                            id="vimeo-workflow-player"
+                        ></iframe>
+                    @endif
                 </div>
 
                 {{-- <img src="/multimedia/{{ $workflow->col_poster ?? '' }}"
