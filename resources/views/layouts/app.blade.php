@@ -186,7 +186,9 @@ body {
     height: 36px;
     filter: drop-shadow(0 2px 14px #000);
 }
-
+#page::after {
+    content: none !important;
+}
 /* Адаптивность */
 @media (max-width: 1250px) {
     .showreel-center {
