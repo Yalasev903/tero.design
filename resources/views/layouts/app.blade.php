@@ -343,7 +343,7 @@ body {
 </footer>
 
         {{-- SHOWREEL MODAL --}}
-    @include('components.showreel', ['showreel' => $showreel])
+    @include('components.showreel', ['vimeoLink' => $vimeoLink])
     </div> <!-- /.wrapper -->
 
     <div class="mobile-menu" id="js-mobile-menu">

@@ -9,6 +9,8 @@ class ProjectController extends Controller
     public function show($id)
     {
         $project = \App\Models\Project::findOrFail($id);
-        return view('project', compact('project'));
+        $vimeoLink = optional(json_decode(optional(Showreel::first())->media, true))['link'] ?? null;
+
+        return view('project', compact('project', 'vimeoLink'));
     }
 }

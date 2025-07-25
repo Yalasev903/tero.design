@@ -22,7 +22,8 @@ class WorkflowController extends Controller
             ->where('col_title', 'workflow')
             ->first();
 
+            $vimeoLink = optional(json_decode(optional(Showreel::first())->media, true))['link'] ?? null;
 
-        return view('workflow', compact('workflow', 'faq_list', 'seo'));
+        return view('workflow', compact('workflow', 'faq_list', 'seo', 'vimeoLink'));
     }
 }
