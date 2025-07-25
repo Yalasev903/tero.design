@@ -120,26 +120,27 @@
           @break
 
         @case('video')
-        <div class="grid-item"
-            style="flex: 0 0 calc({{ $flexPercent }}%);"
-            data-media-width="{{ $w }}" data-media-height="{{ $h }}">
-            <div class="video-wrapper"
-                style="position: relative; width: 100%; padding-bottom: {{ round(100 * $h / $w, 4) }}%;">
-            <video preload="metadata"
-                    playsinline
-                    muted
-                    loop
-                    autoplay
-                    class="js-grid-item-media lazyload"
-                    style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: block;">
-                @foreach ($col['links'] ?? [] as $source)
-                <source src="{{ '/' . ltrim($source['link'], '/') }}"
-                        type="{{ $source['mime'] ?? 'video/mp4' }}">
-                @endforeach
-            </video>
-            </div>
-        </div>
-        @break
+<div class="grid-item"
+     style="flex: 0 0 calc({{ $flexPercent }}%);"
+     data-media-width="{{ $w }}" data-media-height="{{ $h }}">
+  <div class="grid-inner-wrapper">
+    <video
+      preload="metadata"
+      playsinline
+      muted
+      loop
+      autoplay
+      class="js-grid-item-media lazyload"
+      width="{{ $w }}"
+      height="{{ $h }}"
+      style="max-width: 100%; max-height: 100%; object-fit: contain; display: block;">
+      @foreach ($col['links'] ?? [] as $source)
+        <source src="{{ '/' . ltrim($source['link'], '/') }}" type="{{ $source['mime'] ?? 'video/mp4' }}">
+      @endforeach
+    </video>
+  </div>
+</div>
+@break
 
         @case('vr')
           @php
@@ -412,6 +413,14 @@ window.addEventListener('resize', () => {
   width: 100%;
   height: auto;
   object-fit: contain;
+  display: block;
+}
+.grid-inner-wrapper > video {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  width: auto;
+  height: auto;
   display: block;
 }
 .video-wrapper {
