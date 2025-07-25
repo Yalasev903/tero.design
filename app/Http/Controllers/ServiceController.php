@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\TblService;
 use Illuminate\Support\Facades\DB;
+use App\Models\Showreel;
 
 class ServiceController extends Controller
 {

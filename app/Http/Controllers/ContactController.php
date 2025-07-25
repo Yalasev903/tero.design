@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Setting;
 use App\Models\Map;
+use App\Models\Showreel;
 
 class ContactController extends Controller
 {
@@ -12,6 +13,8 @@ class ContactController extends Controller
     {
         $setting = Setting::first();
         $map = Map::first();
+         $media = optional(json_decode(optional(Showreel::first())->media, true));
+        $vimeoLink = $media->type === 'vimeo' ? $media->link : null;
         return view('contact', [
             'contact_data' => [
                 'email' => $setting->col_email ?? '',
@@ -26,6 +29,7 @@ class ContactController extends Controller
                 'footer_left' => $setting->footer_left ?? '',
                 'footer_right' => $setting->footer_right ?? '',
                 'footer_right_note' => $setting->footer_right_note ?? '',
+                'vimeoLink' => $vimeoLink,
         ]);
     }
 }
