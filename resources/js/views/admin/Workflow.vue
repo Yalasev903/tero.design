@@ -221,22 +221,26 @@ onActivated(() => {
     <div class="right-column">
       <h3>🎬 Видео Workflow</h3>
 
-      <div class="media-box" :class="{ expanded: expanded === 'poster' }" @click="toggleExpand('poster')">
-        <div class="media-label">Постер ({{ posterDimensions }})</div>
-        <img :src="posterSrc" :alt="model.col_poster_alt || 'Постер'" />
-        <div class="overlay"><span class="upload-icon" @click.stop="openManager('col_poster')">📤 Заменить</span></div>
-      </div>
-      <el-input v-model="model.col_poster_alt" placeholder="Alt постера" style="margin-top: 10px" :size="inputSize" />
-      <p class="filename">{{ model.col_poster }}</p>
+      <div class="vimeo-input">
+            <el-input
+                v-model="model.col_video"
+                placeholder="https://player.vimeo.com/video/123456789"
+                clearable
+                :size="inputSize"
+            />
+            </div>
 
-      <div class="media-box" :class="{ expanded: expanded === 'video' }" @click="toggleExpand('video')">
-        <div class="media-label">Видео ({{ videoDimensions }})</div>
-        <video class="js-video" :key="videoSrc" autoplay loop muted playsinline>
-          <source :src="videoSrc" :type="'video/' + videoSrc.split('.').pop()" />
-        </video>
-        <div class="overlay"><span class="upload-icon" @click.stop="openManager('col_video')">📤 Заменить</span></div>
-      </div>
-      <p class="filename">{{ model.col_video }}</p>
+            <div v-if="model.col_video" class="vimeo-preview">
+            <div style="position: relative; padding-top: 56.25%;">
+                <iframe
+                :src="model.col_video"
+                frameborder="0"
+                allow="autoplay; fullscreen; picture-in-picture"
+                allowfullscreen
+                style="position:absolute;top:0;left:0;width:100%;height:100%;"
+                ></iframe>
+            </div>
+        </div>
 
       <div class="editor-wrap">
         <h4>Описание</h4>
@@ -441,5 +445,14 @@ onActivated(() => {
   border-radius: 6px;
   cursor: pointer;
   z-index: 10;
+}
+.vimeo-input {
+  margin-top: 20px;
+  max-width: 720px;
+}
+.vimeo-preview {
+  margin-top: 20px;
+  width: 100%;
+  max-width: 720px;
 }
 </style>
