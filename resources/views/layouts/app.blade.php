@@ -91,7 +91,6 @@ body {
 }
 
 /* Переопределение top */
-.mobile-menu.open,
 .showreel.open {
     top: 0px !important;
 }
