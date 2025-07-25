@@ -460,6 +460,9 @@ document.addEventListener('DOMContentLoaded', function () {
         document.documentElement.style.overflow = 'hidden';
         if (page) page.classList.add('showreel-open');
 
+        // 📱 Закрываем мобильное меню
+        window.mobileMenuClose?.();
+
         const iframe = document.getElementById('vimeo-player');
         if (!vimeoPlayer && iframe && window.Vimeo) {
             vimeoPlayer = new Vimeo.Player(iframe);
