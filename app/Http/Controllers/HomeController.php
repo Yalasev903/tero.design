@@ -88,7 +88,10 @@ public function index(Request $request)
                 'title' => 'SHOWREEL',
             ];
         }
-        $vimeoLink = $showreel['media']['type'] === 'vimeo' ? $showreel['media']['link'] : null;
+
+        $vimeoLink = isset($showreel['media']['type'], $showreel['media']['link']) && $showreel['media']['type'] === 'vimeo'
+        ? $showreel['media']['link']
+        : null;
 
         return view('home', compact('projects_grid', 'settings', 'showreel', 'page', 'vimeoLink'));
     }

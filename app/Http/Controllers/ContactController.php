@@ -13,8 +13,8 @@ class ContactController extends Controller
     {
         $setting = Setting::first();
         $map = Map::first();
-         $media = optional(json_decode(optional(Showreel::first())->media, true));
-        $vimeoLink = $media->type === 'vimeo' ? $media->link : null;
+        $vimeoLink = optional(json_decode(optional(Showreel::first())->media, true))['link'] ?? null;
+
         return view('contact', [
             'contact_data' => [
                 'email' => $setting->col_email ?? '',
