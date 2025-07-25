@@ -362,6 +362,7 @@ body {
         <script src="{{ asset('js/jquery.twentytwenty.min.js') }}"></script>
         <script src="{{ asset('js/main.min.js?v=5.92') }}"></script>
         <script src="https://cdn.jsdelivr.net/npm/beerslider/dist/BeerSlider.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
         <script>
         window.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.beer-slider').forEach(el => {
