@@ -58,10 +58,14 @@
         <link rel="stylesheet" href="{{ asset('css/style.min.css?v=5.92') }}"/>
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/before-after.js/dist/before-after.min.css">
     @show
+    	<script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="55b2e969-431a-4913-a370-6f3742650a2d" data-blockingmode="auto" type="text/javascript"></script>
+<script
+  id="CookieDeclaration"
+  src="https://consent.cookiebot.com/55b2e969-431a-4913-a370-6f3742650a2d/cd.js"
+  type="text/javascript"
+></script>
      <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
     <script src="{{ asset('js/header.min.js?v=5.92') }}" type="application/javascript"></script>
-
-
 
     @stack('styles')
     <style>
@@ -341,6 +345,32 @@ body {
         All rights reserved © {{ now()->year }} TERODESIGN
     </div>
 </footer>
+
+    {{-- Cookiebot session tracker (обязательный пиксель) --}}
+    <img id="CookiebotSessionPixel"
+         src="https://imgsct.cookiebot.com/1.gif?dgi=55b2e969-431a-4913-a370-6f3742650a2d"
+         alt="Cookiebot session tracker icon loaded"
+         data-cookieconsent="ignore"
+         style="display: none;">
+
+    {{-- Cookiebot Widget --}}
+    <div dir="ltr" id="CookiebotWidget" lang="en">
+        <button class="CookiebotWidget-logo" aria-label="Open CMP widget" lang="en">
+            <svg width="24" height="24" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <g fill-rule="evenodd">
+                    <circle cx="12" cy="12" r="12"></circle>
+                    <path d="M15.094 13.978c-1.146 0-1.946-.813-1.946-1.978s.8-1.978 1.946-1.978c1.145 0 1.945.813 1.945 1.978s-.8 1.978-1.945 1.978M9.07 10.022h3.883l-.094.09c-.537.515-.844 1.203-.844 1.888 0 1.738 1.294 3 3.079 3 1.786 0 3.082-1.262 3.082-3s-1.296-3-3.082-3H9.079C7.295 9 6 10.262 6 12s1.295 3 3.079 3h2.144v-1.022H9.07c-1.136 0-1.932-.813-1.937-1.978 0-1.146.815-1.978 1.937-1.978" fill="#000"></path>
+                </g>
+            </svg>
+        </button>
+        <div id="CookiebotWidget-widgetContent"></div>
+    </div>
+    <div id="CookiebotWidgetUnderlay"></div>
+
+    <style id="CookiebotWidgetStylesheet">
+    @keyframes CookiebotWidgetFadeIn{0%{opacity:0}to{opacity:1}}#CookiebotWidget{word-wrap:break-word;left:10px;bottom:10px;animation:CookiebotWidgetFadeIn .3s ease-in;background-color:#000000;border-radius:40px;box-shadow:0 4px 16px rgba(0,0,0,.15);font-family:Helvetica,Arial,sans-serif;line-height:1.5;min-height:48px;min-width:48px;opacity:0;pointer-events:none;position:fixed;transition:all .2s ease-in;word-break:break-word;z-index:2147483631}#CookiebotWidget,#CookiebotWidget *{background:transparent;box-sizing:border-box;color:#ffffff;font-size:15px;letter-spacing:.1px;margin:0;outline:0;padding:0}#CookiebotWidget *{font-family:inherit}#CookiebotWidget button,#CookiebotWidget li,#CookiebotWidget strong,#CookiebotWidget svg,#CookiebotWidget ul{border:none;cursor:inherit;font-weight:inherit;line-height:1.5}#CookiebotWidget:not(.CookiebotWidget-inactive){opacity:1;pointer-events:all;transition:opacity .3s ease-in,border-radius .2s ease-in}#CookiebotWidget.CookiebotWidget-open{overflow:hidden}#CookiebotWidget:not(.CookiebotWidget-open):hover{box-shadow:0 4px 18px rgba(0,0,0,.3)}#CookiebotWidget+#CookiebotWidgetUnderlay{background:#000;height:100vh;left:0;opacity:0;pointer-events:none;position:fixed;top:0;visibility:hidden;width:100vw;z-index:2147483630}#CookiebotWidget:not(.CookiebotWidget-open) .CookiebotWidget-logo{cursor:pointer}#CookiebotWidget .CookiebotWidget-logo{display:block;transition:opacity .3s,transform .3s}#CookiebotWidget .CookiebotWidget-logo svg{display:block;height:44px;transition:all .3s;width:44px}#CookiebotWidget:not(.CookiebotWidget-open) button.CookiebotWidget-logo svg{height:48px;transition:all 0s ease;transition-delay:.2s;width:48px}#CookiebotWidget .CookiebotWidget-logo svg circle{fill:#000000}#CookiebotWidget .CookiebotWidget-logo svg path{fill:#ffffff}#CookiebotWidget #CookiebotWidget-widgetContent{display:flex;max-height:0;max-width:0;overflow:hidden;transition:all .2s ease-in}#CookiebotWidget.CookiebotWidget-open #CookiebotWidget-widgetContent{max-height:1000px;max-width:1000px}#CookiebotWidget.CookiebotWidget-open .CookiebotWidget-contents{max-height:calc(100vh - 10px);min-height:360px}#CookiebotWidget :focus-visible,#CookiebotWidget:not(.CookiebotWidget-open) .Cookiebotwidget-logo{outline:2px solid #1032CF;outline-offset:1px}@media screen and (max-width:600px){#CookiebotWidget:not(.CookiebotWidget-inactive){bottom:10px;left:10px}#CookiebotWidget :focus-visible,#CookiebotWidget:not(.CookiebotWidget-open) .Cookiebotwidget-logo{outline:0}}@media screen and (min-width:601px){#CookiebotWidget+#CookiebotWidgetUnderlay{display:none}}
+    </style>
+
 
         {{-- SHOWREEL MODAL --}}
     @include('components.showreel', ['vimeoLink' => $vimeoLink])
