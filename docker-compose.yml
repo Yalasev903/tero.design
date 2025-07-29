@@ -5,8 +5,8 @@ services:
     build:
       context: .
       dockerfile: docker/php/Dockerfile
-    image: tero-php
-    container_name: tero-app
+    image: app-tero-php
+    container_name: app-tero-app
     restart: unless-stopped
     working_dir: /var/www
     volumes:
@@ -14,38 +14,41 @@ services:
     depends_on:
       - db
     networks:
-      - tero-net
+      - app-tero-net
 
   nginx:
     image: nginx:stable-alpine
-    container_name: tero-nginx
+    container_name: app-tero-nginx
     restart: unless-stopped
     ports:
-      - "8000:80"
+      - "8000:80"       # локальная отладка
+      - "80:80"         # HTTP (для certbot и редиректа)
+      - "443:443"       # HTTPS (для Let's Encrypt)
     volumes:
       - ./:/var/www
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt:/etc/letsencrypt:ro
     depends_on:
       - app
     networks:
-      - tero-net
+      - app-tero-net
 
   db:
     image: mysql:8.0
-    container_name: tero-mysql
+    container_name: app-tero-mysql
     restart: unless-stopped
     ports:
-      - "3308:3306"
+      - "3309:3306"  # отличаемся от 3306 (основной сайт) и 3308 (ваш старый docker)
     environment:
-      MYSQL_DATABASE: tero_db
-      MYSQL_ROOT_PASSWORD: simplepassword
+      MYSQL_DATABASE: app_tero_db
+      MYSQL_ROOT_PASSWORD: 7PzVasfLp43!gMyZ
     volumes:
-      - mysql_data:/var/lib/mysql
+      - app_tero_mysql_data:/var/lib/mysql
     networks:
-      - tero-net
+      - app-tero-net
 
 networks:
-  tero-net:
+  app-tero-net:
 
 volumes:
-  mysql_data:
+  app_tero_mysql_data:

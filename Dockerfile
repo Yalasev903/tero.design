@@ -43,6 +43,7 @@ COPY ./docker/nginx/nginx.conf /etc/nginx/nginx.conf
 COPY ./docker/supervisord.conf /etc/supervisord.conf
 RUN mkdir -p /etc/nginx/sites-enabled && \
     ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+RUN apk --no-cache add certbot certbot-nginx
 
 # Entrypoint
 COPY ./docker/entrypoint.sh /var/www/docker/entrypoint.sh
