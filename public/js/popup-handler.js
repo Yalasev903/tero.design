@@ -175,12 +175,12 @@ function bindPopupEvents() {
 
         // ✅ Удаляем фантомы и сбрасываем popup перед вставкой нового содержимого
         if (popup.classList.contains('active')) {
-        popup.querySelectorAll('.popup-inner, .popup-controls, .info-block, .info-button, .project-link-text, h3').forEach(el => el.remove());
+        // Удаляем только содержимое, НЕ удаляем весь popup
+        popup.innerHTML = '';
         popup.classList.remove('active');
         }
 
-        // ✅ Полностью очищаем popup, даже если вдруг что-то осталось
-        popup.innerHTML = '';
+        // ✅ Вставляем новое содержимое
         popup.appendChild(popupInner);
         popup.classList.add('active');
 
