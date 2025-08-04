@@ -48,19 +48,32 @@ function bindPopupEvents() {
       } else {
         mediaUrl = this.dataset.video;
         const video = document.createElement('video');
-        video.preload = 'metadata';
+
+        // ✅ Ключевые атрибуты для iOS (иначе fullscreen)
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.setAttribute('muted', '');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('loop', '');
+        video.setAttribute('preload', 'metadata');
+
+        // ✅ Дублируем на случай полной поддержки
         video.muted = true;
-        video.loop = true;
         video.autoplay = true;
+        video.playsInline = true;
+
         const source = document.createElement('source');
         source.src = mediaUrl;
         video.appendChild(source);
+
+        // ✅ Добавляем поведение при длинных видео
         video.onloadedmetadata = function () {
-          if (video.videoHeight / video.videoWidth > 1.5) {
+        if (video.videoHeight / video.videoWidth > 1.5) {
             video.classList.add('tall-media');
             popupInner.classList.add('tall-adjust');
-          }
+        }
         };
+
         popupInner.appendChild(video);
       }
 
