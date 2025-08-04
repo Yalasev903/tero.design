@@ -24,6 +24,8 @@
     <link rel="icon" href="{{ asset('favicon.png') }}?v={{ filemtime(public_path('favicon.png')) }}" sizes="32x32"/>
     <link rel="icon" href="{{ asset('favicon.png') }}" sizes="192x192"/>
     <link rel="apple-touch-icon-precomposed" href="{{ asset('favicon.png') }}"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;700&display=swap" rel="stylesheet">
     <meta name="msapplication-TileImage" content="{{ asset('favicon.png') }}"/>
     @vite(['resources/css/overrides.css'])
@@ -55,17 +57,13 @@
     {!! $base_config['googleTm'] ?? '' !!}
 
     @section('header_styles')
-        <link rel="stylesheet" href="{{ asset('css/style.min.css?v=5.92') }}"/>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/before-after.js/dist/before-after.min.css">
+        <link rel="preload" as="style" href="{{ asset('css/style.min.css?v=5.92') }}" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="{{ asset('css/style.min.css?v=5.92') }}"></noscript>
+
+        <link rel="preload" as="style" href="https://cdn.jsdelivr.net/npm/before-after.js/dist/before-after.min.css" onload="this.onload=null;this.rel='stylesheet'">
+        <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/before-after.js/dist/before-after.min.css"></noscript>
     @show
-    	<script id="Cookiebot" src="https://consent.cookiebot.com/uc.js" data-cbid="55b2e969-431a-4913-a370-6f3742650a2d" data-blockingmode="auto" type="text/javascript"></script>
-<script
-  id="CookieDeclaration"
-  src="https://consent.cookiebot.com/55b2e969-431a-4913-a370-6f3742650a2d/cd.js"
-  type="text/javascript"
-></script>
-     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.min.js"></script>
-    <script src="{{ asset('js/header.min.js?v=5.92') }}" type="application/javascript"></script>
+    	    <script src="{{ asset('js/header.min.js?v=5.92') }}" type="application/javascript" defer></script>
 
     @stack('styles')
     <style>
@@ -386,12 +384,12 @@ body {
     </div>
 
     @section('scripts')
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+        {{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> --}}
         <script src="{{ asset('js/lightgallery.min.js') }}"></script>
-        <script src="{{ asset('js/jquery.event.move.min.js') }}"></script>
+        {{-- <script src="{{ asset('js/jquery.event.move.min.js') }}"></script>
         <script src="{{ asset('js/jquery.twentytwenty.min.js') }}"></script>
         <script src="{{ asset('js/main.min.js?v=5.92') }}"></script>
-        <script src="https://cdn.jsdelivr.net/npm/beerslider/dist/BeerSlider.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/beerslider/dist/BeerSlider.min.js"></script> --}}
         <script>
         window.addEventListener('DOMContentLoaded', function () {
             document.querySelectorAll('.beer-slider').forEach(el => {
@@ -508,6 +506,22 @@ document.addEventListener('DOMContentLoaded', function () {
 		headerElement.classList.remove('fixed');
 	};
 });
+</script>
+
+<script>
+  window.requestIdleCallback(() => {
+    const s1 = document.createElement('script')
+    s1.src = 'https://consent.cookiebot.com/uc.js'
+    s1.dataset.cbid = '55b2e969-431a-4913-a370-6f3742650a2d'
+    s1.dataset.blockingmode = 'auto'
+    s1.type = 'text/javascript'
+    document.head.appendChild(s1)
+
+    const s2 = document.createElement('script')
+    s2.src = 'https://consent.cookiebot.com/55b2e969-431a-4913-a370-6f3742650a2d/cd.js'
+    s2.type = 'text/javascript'
+    document.head.appendChild(s2)
+  })
 </script>
 
 @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))
