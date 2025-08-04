@@ -173,24 +173,25 @@ function bindPopupEvents() {
         }
       });
 
-      // 🧼 Fix багов отрисовки на iOS — удаляем всё, что могло не успеть удалиться
-        popup.querySelectorAll('.popup-inner').forEach(el => el.remove());
-        popup.querySelectorAll('.popup-controls').forEach(el => el.remove());
-        popup.querySelectorAll('h3').forEach(el => el.remove());
-        popup.querySelectorAll('.project-link-text').forEach(el => el.remove());
-        popup.querySelectorAll('.info-button').forEach(el => el.remove());
-
-      popup.innerHTML = '';
-      popup.appendChild(popupInner);
-      popup.classList.add('active');
-
-      const mediaEl = popupInner.querySelector('img, video');
-      mediaEl?.addEventListener('click', function (e) {
-        if (e.target === this) {
-          popup.innerHTML = '';
-          popup.classList.remove('active');
+        // ✅ Удаляем фантомы и сбрасываем popup перед вставкой нового содержимого
+        if (popup.classList.contains('active')) {
+        popup.querySelectorAll('.popup-inner, .popup-controls, .info-block, .info-button, .project-link-text, h3').forEach(el => el.remove());
+        popup.classList.remove('active');
         }
-      });
+
+        // ✅ Полностью очищаем popup, даже если вдруг что-то осталось
+        popup.innerHTML = '';
+        popup.appendChild(popupInner);
+        popup.classList.add('active');
+
+        // ✅ Закрытие popup при клике на само изображение/видео
+        const mediaEl = popupInner.querySelector('img, video');
+        mediaEl?.addEventListener('click', function (e) {
+        if (e.target === this) {
+            popup.innerHTML = '';
+            popup.classList.remove('active');
+        }
+        });
     });
   }
 
