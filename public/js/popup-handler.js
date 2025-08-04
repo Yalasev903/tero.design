@@ -173,6 +173,13 @@ function bindPopupEvents() {
         }
       });
 
+      // 🧼 Fix багов отрисовки на iOS — удаляем всё, что могло не успеть удалиться
+        popup.querySelectorAll('.popup-inner').forEach(el => el.remove());
+        popup.querySelectorAll('.popup-controls').forEach(el => el.remove());
+        popup.querySelectorAll('h3').forEach(el => el.remove());
+        popup.querySelectorAll('.project-link-text').forEach(el => el.remove());
+        popup.querySelectorAll('.info-button').forEach(el => el.remove());
+
       popup.innerHTML = '';
       popup.appendChild(popupInner);
       popup.classList.add('active');
