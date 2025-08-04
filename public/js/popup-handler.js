@@ -18,9 +18,12 @@ function checkTitleOverlap(titleElement, buttonContainer) {
 
 function bindPopupEvents() {
   const gridItemLinks = document.getElementsByClassName('grid-item');
-  const popup = document.createElement('div');
-  popup.classList.add('popup');
-  document.body.appendChild(popup);
+  let popup = document.querySelector('.popup');
+    if (!popup) {
+    popup = document.createElement('div');
+    popup.classList.add('popup');
+    document.body.appendChild(popup);
+    }
 
   for (let i = 0; i < gridItemLinks.length; i++) {
     gridItemLinks[i].addEventListener('click', function (e) {
@@ -173,14 +176,11 @@ function bindPopupEvents() {
         }
       });
 
-        // ✅ Удаляем фантомы и сбрасываем popup перед вставкой нового содержимого
-        if (popup.classList.contains('active')) {
-        // Удаляем только содержимое, НЕ удаляем весь popup
+        // ✅ Сначала очищаем popup перед вставкой
         popup.innerHTML = '';
         popup.classList.remove('active');
-        }
 
-        // ✅ Вставляем новое содержимое
+        // ✅ Вставляем popupInner
         popup.appendChild(popupInner);
         popup.classList.add('active');
 
