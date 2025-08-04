@@ -386,6 +386,7 @@ body {
     @section('scripts')
         {{-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script> --}}
         <script src="{{ asset('js/lightgallery.min.js') }}"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async></script>
         {{-- <script src="{{ asset('js/jquery.event.move.min.js') }}"></script>
         <script src="{{ asset('js/jquery.twentytwenty.min.js') }}"></script>
         <script src="{{ asset('js/main.min.js?v=5.92') }}"></script>
@@ -522,6 +523,19 @@ document.addEventListener('DOMContentLoaded', function () {
     s2.type = 'text/javascript'
     document.head.appendChild(s2)
   })
+</script>
+
+<script>
+document.addEventListener('lazybeforeunveil', function(e){
+    if (e.target.tagName === 'VIDEO') {
+        const video = e.target
+        const sources = video.querySelectorAll('source[data-src]')
+        sources.forEach(source => {
+            source.src = source.dataset.src
+        })
+        video.load()
+    }
+})
 </script>
 
 @if (!empty($base_config['jivochat']) && $base_config['jivochat'] && filled($base_config['jivochat_id']))

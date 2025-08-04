@@ -60,21 +60,20 @@
                 >
                     @if(($media['type'] ?? '') === 'img')
                         <img
-                            src="/multimedia/{{ $mediaLink }}"
+                            src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw=="
                             data-src="/multimedia/{{ $mediaLink }}"
                             alt="{{ $media['alt'] ?? '' }}"
                             class="js-grid-item-media lazyload" />
                     @elseif(($media['type'] ?? '') === 'video')
                         <video
+                            class="js-grid-item-media lazyload"
                             muted
                             loop
                             playsinline
-                            preload="auto"
-                            class="js-grid-item-media lazyload"
-                            data-autoplay
+                            preload="none"
                             data-poster="/multimedia/{{ $poster }}">
                             @foreach($media['links'] ?? [] as $link)
-                                <source src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? 'video/mp4' }}">
+                                <source data-src="/multimedia/{{ $link['link'] ?? '' }}" type="{{ $link['mime'] ?? 'video/mp4' }}">
                             @endforeach
                         </video>
                     @endif
