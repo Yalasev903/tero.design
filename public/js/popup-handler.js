@@ -82,18 +82,21 @@ function bindPopupEvents() {
 
       // 🔗 Кнопка под медиа
     if (projectLink) {
-    const linkBtn = document.createElement('a');
-    linkBtn.href = projectLink;
-    linkBtn.target = '_blank';
-    linkBtn.rel = 'noopener';
-    linkBtn.textContent = 'View Full Project';
-    linkBtn.className = 'project-link-text';
+        const linkBtn = document.createElement('a');
+        linkBtn.href = projectLink;
+        linkBtn.target = '_blank';
+        linkBtn.rel = 'noopener';
+        linkBtn.textContent = 'View Full Project';
+        linkBtn.className = 'project-link-text';
 
-    linkBtn.style.marginTop = '12px';
-    linkBtn.style.textAlign = 'left';
+        // 🔽 Прямо и просто — снизу и влево
+        Object.assign(linkBtn.style, {
+            alignSelf: 'flex-start',  // ключевая строчка
+            marginTop: '12px'
+        });
 
-    popupInner.appendChild(linkBtn);
-    }
+        popupInner.appendChild(linkBtn); // ВСТАВКА ПОСЛЕ медиа
+        }
 
       const topBar = document.createElement('div');
       if (window.innerWidth <= 576) {
