@@ -8,7 +8,7 @@ import draggable from 'vuedraggable'
 import TinyEditor from '@/components/admin/TinyEditor.vue'
 import SeoServices from '@/components/admin/SeoServices.vue'
 import { ElNotification } from 'element-plus'
-import { Edit, EditPen, Delete, Rank } from '@element-plus/icons-vue'
+import { Edit, EditPen, Delete, Rank, House } from '@element-plus/icons-vue'
 
 // Workflow модель
 const model = ref({
@@ -174,6 +174,12 @@ onActivated(() => {
 </script>
 
 <template>
+  <div class="page-header">
+    <a href="/workflow" target="_blank" class="inline-flex items-center text-blue-600 hover:underline text-lg font-medium mb-4">
+      <el-icon class="mr-1"><House /></el-icon>
+      Открыть страницу
+    </a>
+  </div>
   <div class="page-layout">
     <div class="left-column">
       <SeoServices title="SEO для Workflow" pageName="workflow" />
@@ -291,6 +297,9 @@ onActivated(() => {
 </template>
 
 <style scoped>
+.page-header {
+  margin-bottom: 10px;
+}
 .page-layout {
   display: flex;
   gap: 20px;
