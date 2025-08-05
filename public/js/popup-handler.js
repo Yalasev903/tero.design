@@ -80,6 +80,21 @@ function bindPopupEvents() {
         popupInner.appendChild(video);
       }
 
+      // 🔗 Кнопка под медиа
+    if (projectLink) {
+    const linkBtn = document.createElement('a');
+    linkBtn.href = projectLink;
+    linkBtn.target = '_blank';
+    linkBtn.rel = 'noopener';
+    linkBtn.textContent = 'View Full Project';
+    linkBtn.className = 'project-link-text';
+
+    linkBtn.style.marginTop = '12px';
+    linkBtn.style.textAlign = 'center';
+
+    popupInner.appendChild(linkBtn);
+    }
+
       const topBar = document.createElement('div');
       if (window.innerWidth <= 576) {
         Object.assign(topBar.style, {
@@ -103,14 +118,14 @@ function bindPopupEvents() {
         position: 'absolute', right: '0', top: '-5px'
       });
 
-      if (projectLink) {
-        const link = document.createElement('a');
-        Object.assign(link, {
-          href: projectLink, target: '_blank', rel: 'noopener', className: 'project-link-text', textContent: 'View Full Project'
-        });
-        Object.assign(link.style, { position: 'relative', top: '-10px', marginRight: '10px' });
-        buttonContainer.appendChild(link);
-      }
+    //   if (projectLink) {
+    //     const link = document.createElement('a');
+    //     Object.assign(link, {
+    //       href: projectLink, target: '_blank', rel: 'noopener', className: 'project-link-text', textContent: 'View Full Project'
+    //     });
+    //     Object.assign(link.style, { position: 'relative', top: '-10px', marginRight: '10px' });
+    //     buttonContainer.appendChild(link);
+    //   }
 
       const infoIcon = document.createElement('span');
       infoIcon.innerHTML = '<img class="i_svg" src="/multimedia/info.svg" alt="i">';
