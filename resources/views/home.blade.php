@@ -204,19 +204,20 @@
         height: 20px;
         fill: #fff;
     }
-
+}
     @media (max-width: 576px) {
     .popup-inner.tall-adjust {
-        transform: translateY(60px); /* 💡 Сдвигаем весь блок вниз */
+            /* убираем translate */
+        }
+
+        .popup-inner img.tall-media,
+        .popup-inner video.tall-media {
+            max-height: 60vh;
+            margin-top: 0;
+            transform: none;
+        }
     }
 
-    .popup-inner img.tall-media,
-    .popup-inner video.tall-media {
-        transform: scale(0.75);
-        transform-origin: center top;
-    }
-}
-}
     </style>
     {{-- / Внутренние стили главной --}}
 
