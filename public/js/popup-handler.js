@@ -90,7 +90,7 @@ function bindPopupEvents() {
     linkBtn.className = 'project-link-text';
 
     linkBtn.style.marginTop = '12px';
-    linkBtn.style.textAlign = 'center';
+    linkBtn.style.textAlign = 'left';
 
     popupInner.appendChild(linkBtn);
     }
@@ -103,7 +103,7 @@ function bindPopupEvents() {
         });
       } else {
         Object.assign(topBar.style, {
-          position: 'absolute', top: '-35px', left: '10px', right: '10px', zIndex: '2', height: '30px'
+          position: 'absolute', top: '-43px', left: '10px', right: '10px', zIndex: '2', height: '30px'
         });
       }
 
