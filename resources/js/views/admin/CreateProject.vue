@@ -592,7 +592,7 @@ const stopCurtainDrag = () => {
 // =====================
 // Контентная логика
 // =====================
-const addRow = () => gridRows.value.push({ id: Date.now() + Math.random(), items: [] })
+const addRow = () => gridRows.value.unshift({ id: Date.now() + Math.random(), items: [] })
 const removeRow = async (idx) => {
   try {
     await ElMessageBox.confirm(
@@ -1414,7 +1414,7 @@ const loadProject = async () => {
     }))
 
     return {
-      id: Date.now() + Math.random(),
+      id: items.id || (Date.now() + Math.random()),
       items: rowItems.filter(i =>
         i.media &&
         (
